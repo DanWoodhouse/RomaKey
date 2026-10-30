@@ -9,7 +9,7 @@ final class DictionaryEntryView: UIView {
 
     init(entry: DictionaryEntry, theme: KeyboardTheme) {
         super.init(frame: .zero)
-        backgroundColor = theme.key
+        backgroundColor = theme.panel
         layer.cornerRadius = 10
 
         let word = UILabel()

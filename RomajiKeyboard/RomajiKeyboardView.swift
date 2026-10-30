@@ -249,7 +249,7 @@ private final class ModeMenuView: UIView {
         panel.spacing = 4
         panel.layoutMargins = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
         panel.isLayoutMarginsRelativeArrangement = true
-        panel.backgroundColor = theme.key
+        panel.backgroundColor = theme.panel
         panel.layer.cornerRadius = 10
         panel.layer.shadowColor = UIColor.black.cgColor
         panel.layer.shadowOpacity = 0.3

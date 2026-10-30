@@ -72,8 +72,41 @@ final class KeyboardSettingsTests: XCTestCase {
         settings.flickOnly = true
         settings.languageKeyModes = [.japanese, .dictionary]
         settings.startingMode = .lastUsed
+        settings.theme = .custom
+        settings.customColors.key = 0x123456
+        settings.customColors.accent = 0xFF00AA
+        settings.keyOpacity = 0.6
+        settings.backgroundImageID = "photo-1"
+        settings.backgroundDim = 0.5
+        settings.backgroundBlur = true
         settings.save(to: defaults)
         XCTAssertEqual(KeyboardSettings(defaults: defaults), settings)
+
+        settings.backgroundImageID = nil
+        settings.save(to: defaults)
+        XCTAssertNil(KeyboardSettings(defaults: defaults).backgroundImageID)
+    }
+
+    func testOutOfRangeValuesAreClamped() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "KeyboardSettingsTests-\(UUID())"))
+        defaults.set(0.0, forKey: "keyOpacity")
+        defaults.set(5.0, forKey: "backgroundDim")
+        defaults.set(["key": 0x1000000, "text": 0x00FF00], forKey: "customColors")
+        let settings = KeyboardSettings(defaults: defaults)
+        XCTAssertEqual(settings.keyOpacity, 0.3)
+        XCTAssertEqual(settings.backgroundDim, 0.8)
+        // Invalid colours keep the default; valid ones are used.
+        XCTAssertEqual(settings.customColors.key, KeyboardSettings().customColors.key)
+        XCTAssertEqual(settings.customColors.text, 0x00FF00)
+    }
+
+    func testPresetPalettes() {
+        for theme in KeyboardSettings.Theme.allCases {
+            for dark in [false, true] {
+                let colors = ThemePalette.colors(for: theme, dark: dark)
+                XCTAssertNotEqual(colors.key, colors.text, "\(theme) keys and text must differ")
+            }
+        }
     }
 
     func testMissingValuesUseDefaults() throws {

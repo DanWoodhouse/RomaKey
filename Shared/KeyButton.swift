@@ -131,7 +131,7 @@ final class KeyPopupView: UIView {
         label.frame = CGRect(origin: .zero, size: frame.size)
         label.text = text
         label.textColor = theme.text
-        backgroundColor = theme.key
+        backgroundColor = theme.panel
         isHidden = false
     }
 

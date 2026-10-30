@@ -1,5 +1,6 @@
 import KeyboardCore
 import SwiftUI
+import UIKit
 
 /// Keeps the settings in the App Group the keyboards read from, saving on every change.
 @MainActor
@@ -10,8 +11,39 @@ final class SettingsStore: ObservableObject {
         didSet { settings.save(to: defaults) }
     }
 
+    /// The saved background photo, for the preview.
+    @Published private(set) var backgroundImage: UIImage?
+
     init() {
         settings = KeyboardSettings(defaults: defaults)
+        if settings.backgroundImageID != nil, let url = KeyboardSettings.backgroundImageURL {
+            backgroundImage = UIImage(contentsOfFile: url.path)
+        }
+    }
+
+    enum PhotoError: Error {
+        case unreadable
+        case noSharedContainer
+    }
+
+    /// Saves a photo for the keyboards to use, scaled down so they can load it cheaply.
+    func setBackgroundImage(_ data: Data) throws {
+        guard let image = UIImage(data: data) else { throw PhotoError.unreadable }
+        guard let url = KeyboardSettings.backgroundImageURL else { throw PhotoError.noSharedContainer }
+        let scaled = image.scaledDown(toFit: 1400)
+        guard let jpeg = scaled.jpegData(compressionQuality: 0.85) else { throw PhotoError.unreadable }
+        try jpeg.write(to: url, options: .atomic)
+        backgroundImage = scaled
+        // A new ID tells the keyboards to reload the file.
+        settings.backgroundImageID = UUID().uuidString
+    }
+
+    func removeBackgroundImage() {
+        if let url = KeyboardSettings.backgroundImageURL {
+            try? FileManager.default.removeItem(at: url)
+        }
+        backgroundImage = nil
+        settings.backgroundImageID = nil
     }
 
     /// Binding for one mode's toggle. At least two modes must stay on, so the key still switches.
@@ -45,21 +77,18 @@ struct SettingsView: View {
                 .font(.footnote)
             }
 
-            Section("見た目 · Look") {
-                Picker("Theme", selection: $store.settings.theme) {
-                    ForEach(KeyboardSettings.Theme.allCases, id: \.self) { theme in
-                        ThemeRow(theme: theme).tag(theme)
+            Section {
+                NavigationLink {
+                    AppearanceView(store: store)
+                } label: {
+                    HStack {
+                        Label("見た目 · Look", systemImage: "paintpalette")
+                        Spacer()
+                        Text(lookSummary).foregroundStyle(.secondary)
                     }
                 }
-                .pickerStyle(.inline)
-                .labelsHidden()
-
-                Picker("Height", selection: $store.settings.height) {
-                    Text("Compact").tag(KeyboardSettings.Height.compact)
-                    Text("Standard").tag(KeyboardSettings.Height.standard)
-                    Text("Tall").tag(KeyboardSettings.Height.tall)
-                }
-                .pickerStyle(.segmented)
+            } footer: {
+                Text("Themes, your own colours, a background photo and keyboard height.")
             }
 
             Section {
@@ -120,36 +149,27 @@ struct SettingsView: View {
     }
 }
 
-/// A theme's name with a tiny keyboard drawn in its colours.
-private struct ThemeRow: View {
-    let theme: KeyboardSettings.Theme
-
-    private var name: String {
-        switch theme {
-        case .system: return "System"
-        case .ai: return "藍 Ai (indigo)"
-        case .sakura: return "桜 Sakura"
-        case .matcha: return "抹茶 Matcha"
-        case .sumi: return "墨 Sumi (ink)"
+private extension SettingsView {
+    var lookSummary: String {
+        var parts = [store.settings.theme == .custom ? "Custom" : store.settings.theme.rawValue.capitalized]
+        if store.settings.backgroundImageID != nil {
+            parts.append("photo")
         }
+        return parts.joined(separator: " · ")
     }
+}
 
-    var body: some View {
-        let colors = KeyboardTheme.named(theme)
-        HStack(spacing: 12) {
-            HStack(spacing: 2) {
-                ForEach(0..<4) { index in
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color(uiColor: index == 3 ? colors.specialKey : colors.key))
-                        .frame(width: 10, height: 14)
-                }
-            }
-            .padding(4)
-            .background(
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(theme == .system ? Color(uiColor: .systemGray4) : Color(uiColor: colors.background))
-            )
-            Text(name)
+extension UIImage {
+    /// The image shrunk so its longer side is at most `maxDimension` pixels.
+    func scaledDown(toFit maxDimension: CGFloat) -> UIImage {
+        let pixelWidth = size.width * scale
+        let pixelHeight = size.height * scale
+        let ratio = min(1, maxDimension / max(pixelWidth, pixelHeight))
+        let target = CGSize(width: (pixelWidth * ratio).rounded(), height: (pixelHeight * ratio).rounded())
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: target, format: format).image { _ in
+            draw(in: CGRect(origin: .zero, size: target))
         }
     }
 }

@@ -1,3 +1,4 @@
+import ImageIO
 import KeyboardCore
 import UIKit
 
@@ -10,6 +11,9 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     private(set) var settings = KeyboardSettings()
     private(set) var theme = KeyboardTheme.named(.system)
     private var entryView: DictionaryEntryView?
+    private let backgroundImageView = UIImageView()
+    private let dimView = UIView()
+    private let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .regular))
 
     var enableInputClicksWhenVisible: Bool { true }
 
@@ -17,6 +21,14 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         self.feedback = feedback
         super.init(frame: .zero)
         backgroundColor = .clear
+        backgroundImageView.contentMode = .scaleAspectFill
+        backgroundImageView.clipsToBounds = true
+        dimView.backgroundColor = .black
+        for view in [backgroundImageView, blurView, dimView] {
+            view.isHidden = true
+            view.isUserInteractionEnabled = false
+            addSubview(view)
+        }
         addSubview(candidateBar)
         addSubview(keyArea)
         candidateBar.onSelect = { [weak self] candidate in
@@ -57,8 +69,15 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
 
     func apply(_ settings: KeyboardSettings) {
         self.settings = settings
-        theme = .named(settings.theme)
+        theme = KeyboardTheme(settings)
         backgroundColor = theme.background
+
+        let image = BackgroundImageLoader.image(id: settings.backgroundImageID)
+        backgroundImageView.image = image
+        backgroundImageView.isHidden = image == nil
+        blurView.isHidden = image == nil || !settings.backgroundBlur
+        dimView.isHidden = image == nil
+        dimView.alpha = settings.backgroundDim
         candidateBar.theme = theme
         settingsDidChange()
         reload()
@@ -71,6 +90,9 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        backgroundImageView.frame = bounds
+        blurView.frame = bounds
+        dimView.frame = bounds
         let barHeight = KeyboardMetrics.candidateBarHeight
         candidateBar.frame = CGRect(x: 0, y: 0, width: bounds.width, height: barHeight)
         keyArea.frame = CGRect(x: 0, y: barHeight, width: bounds.width, height: bounds.height - barHeight)
@@ -103,5 +125,31 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         UIView.animate(withDuration: 0.15) {
             self.keyArea.alpha = active ? 0.35 : 1
         }
+    }
+}
+
+/// Loads the background image the app saved, scaled down to keyboard size so it stays well
+/// within a keyboard extension's small memory allowance.
+enum BackgroundImageLoader {
+    private static var cached: (id: String, image: UIImage)?
+
+    static func image(id: String?) -> UIImage? {
+        guard let id, let url = KeyboardSettings.backgroundImageURL else { return nil }
+        if let cached, cached.id == id {
+            return cached.image
+        }
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary) else {
+            return nil
+        }
+        let options = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceThumbnailMaxPixelSize: 1400,
+        ] as CFDictionary
+        guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, options) else { return nil }
+        let image = UIImage(cgImage: thumbnail)
+        cached = (id, image)
+        return image
     }
 }

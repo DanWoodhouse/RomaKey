@@ -240,7 +240,7 @@ final class FlickGuideView: UIView {
             tile.text = text
             tile.frame = frame.insetBy(dx: 2, dy: 2).intersection(bounds)
             let isSelected = direction == selected
-            tile.backgroundColor = isSelected ? theme.accent : theme.key
+            tile.backgroundColor = isSelected ? theme.accent : theme.panel
             tile.textColor = isSelected ? .white : theme.text
         }
     }

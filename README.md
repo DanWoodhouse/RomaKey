@@ -75,11 +75,13 @@ In 辞書 mode the English you type is underlined instead. Space adds a space (f
 
 ## Customisation
 
-The app's **設定 · Settings** screen has:
+The app's **設定 · Settings** screen has the following. Theme, colours, photo and height are on its **見た目 · Look** page, which has a live preview:
 
 | Setting | Options |
 |---|---|
-| Theme | System, 藍 Ai (indigo), 桜 Sakura, 抹茶 Matcha, 墨 Sumi (ink). All adapt to light and dark mode |
+| Theme | System, 藍 Ai (indigo), 桜 Sakura, 抹茶 Matcha, 墨 Sumi (ink), all adapting to light and dark mode; or Custom |
+| Custom colours | Background, keys, function keys, pressed key, text, readings, accent. Start from any preset's light or dark colours |
+| Background photo | Any photo from your library, with darken, blur and key opacity (so it shows through the keys) |
 | Height | Compact, Standard, Tall |
 | Start in | あ, EN, 辞, or the last mode used |
 | Language key | Which of あ / EN / 辞 it steps through (at least two) |
@@ -87,13 +89,13 @@ The app's **設定 · Settings** screen has:
 | Flick | Flick only (no tap cycling), sensitivity: gentle / normal / quick |
 | Both | English meanings under suggestions, full-width space, space-bar cursor, key sounds, haptics |
 
-Settings are stored in an App Group shared by the app and both keyboards. iOS only lets a keyboard use that shared storage, and haptics, with **Allow Full Access** turned on. Without it the keyboards still work, using the default settings. The keyboards contain no networking code.
+Settings are stored in an App Group shared by the app and both keyboards. The app scales the photo down to 1400 px and saves it there as a JPEG; the keyboards load an even smaller copy, to stay within a keyboard's tight memory limit. iOS only lets a keyboard use that shared storage, and haptics, with **Allow Full Access** turned on. Without it the keyboards still work, using the default settings. The keyboards contain no networking code.
 
 ## Project structure
 
 ```
 project.yml                      XcodeGen spec (generates the .xcodeproj)
-App/                             Container app: setup, a test text field, Settings
+App/                             Container app: setup, a test text field, Settings, Look (theme/colours/photo)
 Shared/                          UI shared by both keyboards
   KeyboardHostController.swift   UIInputViewController base: settings, dictionary loading, text proxy
   KeyboardViewBase.swift         Candidate bar + key area + dictionary entry panel
@@ -108,6 +110,7 @@ Packages/KeyboardCore/           UI-free logic, unit-tested with `swift test`
   FlickKeyboardEngine.swift      Flick, tap cycle, ゛゜小, pages
   JapaneseDictionary.swift       English → Japanese search, reading → kanji lookup
   KeyboardSettings.swift         Every customisable option, saved in the App Group
+  ThemeColors.swift              Preset palettes and custom colours
   RomajiComposer.swift           romaji → ひらがな, ひらがな ↔ カタカナ
   RomajiTable.swift              The romaji table
   Resources/dictionary.tsv       ~22,000 common JMdict entries, most frequent first
@@ -143,6 +146,7 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 - Learn from what you pick, so your choices move up the candidate list
 - Reset the composition when the user moves the cursor mid-composition
 - A bigger dictionary (all of JMdict) in SQLite, if the common words aren't enough
+- Grammar checking: see [docs/grammar-checker.md](docs/grammar-checker.md) for the options and a recommended order
 
 ## Dictionary licence
 
