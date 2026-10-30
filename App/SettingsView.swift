@@ -140,6 +140,16 @@ struct SettingsView: View {
             }
 
             Section {
+                NavigationLink {
+                    AIProbeView()
+                } label: {
+                    Label("Apple Intelligence test", systemImage: "sparkles")
+                }
+            } footer: {
+                Text("Checks whether Apple's on-device model can run inside the keyboard, for future grammar checking.")
+            }
+
+            Section {
                 Button("Reset to defaults", role: .destructive) {
                     store.settings = KeyboardSettings()
                 }

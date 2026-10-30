@@ -27,6 +27,11 @@ final class CandidateBar: UIView {
         didSet { if placeholder != oldValue { rebuild() } }
     }
 
+    /// A temporary message that takes the placeholder's place, e.g. a test result.
+    var status: String? {
+        didSet { if status != oldValue { rebuild() } }
+    }
+
     private let scrollView = UIScrollView()
     private let stack = UIStackView()
 
@@ -62,9 +67,10 @@ final class CandidateBar: UIView {
         stack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         scrollView.contentOffset = .zero
 
-        if candidates.isEmpty && !placeholder.isEmpty {
+        let message = status ?? placeholder
+        if candidates.isEmpty && !message.isEmpty {
             let label = UILabel()
-            label.text = placeholder
+            label.text = message
             label.font = .systemFont(ofSize: 13)
             label.textColor = theme.secondaryText
             stack.addArrangedSubview(label)

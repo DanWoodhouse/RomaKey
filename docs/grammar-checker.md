@@ -1,5 +1,7 @@
 # On-device grammar checking: how hard is it?
 
+> Follow-up: [apple-intelligence.md](apple-intelligence.md) looks at Apple's on-device model in more detail, and the app now has a test for it.
+
 Researched 30 Oct 2026. Nothing here is built yet.
 
 ## The constraint that decides everything

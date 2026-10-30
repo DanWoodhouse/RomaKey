@@ -119,7 +119,7 @@ tools/build_dictionary.py        Rebuilds dictionary.tsv from JMdict
 
 ## Building
 
-You need a Mac with Xcode 15 or later.
+You need a Mac with Xcode 26 or later (the project links the Foundation Models framework, which older Xcode versions don't have).
 
 ```sh
 brew install xcodegen
@@ -147,6 +147,7 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 - Reset the composition when the user moves the cursor mid-composition
 - A bigger dictionary (all of JMdict) in SQLite, if the common words aren't enough
 - Grammar checking: see [docs/grammar-checker.md](docs/grammar-checker.md) for the options and a recommended order
+- Apple Intelligence features (grammar check, sentence translation, politeness switch): see [docs/apple-intelligence.md](docs/apple-intelligence.md). Run Settings → **Apple Intelligence test** on your iPhone first; it checks whether the on-device model works inside the keyboard
 
 ## Dictionary licence
 

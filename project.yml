@@ -7,6 +7,8 @@ options:
 settings:
   base:
     MARKETING_VERSION: "0.1.0"
+    # Foundation Models needs iOS 26; weak-linking keeps the app running on older versions.
+    OTHER_LDFLAGS: ["$(inherited)", "-weak_framework", "FoundationModels"]
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.9"
     TARGETED_DEVICE_FAMILY: "1,2"
@@ -20,6 +22,7 @@ targets:
     sources:
       - App
       - Shared/KeyboardTheme.swift  # for the theme previews in Settings
+      - Shared/AIProbe.swift
     entitlements:
       path: App/JapaneseKeyboard.entitlements
       properties: &appGroups

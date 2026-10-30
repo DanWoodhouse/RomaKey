@@ -92,6 +92,23 @@ class KeyboardHostController: UIInputViewController {
         feedback.playsHaptics = settings.haptics && hasFullAccess
         contentView.apply(settings)
         updateHeight()
+        runAIProbeIfRequested()
+    }
+
+    /// The app's Apple Intelligence screen can ask the next keyboard to appear to test the
+    /// on-device model from inside the keyboard. The result goes back to the app (with Full
+    /// Access) and is also shown in the candidate bar.
+    private func runAIProbeIfRequested() {
+        guard let defaults = sharedDefaults, defaults.bool(forKey: AIProbe.requestKey) else { return }
+        defaults.set(false, forKey: AIProbe.requestKey)
+        contentView.candidateBar.status = "Testing Apple Intelligence…"
+        Task { @MainActor [weak self] in
+            let result = await AIProbe.run(process: "Keyboard")
+            AIProbe.save(result, to: defaults)
+            self?.contentView.candidateBar.status = AIProbe.summary(of: result)
+            try? await Task.sleep(nanoseconds: 8_000_000_000)
+            self?.contentView.candidateBar.status = nil
+        }
     }
 
     override func viewWillLayoutSubviews() {
