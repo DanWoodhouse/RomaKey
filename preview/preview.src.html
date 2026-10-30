@@ -1,0 +1,1679 @@
+<title>日本語キーボード Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: phone-width device (text field + keyboard) beside a Customise panel and notes; stacks on phones. */
+:root {
+  --page: #eef0f4; --ink: #1d2230; --muted: #5c6475; --rule: #d5d9e2;
+  --ai: #24477a; --ai-soft: #dfe7f3; --field: #ffffff; --panel: #ffffff;
+  --font-display: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-key: -apple-system, "SF Pro Text", "Hiragino Sans", "Helvetica Neue", system-ui, sans-serif;
+  /* keyboard theme tokens (System theme, light) */
+  --kb-bg: #d1d4db; --kb-key: #ffffff; --kb-special: #abb0ba; --kb-pressed: #d1d3d8;
+  --kb-text: #111111; --kb-muted: #6b7080; --kb-accent: #2f6fe0; --kb-shadow: rgba(0, 0, 0, 0.32);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #12151c; --ink: #e8ebf2; --muted: #9aa2b3; --rule: #2a303c;
+    --ai: #8fb0e6; --ai-soft: #1f2a3d; --field: #1c2029; --panel: #181c25;
+    --kb-bg: #2b2b2e; --kb-key: #6b6b6f; --kb-special: #464649; --kb-pressed: #8c8c90;
+    --kb-text: #ffffff; --kb-muted: #b5b5bb; --kb-accent: #3d82f5; --kb-shadow: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #12151c; --ink: #e8ebf2; --muted: #9aa2b3; --rule: #2a303c;
+  --ai: #8fb0e6; --ai-soft: #1f2a3d; --field: #1c2029; --panel: #181c25;
+  --kb-bg: #2b2b2e; --kb-key: #6b6b6f; --kb-special: #464649; --kb-pressed: #8c8c90;
+  --kb-text: #ffffff; --kb-muted: #b5b5bb; --kb-accent: #3d82f5; --kb-shadow: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+/* Keyboard themes, mirroring KeyboardTheme.swift */
+.kb[data-kb-theme="ai"] { --kb-bg: #d7dfea; --kb-key: #ffffff; --kb-special: #a9b8cf; --kb-pressed: #c7d3e5; --kb-text: #14213a; --kb-muted: #4a5a75; --kb-accent: #24477a; }
+.kb[data-kb-theme="sakura"] { --kb-bg: #f6e4e8; --kb-key: #ffffff; --kb-special: #e3bcc6; --kb-pressed: #f2d3da; --kb-text: #3a1f27; --kb-muted: #7a5560; --kb-accent: #c94f6d; }
+.kb[data-kb-theme="matcha"] { --kb-bg: #e1e8d8; --kb-key: #ffffff; --kb-special: #b5c4a3; --kb-pressed: #d3dec6; --kb-text: #24301d; --kb-muted: #56654b; --kb-accent: #5b7f3a; }
+.kb[data-kb-theme="sumi"] { --kb-bg: #1b1b1d; --kb-key: #3a3a3e; --kb-special: #2a2a2d; --kb-pressed: #55555a; --kb-text: #f2f2f2; --kb-muted: #a8a8ad; --kb-accent: #e0b354; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .kb[data-kb-theme="ai"] { --kb-bg: #141c2b; --kb-key: #2a3a55; --kb-special: #1e2a3f; --kb-pressed: #3a4e70; --kb-text: #e6ecf5; --kb-muted: #9fb0cc; --kb-accent: #8fb0e6; }
+  :root:not([data-theme="light"]) .kb[data-kb-theme="sakura"] { --kb-bg: #2a1d21; --kb-key: #4a353b; --kb-special: #3a2a2f; --kb-pressed: #5e444b; --kb-text: #f7e8ec; --kb-muted: #c9a7b0; --kb-accent: #f08ca5; }
+  :root:not([data-theme="light"]) .kb[data-kb-theme="matcha"] { --kb-bg: #1c2219; --kb-key: #36422f; --kb-special: #2a3325; --kb-pressed: #46553d; --kb-text: #e6eedd; --kb-muted: #a9b99b; --kb-accent: #a8cb82; }
+}
+:root[data-theme="dark"] .kb[data-kb-theme="ai"] { --kb-bg: #141c2b; --kb-key: #2a3a55; --kb-special: #1e2a3f; --kb-pressed: #3a4e70; --kb-text: #e6ecf5; --kb-muted: #9fb0cc; --kb-accent: #8fb0e6; }
+:root[data-theme="dark"] .kb[data-kb-theme="sakura"] { --kb-bg: #2a1d21; --kb-key: #4a353b; --kb-special: #3a2a2f; --kb-pressed: #5e444b; --kb-text: #f7e8ec; --kb-muted: #c9a7b0; --kb-accent: #f08ca5; }
+:root[data-theme="dark"] .kb[data-kb-theme="matcha"] { --kb-bg: #1c2219; --kb-key: #36422f; --kb-special: #2a3325; --kb-pressed: #46553d; --kb-text: #e6eedd; --kb-muted: #a9b99b; --kb-accent: #a8cb82; }
+
+body { background: var(--page); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6; }
+.wrap {
+  max-width: 1000px; margin: 0 auto; padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: minmax(0, 430px) minmax(0, 1fr); gap: 20px 40px; align-items: start;
+}
+header { grid-column: 1 / -1; display: grid; gap: 6px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 5vw, 36px); line-height: 1.2; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 64ch; }
+
+.device { display: grid; gap: 12px; min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--ai); outline-offset: 2px; }
+.field-row { display: flex; gap: 8px; align-items: stretch; }
+.doc {
+  flex: 1; min-width: 0; min-height: 88px; max-height: 150px; overflow-y: auto;
+  background: var(--field); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px;
+  font-size: 19px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.doc .marked { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: var(--ai); }
+.doc .placeholder { color: var(--muted); }
+.caret { display: inline-block; width: 2px; height: 1.15em; background: #2f6fe0; vertical-align: -0.2em; margin: 0 1px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.clear { font: 500 12px var(--font-mono); color: var(--muted); background: transparent; border: 1px solid var(--rule); border-radius: 10px; padding: 0 10px; cursor: pointer; }
+
+.kb {
+  position: relative; width: 100%; background: var(--kb-bg); border-radius: 14px; overflow: hidden;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; font-family: var(--font-key);
+}
+.cands { position: absolute; left: 0; right: 0; top: 0; height: 40px; display: flex; gap: 2px; align-items: center; padding: 0 4px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; }
+.cands::-webkit-scrollbar { display: none; }
+.cand { display: grid; align-content: center; text-align: left; height: 38px; max-width: 220px; flex: none; font-family: var(--font-key); color: var(--kb-text); background: transparent; border: 0; padding: 0 10px; border-radius: 6px; cursor: pointer; }
+.cand.down { background: var(--kb-pressed); }
+.cand .w { font-size: 18px; line-height: 1.15; white-space: nowrap; }
+.cand .r { font-size: 11px; color: var(--kb-muted); margin-left: 4px; }
+.cand .m { font-size: 11px; color: var(--kb-muted); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cands .hint { font-size: 13px; color: var(--kb-muted); padding-left: 8px; white-space: nowrap; }
+.kb-photo { position: absolute; inset: -20px; background-size: cover; background-position: center; display: none; }
+.kb-photo.blur { filter: blur(12px); }
+.kb-dim { position: absolute; inset: 0; background: #000; display: none; }
+.kb.has-photo .kb-photo, .kb.has-photo .kb-dim { display: block; }
+.keys { position: absolute; left: 0; right: 0; top: 40px; bottom: 0; transition: opacity 150ms; }
+.keys.faint { opacity: 0.35; }
+.key { position: absolute; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.cap { position: absolute; display: grid; place-items: center; border-radius: 5px; background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); color: var(--kb-text); box-shadow: 0 1px 0 var(--kb-shadow); font-size: 22px; }
+.key.special .cap { background: color-mix(in srgb, var(--kb-special) var(--key-op, 100%), transparent); font-size: 15px; }
+.key.small .cap { font-size: 15px; }
+.key.down .cap { background: var(--kb-pressed); }
+.cap.flash { animation: flash 420ms ease-out; }
+@keyframes flash { from { color: var(--kb-accent); transform: scale(1.12); } to { transform: none; } }
+.overlay { position: absolute; inset: 0; pointer-events: none; }
+.tile { position: absolute; display: grid; place-items: center; border-radius: 6px; background: var(--kb-key); color: var(--kb-text); font-size: 24px; box-shadow: 0 1px 3px var(--kb-shadow); }
+.tile.on { background: var(--kb-accent); color: #fff; }
+.popup { position: absolute; display: grid; place-items: center; border-radius: 8px; background: var(--kb-key); color: var(--kb-text); font-size: 32px; box-shadow: 0 1px 4px var(--kb-shadow); }
+/* Mode wheel: a half disc above the mode key, slots at fixed angles (ModeWheelView.swift). */
+.wheel-slot { position: absolute; z-index: 2; width: 36px; height: 28px; border-radius: 8px; display: grid; place-items: center;
+  font: 600 13px var(--font-key); color: var(--kb-text); background: var(--kb-key); box-shadow: 0 1px 4px var(--kb-shadow);
+  transition: transform 80ms ease-out, background-color 80ms; }
+.wheel-slot.next { font-size: 15px; }
+.wheel-slot.cur::after { content: ""; position: absolute; bottom: 3px; width: 4px; height: 4px; border-radius: 50%; background: var(--kb-accent); }
+.wheel-slot.on { background: var(--kb-accent); color: #fff; transform: scale(1.15); }
+.wheel-slot.on::after { background: #fff; }
+@media (prefers-reduced-motion: reduce) { .wheel-slot { transition: none; } }
+.entry { position: absolute; left: 6px; right: 6px; bottom: 4px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px; padding: 10px 14px; background: var(--kb-key); color: var(--kb-text); border-radius: 10px; pointer-events: auto; box-shadow: 0 1px 4px var(--kb-shadow); }
+.entry .head { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+.entry .word { font-size: 28px; font-weight: 500; line-height: 1.2; }
+.entry .sub { font-size: 14px; color: var(--kb-muted); }
+.entry ol { margin: 0; padding-left: 1.3em; overflow-y: auto; font-size: 15px; line-height: 1.45; }
+.entry .forms { display: flex; gap: 8px; }
+.entry .forms button { flex: 1; min-width: 0; font: 17px var(--font-key); border-radius: 8px; padding: 8px 6px; cursor: pointer; border: 0; color: var(--kb-accent); background: color-mix(in srgb, var(--kb-accent) 16%, transparent); }
+.entry .forms button:first-child { background: var(--kb-accent); color: #fff; font-weight: 600; }
+.entry .x { font: 20px var(--font-key); color: var(--kb-muted); background: transparent; border: 0; cursor: pointer; padding: 0 4px; }
+.note { margin: 0; font-size: 13px; color: var(--muted); }
+.tool { font: 600 14px var(--font-key); color: var(--kb-text); background: transparent; border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; flex: none; }
+.tool:active, .tool.down { background: var(--kb-pressed); }
+.tool svg { width: 20px; height: 20px; display: block; }
+.cand.emoji .w { font-size: 24px; }
+.sfield { flex: none; min-width: 140px; max-width: 55%; height: 30px; display: flex; align-items: center; padding: 0 10px; border-radius: 8px; background: var(--kb-key); color: var(--kb-text); font: 16px var(--font-key); white-space: nowrap; overflow: hidden; }
+.sfield.empty { color: var(--kb-muted); }
+.sclose { font: 18px var(--font-key); color: var(--kb-muted); background: transparent; border: 0; padding: 0 6px; cursor: pointer; flex: none; }
+.panel { position: absolute; left: 0; right: 0; top: 40px; bottom: 0; display: grid; grid-template-rows: minmax(0, 1fr) 38px; }
+.egrid { position: relative; overflow-y: auto; overscroll-behavior: contain; display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); align-content: start; padding: 2px 4px; touch-action: pan-y; }
+.egrid.kao { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; }
+.egrid h4 { width: 100%; margin: 0; padding: 4px 2px 2px; font: 600 11px var(--font-key); color: var(--kb-muted); grid-column: 1 / -1;
+  position: sticky; top: -2px; z-index: 1; background: var(--kb-bg); }
+.egrid .anchor { grid-column: 1 / -1; width: 100%; height: 0; }
+.khint { position: absolute; font: 500 10px var(--font-key); color: var(--kb-muted); text-align: right; pointer-events: none; }
+.cand.auto { background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); }
+.cand.auto .w { font-weight: 600; }
+input[type="password"], input[type="text"] { font: 13px var(--font-mono); color: var(--ink); background: var(--field); border: 1px solid var(--rule); border-radius: 8px; padding: 5px 8px; min-width: 0; width: 13em; }
+.ecell { font-size: 28px; height: 44px; background: transparent; border: 0; border-radius: 8px; cursor: pointer; color: var(--kb-text); font-family: var(--font-key); }
+.ecell.kao { font-size: 15px; height: 36px; padding: 0 10px; background: var(--kb-key); box-shadow: 0 1px 0 var(--kb-shadow); }
+.ecell:active { background: var(--kb-pressed); }
+.ebar { display: flex; align-items: center; padding: 0 4px; gap: 1px; }
+.ebar button { flex: 1; min-width: 0; height: 32px; font: 15px var(--font-key); color: var(--kb-text); background: transparent; border: 0; border-radius: 6px; cursor: pointer; padding: 0; }
+.ebar button.on { background: var(--kb-pressed); }
+.ebar button.word { font-size: 12px; font-weight: 600; flex: 1.6; }
+.pmsg { display: grid; place-items: center; padding: 16px 28px; text-align: center; color: var(--kb-muted); font: 14px/1.5 var(--font-key); }
+.tones, .accents { position: absolute; display: flex; gap: 2px; padding: 4px; background: var(--kb-key); border-radius: 10px; box-shadow: 0 2px 8px var(--kb-shadow); pointer-events: auto; }
+.tones button { font-size: 28px; background: transparent; border: 0; border-radius: 6px; padding: 2px 6px; cursor: pointer; }
+.accents span { min-width: 34px; height: 40px; display: grid; place-items: center; font: 24px var(--font-key); color: var(--kb-text); border-radius: 6px; }
+.accents span.on { background: var(--kb-accent); color: #fff; }
+
+.side { display: grid; gap: 28px; min-width: 0; }
+.side h2 { font-family: var(--font-display); font-size: 20px; margin: 0; display: flex; align-items: baseline; gap: 10px; }
+.side h2 .tag { font: 500 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ai); }
+.settings { display: grid; gap: 14px; background: var(--panel); border: 1px solid var(--rule); border-radius: 14px; padding: 16px; }
+.group { display: grid; gap: 8px; }
+.group h3 { margin: 0; font: 500 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 32px; }
+.row label { min-width: 0; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; background: var(--ai-soft); border-radius: 8px; }
+.seg button { font: 13px var(--font-body); color: var(--ai); background: transparent; border: 0; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--field); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
+.themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.theme { display: grid; gap: 6px; justify-items: start; padding: 8px; border: 1px solid var(--rule); border-radius: 10px; background: transparent; color: var(--ink); font: 13px var(--font-body); cursor: pointer; }
+.theme[aria-pressed="true"] { border-color: var(--ai); box-shadow: 0 0 0 1px var(--ai); }
+.swatch.kb { width: auto; position: static; }
+.swatch { display: flex; gap: 2px; padding: 4px; border-radius: 4px; background: var(--kb-bg); }
+.swatch i { width: 10px; height: 14px; border-radius: 2px; background: var(--kb-key); }
+.swatch i:last-child { background: var(--kb-special); }
+.colors { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 14px; }
+.colors label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
+input[type="color"] { width: 40px; height: 28px; padding: 0; border: 1px solid var(--rule); border-radius: 6px; background: transparent; cursor: pointer; flex: none; }
+input[type="range"] { width: min(180px, 50%); accent-color: var(--ai); }
+select, .btn { font: 13px var(--font-body); color: var(--ink); background: var(--field); border: 1px solid var(--rule); border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.value { font: 12px var(--font-mono); color: var(--muted); min-width: 3.5ch; text-align: right; font-variant-numeric: tabular-nums; }
+input[type="file"] { display: none; }
+input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); flex: none; }
+.help { margin: 0; font-size: 12px; color: var(--muted); }
+.notes { display: grid; gap: 14px; }
+.checks { display: grid; gap: 6px; }
+.checks h3 { margin: 0; font: 500 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.check { display: flex; gap: 10px; align-items: flex-start; max-width: 66ch; cursor: pointer; }
+.check input { margin-top: 3px; }
+.check input:checked + span { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--rule); }
+.linkbtn { font: inherit; color: var(--ai); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+.k { font-family: var(--font-key); font-size: 0.9em; background: var(--field); border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; white-space: nowrap; }
+.credit { font-size: 12px; color: var(--muted); }
+.credit a { color: var(--ai); }
+
+.jump { display: none; }
+/* Phones: the keyboard area is exactly one screen tall, with the keyboard pinned to its bottom
+   edge, so scrolling it into view puts the keyboard where a real one sits. */
+@media (max-width: 760px) {
+  /* No scroll anchoring: when the hint above the text field changes length, keep the keyboard
+     pinned to the bottom rather than the text field in place. */
+  html { scroll-snap-type: y proximity; overflow-anchor: none; }
+  .wrap { grid-template-columns: minmax(0, 1fr); }
+  .device {
+    position: static;
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 100vh; min-height: 100dvh;
+    box-sizing: border-box;
+    padding-block: 10px max(6px, env(safe-area-inset-bottom, 0px));
+    scroll-snap-align: start;
+  }
+  .device .kb { margin-top: auto; }
+  .device .note { order: -1; }
+  .jump {
+    display: inline-flex; align-items: center; gap: 6px; width: fit-content;
+    font: 600 14px var(--font-body); color: var(--page); background: var(--ai);
+    border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .caret, .cap.flash { animation: none; }
+  .keys { transition: none; }
+}
+</style>
+
+<main class="wrap">
+  <header>
+    <span class="eyebrow">Interactive preview · web copy of the Swift logic</span>
+    <h1>ローマ字・かな・辞書キーボード</h1>
+    <button class="jump" id="jump" type="button">Try it full screen ↓</button>
+    <p class="lede">Both keyboards from the iOS project, now with everything you need to use them all day. Type, and emoji are suggested (sushi → 🍣, ねこ → 🐈). Clear the text and the bar above the keys becomes a toolbar: emoji, 顔文字, GIF and paste. No key ever moves.</p>
+  </header>
+
+  <section class="device" aria-label="Keyboard preview">
+    <div class="field-row">
+      <div class="doc" id="doc" aria-live="polite"></div>
+      <button class="clear" id="clear" type="button">Clear</button>
+    </div>
+    <div class="kb" id="kb">
+      <div class="kb-photo" id="kb-photo"></div>
+      <div class="kb-dim" id="kb-dim"></div>
+      <div class="cands" id="cands"></div>
+      <div class="keys" id="keys"></div>
+      <div class="overlay" id="overlay"></div>
+    </div>
+    <p class="note" id="note"></p>
+  </section>
+
+  <div class="side">
+    <section class="settings" aria-labelledby="custom-title">
+      <h2 id="custom-title">Customise <span class="tag">設定</span></h2>
+      <p class="help">The same options as the app's Settings screen. Changes apply to the keyboard straight away.</p>
+
+      <div class="group">
+        <h3>Theme</h3>
+        <div class="themes" id="themes"></div>
+      </div>
+      <div class="group">
+        <h3>Custom colours</h3>
+        <div class="colors" id="colors"></div>
+        <div class="row"><label for="preset-from">Start from a preset</label><select id="preset-from"></select></div>
+        <p class="help">Changing a colour switches to the Custom theme.</p>
+      </div>
+      <div class="group">
+        <h3>Background photo</h3>
+        <div class="btns">
+          <label class="btn" for="photo">Choose a photo…</label>
+          <input type="file" id="photo" accept="image/*">
+          <button class="btn" type="button" id="sample-photo">Try a sample</button>
+          <button class="btn" type="button" id="remove-photo">Remove</button>
+        </div>
+        <div class="row"><label for="dim">Darken</label><span class="row"><input type="range" id="dim" min="0" max="0.8" step="0.05"><span class="value" id="dim-value"></span></span></div>
+        <div class="row"><label for="set-backgroundBlur">Blur</label><input type="checkbox" id="set-backgroundBlur"></div>
+        <div class="row"><label for="opacity">Key opacity</label><span class="row"><input type="range" id="opacity" min="0.3" max="1" step="0.05"><span class="value" id="opacity-value"></span></span></div>
+      </div>
+      <div class="group">
+        <div class="row"><span>Height</span><span class="seg" id="seg-height"></span></div>
+      </div>
+      <div class="group">
+        <h3>ローマ字 · Mode key</h3>
+        <div class="row"><span>Start in</span><span class="seg" id="seg-startingMode"></span></div>
+        <p class="help">A tap on the mode key steps through:</p>
+        <div class="row"><label for="mode-japanese">あ Japanese</label><input type="checkbox" id="mode-japanese"></div>
+        <div class="row"><label for="mode-english">EN English</label><input type="checkbox" id="mode-english"></div>
+        <div class="row"><label for="mode-dictionary">辞 Dictionary</label><input type="checkbox" id="mode-dictionary"></div>
+        <div class="row"><label for="set-leftHandedWheel">Left-handed mode wheel</label><input type="checkbox" id="set-leftHandedWheel"></div>
+        <p class="help">At least two stay on. Dragging from the key opens the mode wheel, which always has every mode. Left-handed mirrors it: → あ, ← next keyboard.</p>
+      </div>
+      <div class="group">
+        <h3>ローマ字 · Typing</h3>
+        <div class="row"><label for="set-autoCapitalization">Auto-capitalisation</label><input type="checkbox" id="set-autoCapitalization"></div>
+        <div class="row"><label for="set-doubleSpacePeriod">Double-space for full stop</label><input type="checkbox" id="set-doubleSpacePeriod"></div>
+        <div class="row"><label for="set-keyPopups">Key popups</label><input type="checkbox" id="set-keyPopups"></div>
+        <div class="row"><label for="set-holdForNumbers">Hold top row for numbers</label><input type="checkbox" id="set-holdForNumbers"></div>
+        <p class="help">Hold q for 1 … p for 0. In EN, slide along for accents too.</p>
+      </div>
+      <div class="group">
+        <h3>候補 · Suggestions</h3>
+        <div class="row"><label for="set-autocorrect">Autocorrect</label><input type="checkbox" id="set-autocorrect"></div>
+        <div class="row"><label for="set-wordSuggestions">Word suggestions</label><input type="checkbox" id="set-wordSuggestions"></div>
+        <div class="row"><label for="set-emojiSuggestions">Emoji suggestions</label><input type="checkbox" id="set-emojiSuggestions"></div>
+        <div class="row"><span>Skin tone</span><span class="seg" id="seg-skinTone"></span></div>
+        <div class="btns"><button class="btn" type="button" id="forget">Forget learned words and kanji choices</button></div>
+        <p class="help">Press delete straight after an autocorrection to undo it. On iPhone, suggestions use Apple's spell checker; this preview uses the 25,000 most common English words.</p>
+      </div>
+      <div class="group">
+        <h3>GIF</h3>
+        <div class="row"><label for="giphy-key">GIPHY API key</label><input type="password" id="giphy-key" autocomplete="off" spellcheck="false" placeholder="Paste your key"></div>
+        <div class="row"><span>Content rating</span><span class="seg" id="seg-gifRating"></span></div>
+        <p class="help">Used on iPhone only: this preview can't reach GIPHY.</p>
+      </div>
+      <div class="group">
+        <h3>かな · Flick</h3>
+        <div class="row"><label for="set-flickOnly">Flick only (no tap cycling)</label><input type="checkbox" id="set-flickOnly"></div>
+        <div class="row"><span>Sensitivity</span><span class="seg" id="seg-sensitivity"></span></div>
+      </div>
+      <div class="group">
+        <h3>Both keyboards</h3>
+        <div class="row"><label for="set-showMeanings">Show English meanings</label><input type="checkbox" id="set-showMeanings"></div>
+        <div class="row"><label for="set-showRomaji">Show romaji readings</label><input type="checkbox" id="set-showRomaji"></div>
+        <div class="row"><label for="set-fullWidthSpace">Full-width space in Japanese</label><input type="checkbox" id="set-fullWidthSpace"></div>
+        <div class="row"><label for="set-spaceBarCursor">Space bar moves cursor</label><input type="checkbox" id="set-spaceBarCursor"></div>
+        <div class="row"><label for="set-keySounds">Key sounds</label><input type="checkbox" id="set-keySounds"></div>
+        <div class="row"><label for="set-haptics">Haptics</label><input type="checkbox" id="set-haptics"></div>
+        <p class="help">Romaji readings: 猫 ねこ neko. Haptics vibrate where the browser allows it (not Safari); on iPhone they need Full Access.</p>
+      </div>
+      <div class="btns"><button class="btn" type="button" id="reset-settings">Reset to defaults</button></div>
+    </section>
+
+    <section class="notes">
+      <h2>Test checklist <span class="tag">確認</span></h2>
+      <p class="help"><span id="check-count"></span> Ticks are saved in this browser. <button class="linkbtn" type="button" id="check-reset">Clear ticks</button></p>
+      <div class="checks"><h3>Layout and modes</h3>
+        <label class="check"><input type="checkbox" data-check="k1"><span>Tap the mode key (next to <span class="k">123</span>) to step through あ → EN → 辞. No key moves: only labels change (空白/space, ー/-, 改行/return).</span></label>
+        <label class="check"><input type="checkbox" data-check="k2"><span><span class="k">ー</span> / <span class="k">-</span> stays in the bottom row in every mode, and the space bar is wide (no 🌐 key).</span></label>
+      </div>
+      <div class="checks"><h3>Mode wheel</h3>
+        <label class="check"><input type="checkbox" data-check="w1"><span>Hold the mode key: five small chips appear around your finger, and the current mode has a dot.</span></label>
+        <label class="check"><input type="checkbox" data-check="w2"><span>Swipe without waiting: ← あ, ↖ EN, ↑ 辞, ↗ かな, → 🌐 (a message here; your next keyboard on iPhone).</span></label>
+        <label class="check"><input type="checkbox" data-check="w3"><span>Hold, then let go without moving: nothing changes.</span></label>
+        <label class="check"><input type="checkbox" data-check="w4"><span>Turn on <em>Left-handed mode wheel</em> in Customise: the directions mirror (→ あ, ← 🌐).</span></label>
+      </div>
+      <div class="checks"><h3>かな flick board</h3>
+        <label class="check"><input type="checkbox" data-check="f1"><span>Swipe ↗ to かな. Flick あ up for う. Tap あ twice for い (or ああ with <em>Flick only</em> on).</span></label>
+        <label class="check"><input type="checkbox" data-check="f2"><span>Type は then <span class="k">゛゜小</span>: ば, then ぱ. <span class="k">ABC</span> steps to the alphabet and ☆123 pages.</span></label>
+        <label class="check"><input type="checkbox" data-check="f3"><span>Tap <span class="k">かな</span> (bottom left) to go back to ローマ字. Drag from it for the same wheel, same directions.</span></label>
+      </div>
+      <div class="checks"><h3>Japanese (あ)</h3>
+        <label class="check"><input type="checkbox" data-check="j1"><span>Type <em>neko</em>: 猫 appears with its meaning. Long-press it for the full entry with kanji, hiragana and katakana buttons.</span></label>
+        <label class="check"><input type="checkbox" data-check="j2"><span>Type <em>kikai</em> and pick 機会. Type <em>kikai</em> again: 機会 now comes first.</span></label>
+        <label class="check"><input type="checkbox" data-check="j3"><span>Type <em>ra</em> <span class="k">ー</span> <em>men</em>: らーめん. Type <em>ko-hi-</em>: コーヒー is offered.</span></label>
+        <label class="check"><input type="checkbox" data-check="j4"><span>Turn on <em>Show romaji readings</em>: suggestions read 猫 ねこ neko.</span></label>
+      </div>
+      <div class="checks"><h3>辞書 dictionary</h3>
+        <label class="check"><input type="checkbox" data-check="d1"><span>Swipe ↑ to 辞, type <em>water</em> or <em>thank you</em>, and tap a card: the Japanese word goes in.</span></label>
+      </div>
+      <div class="checks"><h3>English (EN)</h3>
+        <label class="check"><input type="checkbox" data-check="e1"><span>Type <em>teh</em> and space: it becomes <em>the</em>. Press delete straight away: <em>teh</em> comes back and is learned.</span></label>
+        <label class="check"><input type="checkbox" data-check="e2"><span>Type <em>helo</em>: “helo” and <strong>hello</strong> appear. Type <em>wor</em>: completions (work, world…). Turn off <em>Autocorrect</em> and the fix becomes a plain suggestion.</span></label>
+        <label class="check"><input type="checkbox" data-check="e3"><span>A new sentence starts with a capital, and two spaces type a full stop.</span></label>
+        <label class="check"><input type="checkbox" data-check="e4"><span>Hold <span class="k">e</span> and slide to é. Hold <span class="k">q</span> for 1 (in あ mode too). The digits show in the key corners.</span></label>
+        <label class="check"><input type="checkbox" data-check="e5"><span>Type <em>pizza</em>: 🍕 is offered and goes in after the word.</span></label>
+      </div>
+      <div class="checks"><h3>Emoji, 顔文字 and toolbar</h3>
+        <label class="check"><input type="checkbox" data-check="m1"><span>Clear the text: the bar above the keys becomes a toolbar (😊, (^_^), GIF, paste).</span></label>
+        <label class="check"><input type="checkbox" data-check="m2"><span>Open emoji and scroll the whole way: one list, headings pinned, tabs following. Tap 🍙 to jump.</span></label>
+        <label class="check"><input type="checkbox" data-check="m3"><span>Long-press 👍 for skin tones; your pick sticks for every emoji.</span></label>
+        <label class="check"><input type="checkbox" data-check="m4"><span>🔍 search: <em>cat</em>, or <em>neko</em> in あ mode.</span></label>
+        <label class="check"><input type="checkbox" data-check="m5"><span>顔 tab and the (^_^) button: kaomoji by mood.</span></label>
+      </div>
+      <div class="checks"><h3>Cursor and delete</h3>
+        <label class="check"><input type="checkbox" data-check="c1"><span>Hold the space bar and slide to move the cursor. Hold delete: it speeds up to whole words.</span></label>
+      </div>
+      <div class="checks"><h3>Look</h3>
+        <label class="check"><input type="checkbox" data-check="l1"><span>Themes, custom colours, a background photo with darken, blur and key opacity, and the three heights.</span></label>
+        <label class="check"><input type="checkbox" data-check="l2"><span>On a phone: <em>Try it full screen</em> puts the keyboard at the bottom of the screen, where the real one sits.</span></label>
+      </div>
+      <div class="checks"><h3>iPhone only (once built in Xcode)</h3>
+        <label class="check"><input type="checkbox" data-check="p1"><span>Both keyboards appear in Settings → Keyboards; かな opens on the flick board, ローマ字 on QWERTY.</span></label>
+        <label class="check"><input type="checkbox" data-check="p2"><span>GIFs: add your GIPHY key in the app, search, tap a GIF to copy, then paste it.</span></label>
+        <label class="check"><input type="checkbox" data-check="p3"><span>Paste from the toolbar (needs Allow Full Access). This preview tries your browser's clipboard.</span></label>
+        <label class="check"><input type="checkbox" data-check="p4"><span>Your iOS text replacements (omw) and contact names in suggestions; English uses Apple's spell checker.</span></label>
+        <label class="check"><input type="checkbox" data-check="p5"><span>Haptics, key sounds, and the Apple Intelligence test in the app.</span></label>
+      </div>
+      <p class="credit">English suggestions in this preview: the most common words from <a href="https://github.com/rspeer/wordfreq">wordfreq</a> by Robyn Speer (data under CC BY-SA 4.0).</p>
+      <p class="credit">Dictionary: common words from <a href="https://www.edrdg.org/jmdict/j_jmdict.html">JMdict</a> by the Electronic Dictionary Research and Development Group, used under <a href="https://www.edrdg.org/edrdg/licence.html">CC BY-SA 3.0</a>.</p>
+    </section>
+  </div>
+</main>
+
+<script>
+(() => {
+  const chars = (s) => Array.from(s);
+  const $ = (id) => document.getElementById(id);
+
+  // ---- Settings (KeyboardSettings.swift) --------------------------------------
+  const DEFAULTS = {
+    languageKeyModes: ["japanese", "english", "dictionary"], autoCapitalization: true, doubleSpacePeriod: true,
+    keyPopups: true, flickOnly: false, flickSensitivity: "normal", showMeanings: true, fullWidthSpace: false,
+    spaceBarCursor: true, theme: "system", height: "standard",
+    customColors: null, keyOpacity: 1, backgroundDim: 0.2, backgroundBlur: false,
+    emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
+    keySounds: true, haptics: false, giphyAPIKey: "", gifRating: "pg", holdForNumbers: true, leftHandedWheel: false, showRomaji: false,
+  };
+  let settings = { ...DEFAULTS };
+  try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
+  const saveSettings = () => { try { localStorage.setItem("kb-settings", JSON.stringify(settings)); } catch (_) {} };
+  const THRESHOLD = { gentle: 30, normal: 20, quick: 12 };
+  const ROW_H = { compact: 48, standard: 54, tall: 60 };
+
+  // ---- Dictionary (JapaneseDictionary.swift) ------------------------------------
+  const TSV = __DICT__;
+  const katakana = (s) => chars(s).map((c) => { const p = c.codePointAt(0); return (p >= 0x3041 && p <= 0x3096) || p === 0x309d || p === 0x309e ? String.fromCodePoint(p + 0x60) : c; }).join("");
+  const hiragana = (s) => chars(s).map((c) => { const p = c.codePointAt(0); return (p >= 0x30a1 && p <= 0x30f6) || p === 0x30fd || p === 0x30fe ? String.fromCodePoint(p - 0x60) : c; }).join("");
+  const withoutArticle = (t) => { for (const a of ["to ", "a ", "an ", "the "]) if (t.toLowerCase().startsWith(a)) return t.slice(a.length); return t; };
+  function normalize(text) {
+    let r = text.toLowerCase(), prev;
+    do { prev = r; r = r.replace(/\([^()]*\)/g, ""); } while (r !== prev);
+    return withoutArticle(r.trim()).split(" ").filter(Boolean).join(" ");
+  }
+  const entries = [], glossIdx = [], wordIdx = [], readIdx = [];
+  for (const line of TSV.split("\n")) {
+    const f = line.split("\t");
+    if (f.length !== 5) continue;
+    const senses = f[4].split(" | ").map((s) => s.split("; "));
+    const e = { kanji: f[0], reading: f[1], uk: f[2] === "1", pos: f[3], senses };
+    e.word = e.uk || !e.kanji ? e.reading : e.kanji;
+    e.short = senses[0].slice(0, 2).join("; ");
+    const i = entries.push(e) - 1;
+    readIdx.push([hiragana(e.reading), i]);
+    senses.forEach((sense, si) => sense.forEach((g, gi) => {
+      const n = normalize(g);
+      if (!n) return;
+      const first = withoutArticle(g.trim())[0];
+      const w = (si === 0 ? (gi === 0 ? 0 : 1) : 2) + (first && first !== first.toLowerCase() ? 1 : 0);
+      glossIdx.push([n, i, w]);
+      for (const word of new Set(n.split(/[^\p{L}\p{N}']+/u).filter(Boolean))) wordIdx.push([word, i, w]);
+    }));
+  }
+  const byKey = (a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+  glossIdx.sort(byKey); wordIdx.sort(byKey); readIdx.sort(byKey);
+  function lower(items, key) { let lo = 0, hi = items.length; while (lo < hi) { const m = (lo + hi) >> 1; if (items[m][0] < key) lo = m + 1; else hi = m; } return lo; }
+  function equal(items, key) { const out = []; for (let i = lower(items, key); i < items.length && items[i][0] === key; i++) out.push(items[i]); return out; }
+  function prefixed(items, key, limit = 2000) { const out = []; for (let i = lower(items, key); i < items.length && out.length < limit && items[i][0].startsWith(key); i++) out.push(items[i]); return out; }
+  function searchEnglish(query, limit = 20) {
+    const q = normalize(query);
+    if (!q) return [];
+    const single = !q.includes(" "), best = new Map();
+    const add = (items, cls) => { for (const [, i, w] of items) { const b = best.get(i); if (!b || cls < b[0] || (cls === b[0] && w < b[1])) best.set(i, [cls, w]); } };
+    add(equal(glossIdx, q), 0);
+    if (single) add(equal(wordIdx, q), 1);
+    add(prefixed(glossIdx, q), 2);
+    if (single) add(prefixed(wordIdx, q), 3);
+    return [...best].sort((a, b) => a[1][0] - b[1][0] || a[1][1] - b[1][1] || a[0] - b[0]).slice(0, limit).map(([i]) => entries[i]);
+  }
+  const byReading = (r) => equal(readIdx, hiragana(r)).map((x) => x[1]).sort((a, b) => a - b).map((i) => entries[i]);
+  const predictions = (p, limit = 8) => { const k = hiragana(p); if (!k) return []; return prefixed(readIdx, k).filter((x) => x[0] !== k).map((x) => x[1]).sort((a, b) => a - b).slice(0, limit).map((i) => entries[i]); };
+
+  // ---- Emoji (Emoji.swift) and kaomoji (Kaomoji.swift) ------------------------------------
+  const EMOJI_TSV = __EMOJI__;
+  const GROUPS = [[0, "😀", "スマイリー · Smileys"], [1, "👋", "人 · People"], [3, "🐱", "動物と自然 · Animals & nature"], [4, "🍙", "食べ物 · Food & drink"],
+    [5, "🚃", "旅行と場所 · Travel & places"], [6, "⚽️", "アクティビティ · Activities"], [7, "💡", "物 · Objects"], [8, "💕", "記号 · Symbols"], [9, "🏳️", "旗 · Flags"]];
+  const emojiList = [], emojiIndex = new Map();
+  const isJa = (t) => /[\u3040-\u30ff\u4e00-\u9fff]/.test(t);
+  for (const line of EMOJI_TSV.split("\n")) {
+    const f = line.split("\t");
+    // Like the app, hide emoji newer than most phones can draw (the app checks the iOS version).
+    if (f.length !== 8 || +f[2] > 15) continue;
+    const e = { ch: f[0], group: +f[1], skins: f[3] ? f[3].split(" ") : [], enName: f[4], jaName: f[6] };
+    const pos = emojiList.push(e) - 1;
+    for (const k of [...f[5].split(" "), ...f[7].split(" ").map(hiragana)]) {
+      if (!k) continue;
+      const list = emojiIndex.get(k) || [];
+      if (list[list.length - 1] !== pos) list.push(pos);
+      emojiIndex.set(k, list);
+    }
+  }
+  // Emoji named after the word beat ones only tagged with it; shorter names first.
+  const relevance = (e, k) => {
+    const ja = isJa(k), name = ja ? hiragana(e.jaName) : e.enName;
+    const inName = ja ? name.includes(k) : name.split(/[ :,]+/).includes(k);
+    return (inName ? 0 : 1000) + chars(name).length;
+  };
+  for (const [k, list] of emojiIndex) list.sort((a, b) => relevance(emojiList[a], k) - relevance(emojiList[b], k) || a - b);
+  const FAVOURITES = { love: ["❤️", "🥰", "😍"], "あい": ["❤️", "🥰"], "すき": ["❤️", "😍", "🥰"], "だいすき": ["❤️", "😍"], happy: ["😊", "😀", "🥳"], "うれしい": ["😊", "😆"], sad: ["😢", "😭", "😞"], "かなしい": ["😢", "😭"], laugh: ["😂", "🤣"], lol: ["😂", "🤣"], "わらう": ["😂", "🤣"], "わら": ["😂", "🤣"], thanks: ["🙏", "😊"], thank: ["🙏"], "ありがとう": ["🙏", "😊"], sorry: ["🙇", "😢"], "ごめん": ["🙇", "🙏"], "ごめんなさい": ["🙇", "🙏"], ok: ["👌", "👍", "🆗"], "おっけー": ["👌", "👍"], "いいね": ["👍", "❤️"], japan: ["🇯🇵", "🗾"], "にほん": ["🇯🇵", "🗾"], "にっぽん": ["🇯🇵", "🗾"], good: ["👍", "😊"], yes: ["👍", "🙆"], no: ["🙅", "👎"], party: ["🎉", "🥳"], "おめでとう": ["🎉", "🎊"], congratulations: ["🎉", "🥳"], birthday: ["🎂", "🎉"], tired: ["😴", "😩"], "つかれた": ["😩", "😴"], "おやすみ": ["😴", "🌙"], night: ["🌙", "😴"], hot: ["🥵", "🔥"], "あつい": ["🥵", "🔥"], cold: ["🥶", "❄️"], "さむい": ["🥶", "❄️"], angry: ["😠", "😡"], "おこ": ["😠", "💢"], beer: ["🍺", "🍻"], coffee: ["\u2615"] };
+  for (const [k, favs] of Object.entries(FAVOURITES)) {
+    const ps = favs.map((f) => emojiList.findIndex((e) => e.ch === f)).filter((i) => i >= 0);
+    emojiIndex.set(k, [...ps, ...(emojiIndex.get(k) || []).filter((i) => !ps.includes(i))]);
+  }
+  const emojiKeys = [...emojiIndex.keys()].sort();
+  const ekey = (w) => hiragana(w.toLowerCase().replace(/^[\p{P}]+|[\p{P}]+$/gu, ""));
+  const toned = (e) => (settings.skinTone && e.skins.length === 5 ? e.skins[settings.skinTone - 1] : e.ch);
+  function emojiSuggestions(word, limit = 3) {
+    const k = ekey(word);
+    if (chars(k).length < 2 && !isJa(k)) return [];
+    return (emojiIndex.get(k) || []).slice(0, limit).map((i) => emojiList[i]);
+  }
+  function emojiSearch(query, limit = 40) {
+    const words = query.split(" ").map(ekey).filter(Boolean);
+    let scores = null;
+    for (const w of words) {
+      const m = new Map();
+      (emojiIndex.get(w) || []).forEach((i, r) => m.set(i, [2, r]));
+      let lo = 0, hi = emojiKeys.length;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (emojiKeys[mid] < w) lo = mid + 1; else hi = mid; }
+      for (let j = lo, n = 0; j < emojiKeys.length && n < 200 && emojiKeys[j].startsWith(w); j++, n++) {
+        if (emojiKeys[j] === w) continue;
+        emojiIndex.get(emojiKeys[j]).forEach((i, r) => { if (!m.has(i)) m.set(i, [1, 10000 + r]); });
+      }
+      if (!scores) scores = m;
+      else { const c = new Map(); for (const [i, s] of scores) if (m.has(i)) c.set(i, [s[0] + m.get(i)[0], s[1]]); scores = c; }
+    }
+    return [...(scores || [])].sort((a, b) => b[1][0] - a[1][0] || a[1][1] - b[1][1] || a[0] - b[0]).slice(0, limit).map(([i]) => emojiList[i]);
+  }
+  const KAOMOJI = [
+    ["嬉しい · Happy", ["(^_^)", "(^▽^)", "(*^▽^*)", "(≧▽≦)", "ヽ(・∀・)ﾉ", "(๑˃ᴗ˂)ﻭ", "(◕‿◕)", "٩(◕‿◕)۶", "(´∀`)", "(＾ｖ＾)"]],
+    ["好き · Love", ["(♡˙︶˙♡)", "(´♡‿♡`)", "(*˘︶˘*).｡.:*♡", "(ღ˘⌣˘ღ)", "♡(｡- ω -)", "(っ´▽`)っ♡"]],
+    ["ありがとう · Thanks", ["m(_ _)m", "(_ _)", "(._.)ゞ", "(*_ _)人", "<(_ _)>"]],
+    ["悲しい · Sad", ["(;_;)", "(T_T)", "(ToT)", "(´；ω；`)", "(ｏ´_｀ｏ)", "(｡•́︿•̀｡)"]],
+    ["驚き · Surprised", ["(ﾟoﾟ;)", "Σ(ﾟДﾟ)", "(⊙_⊙)", "(°ロ°)", "w(ﾟДﾟ)w", "(・□・;)"]],
+    ["困った · Awkward", ["(^_^;)", "(-_-;)", "(・_・;)", "(¬_¬)", "┐(￣ヘ￣)┌", "(´-ω-`)"]],
+    ["怒り · Angry", ["(｀ε´)", "(╬ Ò﹏Ó)", "(ﾉಥ益ಥ)ﾉ", "(＃｀Д´)", "(-_-メ)"]],
+    ["動物 · Animals", ["(=^・^=)", "ฅ^•ﻌ•^ฅ", "U・ᴥ・U", "(・⊝・)", "ʕ•ᴥ•ʔ", "><(((('>"]],
+    ["その他 · Other", ["(￣ー￣)ｂ", "(^_−)☆", "( ˘ω˘ )ｽﾔｧ", "(ง •̀_•́)ง", "¯\\_(ツ)_/¯", "(╯°□°)╯︵ ┻━┻"]],
+  ];
+  const ACCENTS = { a: "àáâäæãåā", c: "çćč", e: "èéêëēėę", i: "îïíīįì", l: "ł", n: "ñń", o: "ôöòóœøōõ", s: "ßśš", u: "ûüùúū", y: "ÿ", z: "žźż" };
+  // Learning: recent emoji and the kanji picked for each reading (Learning.swift).
+  const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (_) { return d; } };
+  const keep = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+  let recents = load("kb-recent", []), history = load("kb-history", {});
+  const useRecent = (t) => { recents = [t, ...recents.filter((x) => x !== t)].slice(0, 32); keep("kb-recent", recents); };
+  const recordChoice = (reading, word) => {
+    if (!reading || reading === word) return;
+    history[reading] = [word, ...(history[reading] || []).filter((w) => w !== word)].slice(0, 5);
+    keep("kb-history", history);
+  };
+
+  // ---- RomajiComposer -------------------------------------------------------------
+  const TABLE = __TABLE__;
+  const PREFIXES = new Set();
+  for (const k of Object.keys(TABLE)) for (let i = 1; i < k.length; i++) PREFIXES.add(k.slice(0, i));
+  const isVowel = (c) => "aiueo".includes(c);
+  class Composer {
+    constructor() { this.kana = ""; this.pending = ""; }
+    get isEmpty() { return !this.kana && !this.pending; }
+    get display() { return this.kana + (this.pending === "nn" ? "ん" : this.pending); }
+    get finalized() { return this.kana + (this.pending === "n" || this.pending === "nn" ? "ん" : this.pending); }
+    candidates() {
+      if (this.isEmpty) return [];
+      const h = this.finalized, k = katakana(h), exact = byReading(h), out = [], seen = new Set();
+      const add = (text, entry, kind = "conversion") => { if (!seen.has(text)) { seen.add(text); out.push({ text, entry, kind }); } };
+      for (const w of history[h] || []) add(w, exact.find((e) => e.word === w || e.kanji === w));
+      add(h, exact.find((e) => e.word === h));
+      for (const e of exact) add(e.word, e);
+      add(k, exact.find((e) => e.word === k));
+      if (settings.emojiSuggestions) for (const e of emojiSuggestions(h, 2)) add(toned(e), null, "emoji");
+      for (const e of predictions(h)) add(e.word, e);
+      return out;
+    }
+    input(c) { this.pending += c.toLowerCase(); this.resolve(); }
+    inputLiteral(t) { this.kana = this.finalized + t; this.pending = ""; }
+    deleteBackward() { if (this.pending) this.pending = chars(this.pending).slice(0, -1).join(""); else if (this.kana) this.kana = chars(this.kana).slice(0, -1).join(""); }
+    reset() { this.kana = ""; this.pending = ""; }
+    resolve() {
+      while (this.pending) {
+        const p = this.pending, isPrefix = PREFIXES.has(p);
+        if (TABLE[p] !== undefined && !isPrefix) { this.kana += TABLE[p]; this.pending = ""; return; }
+        if (isPrefix) return;
+        const c = chars(p), first = c[0], second = c[1];
+        if (first === "n" && second !== undefined) {
+          if (second === "n") { if (c.length <= 2) return; this.kana += "ん"; this.pending = c.slice(isVowel(c[2]) || c[2] === "y" ? 1 : 2).join(""); continue; }
+          if (!isVowel(second) && second !== "y") { this.kana += "ん"; this.pending = c.slice(1).join(""); continue; }
+        }
+        if (second !== undefined && /[a-z]/.test(first) && first !== "n" && !isVowel(first) && (first === second || (first === "t" && second === "c"))) { this.kana += "っ"; this.pending = c.slice(1).join(""); continue; }
+        this.kana += first; this.pending = c.slice(1).join("");
+      }
+    }
+  }
+
+  // ---- The "host text field", with a cursor ------------------------------------------
+  const doc = { text: [], cursor: 0, marked: "" };
+  // While searching emoji or GIFs, typing goes into the search field instead (SearchBuffer).
+  let searching = null;
+  const search = { text: "", marked: "" };
+  const searchOut = {
+    insertText(t) { if (t.includes("\n")) { submitSearch(); return; } search.text += t; },
+    deleteBackward() { search.text = chars(search.text).slice(0, -1).join(""); },
+    setMarkedText(t) { search.marked = t; },
+    unmarkText() { search.text += search.marked; search.marked = ""; },
+    moveCursor() {},
+    get textBeforeCursor() { return search.text + search.marked; },
+    show(c) { if (c.isEmpty) { this.setMarkedText(""); this.unmarkText(); } else this.setMarkedText(c.display); },
+    commit(t) { this.setMarkedText(t); this.unmarkText(); },
+  };
+  const docOut = {
+    insertText(t) { const c = chars(t); doc.text.splice(doc.cursor, 0, ...c); doc.cursor += c.length; },
+    deleteBackward() { if (doc.cursor > 0) { doc.text.splice(doc.cursor - 1, 1); doc.cursor--; } },
+    setMarkedText(t) { doc.marked = t; },
+    unmarkText() { const m = doc.marked; doc.marked = ""; this.insertText(m); },
+    moveCursor(n) { doc.cursor = Math.max(0, Math.min(doc.text.length, doc.cursor + n)); },
+    get textBeforeCursor() { return doc.text.slice(0, doc.cursor).join("") + doc.marked; },
+    show(c) { if (c.isEmpty) { this.setMarkedText(""); this.unmarkText(); } else this.setMarkedText(c.display); },
+    commit(t) { this.setMarkedText(t); this.unmarkText(); },
+  };
+  const out = new Proxy({}, { get: (_, p) => {
+    const target = searching ? searchOut : docOut, v = target[p];
+    return typeof v === "function" ? v.bind(out) : v;
+  } });
+
+  // ---- English suggestions and autocorrect (WordSuggester.swift) --------------------------------
+  // The app uses Apple's spell checker. This preview stands in with the 25,000 most common English
+  // words (wordfreq), most frequent first, plus words you've typed.
+  const WORDS = __WORDS__.split("\n");
+  const RANK = new Map(WORDS.map((w, i) => [w, i]));
+  let learned = load("kb-learned", {}), suggestCache = { word: null, value: null };
+  const currentWord = () => (out.textBeforeCursor.match(/[\p{L}']+$/u) || [""])[0];
+  function learn(word) {
+    const w = word.toLowerCase();
+    if (chars(w).length < 2 || !/^[\p{L}']+$/u.test(w)) return;
+    learned[w] = (learned[w] || 0) + 1;
+    keep("kb-learned", learned);
+    suggestCache = { word: null, value: null };
+  }
+  // Edit distance where swapping two neighbouring letters (teh → the) counts as one typo.
+  // `sub` is the cost of a wrong letter: 2 ranks missing and swapped letters above wrong ones.
+  function typoDistance(a, b, sub = 1) {
+    a = chars(a); b = chars(b);
+    const t = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+    for (let j = 0; j <= b.length; j++) t[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+      t[i][j] = Math.min(t[i - 1][j] + 1, t[i][j - 1] + 1, t[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : sub));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) t[i][j] = Math.min(t[i][j], t[i - 2][j - 2] + 1);
+    }
+    return t[a.length][b.length];
+  }
+  const isKnownWord = (w) => { const l = w.toLowerCase(); return RANK.has(l) || l in learned; };
+  // Close words: fewest typos first, then missing or swapped letters over wrong ones (helo → hello,
+  // not help), then the same first letter, then the most common.
+  function corrections(word) {
+    const l = word.toLowerCase(), found = [];
+    for (let i = 0; i < WORDS.length; i++) {
+      const c = WORDS[i];
+      if (Math.abs(c.length - l.length) > 2) continue;
+      const d = typoDistance(l, c);
+      if (d <= 2) found.push([d, typoDistance(l, c, 2), c[0] === l[0] ? 0 : 1, i, c]);
+    }
+    return found.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || a[3] - b[3]).slice(0, 3).map((x) => x[4]);
+  }
+  // "hel" → "hello", "Hel" → "Hello", "HEL" → "HELLO".
+  const matchCase = (s, typed) => typed.length > 1 && typed === typed.toUpperCase() && typed !== typed.toLowerCase() ? s.toUpperCase()
+    : /^\p{Lu}/u.test(typed) ? s[0].toUpperCase() + s.slice(1) : s;
+  function correction(word) {
+    // Leave short words, known words, words you use and anything with digits alone.
+    if (chars(word).length < 3 || isKnownWord(word) || /\d/.test(word)) return null;
+    const best = corrections(word)[0];
+    // Only small fixes: one typo in a short word, two in a longer one.
+    if (!best || typoDistance(word.toLowerCase(), best) > (chars(word).length <= 4 ? 1 : 2)) return null;
+    return matchCase(best, word);
+  }
+  function wordSuggestions(word) {
+    if (suggestCache.word === word) return suggestCache.value;
+    let value = null;
+    if (word && /\p{L}/u.test(word)) {
+      const auto = correction(word), alts = [], l = word.toLowerCase();
+      const add = (c) => { c = matchCase(c, word); if (c !== word && c !== auto && !alts.includes(c)) alts.push(c); };
+      if (!auto && !isKnownWord(word)) corrections(word).slice(0, 2).forEach(add);
+      Object.entries(learned).filter(([k]) => k.startsWith(l) && k !== l).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).slice(0, 3).forEach(([k]) => add(k));
+      let n = 0;
+      for (const c of WORDS) { if (n >= 3) break; if (c !== l && c.startsWith(l)) { add(c); n++; } }
+      value = { auto, alts: alts.slice(0, 3) };
+    }
+    suggestCache = { word, value };
+    return value;
+  }
+
+  // ---- Romaji readings (KanaConverter.romaji in RomajiComposer.swift) ----------------------------
+  const ROMAJI_SINGLE = (() => {
+    const kana = chars("あいうえおかきくけこがぎぐげごさしすせそざじずぜぞたちつてとだぢづでどなにぬねのはひふへほばびぶべぼぱぴぷぺぽまみむめもやゆよらりるれろわゐゑをんぁぃぅぇぉゃゅょゎゔ");
+    const rom = "a i u e o ka ki ku ke ko ga gi gu ge go sa shi su se so za ji zu ze zo ta chi tsu te to da ji zu de do na ni nu ne no ha hi fu he ho ba bi bu be bo pa pi pu pe po ma mi mu me mo ya yu yo ra ri ru re ro wa i e o n a i u e o ya yu yo wa vu".split(" ");
+    return Object.fromEntries(kana.map((k, i) => [k, rom[i]]));
+  })();
+  const ROMAJI_PAIR = (() => {
+    const pairs = { ふぁ: "fa", ふぃ: "fi", ふぇ: "fe", ふぉ: "fo", てぃ: "ti", でぃ: "di", しぇ: "she", じぇ: "je", ちぇ: "che", うぃ: "wi", うぇ: "we", うぉ: "wo", ゔぁ: "va", ゔぃ: "vi", ゔぇ: "ve", ゔぉ: "vo", とぅ: "tu", どぅ: "du", つぁ: "tsa" };
+    for (const [k, st] of [["き", "ky"], ["ぎ", "gy"], ["し", "sh"], ["じ", "j"], ["ち", "ch"], ["ぢ", "j"], ["に", "ny"], ["ひ", "hy"], ["び", "by"], ["ぴ", "py"], ["み", "my"], ["り", "ry"]])
+      for (const [sm, v] of [["ゃ", "a"], ["ゅ", "u"], ["ょ", "o"]]) pairs[k + sm] = st + v;
+    return pairs;
+  })();
+  // ねこ → neko, がっこう → gakkou, まっちゃ → matcha, きんえん → kin'en, コーヒー → koohii.
+  function toRomaji(text) {
+    const k = chars(hiragana(text));
+    let r = "", double = false;
+    for (let i = 0; i < k.length;) {
+      const c = k[i];
+      if (c === "っ") { double = true; i++; continue; }
+      let piece, n = 1;
+      if (i + 1 < k.length && ROMAJI_PAIR[c + k[i + 1]]) { piece = ROMAJI_PAIR[c + k[i + 1]]; n = 2; }
+      else if (c === "ー" && /[aeiou]/.test(r)) piece = r.match(/[aeiou](?=[^aeiou]*$)/)[0];
+      else piece = ROMAJI_SINGLE[c] || c;
+      if (double && /^[a-z]/.test(piece) && !/^[aeiou]/.test(piece)) piece = (piece.startsWith("ch") ? "t" : piece[0]) + piece;
+      double = false;
+      // ん before a vowel or y: kin'en, not kinen.
+      if (c === "ん" && i + 1 < k.length && /^[aeiouy]/.test(ROMAJI_SINGLE[k[i + 1]] || "")) piece = "n'";
+      r += piece; i += n;
+    }
+    return r;
+  }
+
+  // ---- Key sounds and haptics (KeyFeedback in KeyButton.swift) -----------------------------------
+  let audio = null;
+  function keyFeedback() {
+    if (settings.haptics && navigator.vibrate) { try { navigator.vibrate(8); } catch (_) {} }
+    if (!settings.keySounds) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+      o.type = "triangle"; o.frequency.value = 1500;
+      g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+      o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.035);
+    } catch (_) {}
+  }
+
+  // ---- ローマ字 keyboard (KeyboardLayout.swift + KeyboardEngine.swift) --------------------
+  const K = (kind, w = 1, ch) => ({ kind, w, ch });
+  const charRow = (s, inset = 0, w = 1) => ({ inset, keys: chars(s).map((c) => K("char", w, c)) });
+  const bottomRow = () => ({ inset: 0, keys: [K("pageToggle", 1.25), K("languageToggle", 1.25), K("space", "flex"), K("longVowel", 1), K("return", 1.75)] });
+  const punctRow = () => ({ inset: 0, keys: [K("symbolsToggle", 1.5), ...charRow(".,?!'", 0, 1.4).keys, K("delete", 1.5)] });
+  const LAYOUTS = {
+    letters: [charRow("qwertyuiop"), charRow("asdfghjkl", 0.5), { inset: 0, keys: [K("shift", 1.5), ...charRow("zxcvbnm").keys, K("delete", 1.5)] }, bottomRow()],
+    numbers: [charRow("1234567890"), charRow("-/:;()¥&@\""), punctRow(), bottomRow()],
+    symbols: [charRow("[]{}#%^*+="), charRow("_\\|~<>$€£•"), punctRow(), bottomRow()],
+  };
+  function qwertyFrames(rows, width, rowH) {
+    const unit = width / 10, frames = [];
+    rows.forEach((row, r) => {
+      let fixed = 0, flex = 0;
+      for (const k of row.keys) k.w === "flex" ? flex++ : (fixed += k.w);
+      const flexW = flex ? Math.max(10 - 2 * row.inset - fixed, 0) / flex : 0;
+      let x = row.inset * unit;
+      row.keys.forEach((k, i) => {
+        const u = k.w === "flex" ? flexW : k.w, cap = { x, y: r * rowH, w: u * unit, h: rowH }, hit = { ...cap };
+        if (i === 0) { hit.w += hit.x; hit.x = 0; }
+        if (i === row.keys.length - 1) hit.w = width - hit.x;
+        frames.push({ key: k, cap, hit });
+        x += u * unit;
+      });
+    });
+    return frames;
+  }
+  const SHORT = { japanese: "あ", english: "EN", dictionary: "辞" };
+  const romaji = {
+    mode: "dictionary", page: "letters", shift: "off", auto: false, lastShift: 0, lastSpace: false, query: "", composer: new Composer(),
+    get composing() { return !this.composer.isEmpty || !!this.query; },
+    get shifted() { return this.page === "letters" && this.shift !== "off"; },
+    signature() { return "q:" + this.page; },
+    frames(w, h) { return qwertyFrames(LAYOUTS[this.page], w, h); },
+    candidates() {
+      if (this.mode === "dictionary") return searchEnglish(this.query).map((e) => ({ text: e.word, entry: e, kind: "conversion" }));
+      if (this.mode === "english") {
+        // The word being typed: keep-as-typed and the autocorrection (when space would change it), completions, then emoji.
+        const word = this.page === "symbols" ? "" : currentWord();
+        if (!word) return [];
+        const list = [], s = settings.wordSuggestions ? wordSuggestions(word) : null;
+        if (s) {
+          if (s.auto) {
+            if (settings.autocorrect) list.push({ text: word, kind: "typed" }, { text: s.auto, kind: "autocorrection" });
+            else list.push({ text: s.auto, kind: "word" });
+          }
+          for (const a of s.alts) list.push({ text: a, kind: "word" });
+        }
+        if (settings.emojiSuggestions) for (const e of emojiSuggestions(word, 2)) list.push({ text: toned(e), kind: "emoji" });
+        return list;
+      }
+      return this.composer.candidates();
+    },
+    get nextMode() { const m = settings.languageKeyModes.length >= 2 ? settings.languageKeyModes : DEFAULTS.languageKeyModes; const i = m.indexOf(this.mode); return i < 0 ? m[0] : m[(i + 1) % m.length]; },
+    setMode(m) { this.commit(); this.mode = m; keep("kb-last-mode", m); this.page = "letters"; this.shift = "off"; this.auto = false; flashNext = true; this.autoCap(); },
+    press(k) {
+      const afterSpace = this.lastSpace; this.lastSpace = k.kind === "space";
+      const undo = this.lastFix; this.lastFix = null;
+      const c = this.composer;
+      switch (k.kind) {
+        case "char": {
+          const t = this.shifted ? k.ch.toUpperCase() : k.ch;
+          if (this.mode === "english") out.insertText(t);
+          else if (this.mode === "dictionary") this.appendQuery(t);
+          else { if (this.shifted) c.inputLiteral(t); else for (const ch of t) c.input(ch); out.show(c); }
+          if (this.shift === "once") { this.shift = "off"; this.auto = false; }
+          break;
+        }
+        case "shift": {
+          const now = Date.now();
+          if (this.shift === "once" && now - this.lastShift < 350) this.shift = "locked";
+          else this.shift = this.shift === "off" ? "once" : "off";
+          this.auto = false; this.lastShift = now; break;
+        }
+        case "delete":
+          if (undo && this.undoFix(undo)) break;
+          if (this.query) { this.query = chars(this.query).slice(0, -1).join(""); out.setMarkedText(this.query); if (!this.query) out.unmarkText(); }
+          else if (!c.isEmpty) { c.deleteBackward(); out.show(c); }
+          else out.deleteBackward();
+          break;
+        case "pageToggle": this.page = this.page === "letters" ? "numbers" : "letters"; this.shift = "off"; break;
+        case "symbolsToggle": this.page = this.page === "numbers" ? "symbols" : "numbers"; break;
+        case "languageToggle": this.setMode(this.nextMode); return;
+        case "space": this.space(afterSpace); break;
+        case "longVowel":
+          if (this.mode === "japanese") { c.input("-"); out.show(c); } else if (this.mode === "english") out.insertText("-"); else this.appendQuery("-");
+          break;
+        case "return": if (this.composing) this.commit(); else out.insertText("\n"); break;
+      }
+      this.autoCap();
+    },
+    space(afterSpace) {
+      if (this.mode === "dictionary" && this.query) { this.appendQuery(" "); return; }
+      if (this.composing) { this.commit(); return; }
+      this.page = "letters";
+      if (this.mode === "english") this.finishWord();
+      const before = out.textBeforeCursor;
+      if (this.mode === "english" && settings.doubleSpacePeriod && afterSpace && before.endsWith(" ")) {
+        const prev = chars(before).slice(-2, -1)[0];
+        if (prev && /[\p{L}\p{N}]/u.test(prev)) { out.deleteBackward(); out.insertText(". "); this.lastSpace = false; return; }
+      }
+      out.insertText(this.mode === "japanese" && settings.fullWidthSpace ? "　" : " ");
+    },
+    appendQuery(t) { this.query += t; out.setMarkedText(this.query); },
+    // At the end of an English word: autocorrect it, or remember it as a word you use.
+    finishWord() {
+      const word = currentWord();
+      if (!word) return;
+      const fix = settings.autocorrect ? correction(word) : null;
+      if (fix && fix !== word) { for (let i = 0; i < chars(word).length; i++) out.deleteBackward(); out.insertText(fix); this.lastFix = [word, fix]; }
+      else learn(word);
+    },
+    // Delete straight after an autocorrection puts back what was typed, and remembers it.
+    undoFix([original, fixed]) {
+      if (!out.textBeforeCursor.endsWith(fixed + " ")) return false;
+      for (let i = 0; i <= chars(fixed).length; i++) out.deleteBackward();
+      out.insertText(original); learn(original);
+      return true;
+    },
+    commit() { if (this.query) out.commit(this.query); else if (!this.composer.isEmpty) out.commit(this.composer.finalized); this.query = ""; this.composer.reset(); },
+    select(t) { out.commit(t); this.query = ""; this.composer.reset(); this.autoCap(); },
+    moveCursor(n) { this.commit(); out.moveCursor(n); },
+    deleteWord() {
+      if (this.composing) { this.press(K("delete")); return; }
+      const r = chars(out.textBeforeCursor).reverse();
+      let n = 0;
+      while (n < r.length && r[n] === " ") n++;
+      while (n < r.length && /[A-Za-z0-9']/.test(r[n])) n++;
+      for (let i = 0; i < Math.max(n, 1); i++) out.deleteBackward();
+      this.autoCap();
+    },
+    autoCap() {
+      if (this.shift === "locked") return;
+      const b = out.textBeforeCursor;
+      const start = !b || b.endsWith("\n") || (b.endsWith(" ") && (() => { const v = b.replace(/ +$/, ""); return !v || /[.!?。！？]$/.test(v); })());
+      const want = settings.autoCapitalization && this.mode === "english" && this.page === "letters" && !this.composing && start;
+      if (want) { if (this.shift === "off") { this.shift = "once"; this.auto = true; } }
+      else if (this.shift === "once" && this.auto) { this.shift = "off"; this.auto = false; }
+    },
+    label(k) {
+      const jp = this.mode === "japanese";
+      switch (k.kind) {
+        case "char": return this.shifted ? k.ch.toUpperCase() : k.ch;
+        case "shift": return { off: "⇧", once: "⬆︎", locked: "⇪" }[this.shift];
+        case "delete": return "⌫";
+        case "pageToggle": return this.page === "letters" ? "123" : (jp ? "かな" : "ABC");
+        case "symbolsToggle": return this.page === "numbers" ? "#+=" : "123";
+        case "languageToggle": return SHORT[this.mode];
+        case "space": return jp ? "空白" : "space";
+        case "longVowel": return jp ? "ー" : "-";
+        case "return": return this.composing ? "確定" : (jp ? "改行" : "return");
+      }
+    },
+    special(k) { return !["char", "space", "longVowel"].includes(k.kind); },
+  };
+
+  // ---- かな keyboard (FlickLayout.swift + FlickKeyboardEngine.swift) ------------------------
+  const DIRS = ["center", "left", "up", "right", "down"];
+  function FK(label, flicks, cycle) { const o = {}; chars(flicks).forEach((c, i) => { o[DIRS[i]] = c; }); return { kind: "flick", label, outputs: o, cycle: chars(cycle || flicks) }; }
+  const F = (kind) => ({ kind });
+  const CENTER = {
+    kana: [[FK("あ", "あいうえお", "あいうえおぁぃぅぇぉ"), FK("か", "かきくけこ"), FK("さ", "さしすせそ")],
+      [FK("た", "たちつてと", "たちつてとっ"), FK("な", "なにぬねの"), FK("は", "はひふへほ")],
+      [FK("ま", "まみむめも"), FK("や", "や（ゆ）よ", "やゆよゃゅょ"), FK("ら", "らりるれろ")],
+      [F("modifier"), FK("わ", "わをんー", "わをんゎー"), FK("、。?!", "、。？！…")]],
+    alphabet: [[FK("@#/&_", "@#/&_"), FK("ABC", "abc", "abcABC"), FK("DEF", "def", "defDEF")],
+      [FK("GHI", "ghi", "ghiGHI"), FK("JKL", "jkl", "jklJKL"), FK("MNO", "mno", "mnoMNO")],
+      [FK("PQRS", "pqrs", "pqrsPQRS"), FK("TUV", "tuv", "tuvTUV"), FK("WXYZ", "wxyz", "wxyzWXYZ")],
+      [F("caseToggle"), FK("'\"()", "'\"()"), FK(".,?!", ".,?!")]],
+    numbers: [[FK("1", "1☆♪→"), FK("2", "2¥$€"), FK("3", "3%°#")], [FK("4", "4○*・"), FK("5", "5+×÷"), FK("6", "6<=>")],
+      [FK("7", "7「」:"), FK("8", "8〒々〆"), FK("9", "9^|\\")], [FK("()[]", "()[]"), FK("0", "0〜…"), FK(".,-/", ".,-/")]],
+  };
+  const SIDE = [[F("advance"), 0, 0, 1], [F("reverseCycle"), 0, 1, 1], [F("pageCycle"), 0, 2, 1], [F("modeKey"), 0, 3, 1], [F("delete"), 4, 0, 1], [F("space"), 4, 1, 1], [F("return"), 4, 2, 2]];
+  const WEIGHTS = [1, 1.2, 1.2, 1.2, 1];
+  const MODIFIER = {};
+  for (const g of ["かが", "きぎ", "くぐ", "けげ", "こご", "さざ", "しじ", "すず", "せぜ", "そぞ", "ただ", "ちぢ", "つっづ", "てで", "とど", "はばぱ", "ひびぴ", "ふぶぷ", "へべぺ", "ほぼぽ", "あぁ", "いぃ", "うぅゔ", "えぇ", "おぉ", "やゃ", "ゆゅ", "よょ", "わゎ"]) { const c = chars(g); c.forEach((ch, i) => { MODIFIER[ch] = c[(i + 1) % c.length]; }); }
+  const flick = {
+    page: "kana", composer: new Composer(), toggle: null, lastDirect: null,
+    get composing() { return !this.composer.isEmpty; },
+    signature() { return "f:" + this.page; },
+    frames(width, rowH) {
+      const total = WEIGHTS.reduce((a, b) => a + b, 0), xs = [0];
+      for (const w of WEIGHTS) xs.push(xs[xs.length - 1] + (w / total) * width);
+      const cells = SIDE.map(([key, col, row, span]) => ({ key, col, row, span }));
+      CENTER[this.page].forEach((r, row) => r.forEach((key, i) => cells.push({ key, col: i + 1, row, span: 1 })));
+      return cells.map((c) => { const cap = { x: xs[c.col], y: c.row * rowH, w: xs[c.col + 1] - xs[c.col], h: c.span * rowH }; return { key: c.key, cap, hit: cap }; });
+    },
+    candidates() { return this.composer.candidates(); },
+    press(k, dir = "center") {
+      const pt = this.toggle, pd = this.lastDirect, c = this.composer;
+      this.toggle = null; this.lastDirect = null;
+      switch (k.kind) {
+        case "flick":
+          if (dir !== "center") { if (k.outputs[dir]) this.insert(k.outputs[dir]); }
+          else if (!settings.flickOnly && pt && pt.key === k) { const i = (pt.index + 1) % k.cycle.length; this.replaceLast(k.cycle[i]); this.toggle = { key: k, index: i }; }
+          else { this.insert(k.cycle[0]); this.toggle = { key: k, index: 0 }; }
+          break;
+        case "advance": if (!pt && !this.composing) out.moveCursor(1); break;
+        case "reverseCycle": if (pt) { const n = pt.key.cycle.length, i = (pt.index + n - 1) % n; this.replaceLast(pt.key.cycle[i]); this.toggle = { key: pt.key, index: i }; } break;
+        case "pageCycle": this.commit(); this.page = { kana: "alphabet", alphabet: "numbers", numbers: "kana" }[this.page]; break;
+        case "modifier": { const last = chars(c.kana).pop(); if (last && MODIFIER[last]) { c.deleteBackward(); c.inputLiteral(MODIFIER[last]); out.show(c); } break; }
+        case "caseToggle": if (pd) { const f = pd === pd.toUpperCase() ? pd.toLowerCase() : pd.toUpperCase(); if (f !== pd) { out.deleteBackward(); out.insertText(f); } this.lastDirect = f; } break;
+        case "delete": if (this.composing) { c.deleteBackward(); out.show(c); } else out.deleteBackward(); break;
+        case "space": if (this.composing) this.commit(); else out.insertText(this.page === "kana" && settings.fullWidthSpace ? "　" : " "); break;
+        case "return": if (this.composing) this.commit(); else out.insertText("\n"); break;
+      }
+    },
+    insert(t) { if (this.page === "kana") { this.composer.inputLiteral(t); out.show(this.composer); } else { this.commit(); out.insertText(t); this.lastDirect = t; } },
+    replaceLast(t) { if (this.page === "kana") { this.composer.deleteBackward(); this.composer.inputLiteral(t); out.show(this.composer); } else { out.deleteBackward(); out.insertText(t); this.lastDirect = t; } },
+    commit() { if (this.composing) { out.commit(this.composer.finalized); this.composer.reset(); } },
+    select(t) { out.commit(t); this.composer.reset(); this.toggle = null; },
+    moveCursor(n) { this.commit(); this.toggle = null; out.moveCursor(n); },
+    deleteWord() { this.press(F("delete")); },
+    label(k) {
+      switch (k.kind) {
+        case "flick": return k.label;
+        case "advance": return "→";
+        case "reverseCycle": return "↺";
+        case "pageCycle": return { kana: "ABC", alphabet: "☆123", numbers: "あいう" }[this.page];
+        case "modeKey": return "かな";
+        case "modifier": return "゛゜小";
+        case "caseToggle": return "a/A";
+        case "delete": return "⌫";
+        case "space": return "空白";
+        case "return": return this.composing ? "確定" : "改行";
+      }
+    },
+    special(k) { return !["flick", "modifier", "caseToggle"].includes(k.kind); },
+  };
+
+  // ---- View ---------------------------------------------------------------------------------
+  const kbEl = $("kb"), keysEl = $("keys"), candsEl = $("cands"), overlayEl = $("overlay"), docEl = $("doc");
+  let active = romaji, builtSig = "", builtWidth = 0, builtRowH = 0, items = [], flashNext = false;
+  let entryOpen = null;
+  const rowH = () => ROW_H[settings.height] || 54;
+
+  function build() {
+    keysEl.textContent = "";
+    const h = rowH();
+    items = active.frames(keysEl.clientWidth, h).map(({ key, cap, hit }) => {
+      const el = document.createElement("div");
+      el.className = "key" + (active.special(key) ? " special" : "");
+      Object.assign(el.style, { left: hit.x + "px", top: hit.y + "px", width: hit.w + "px", height: hit.h + "px" });
+      const capEl = document.createElement("div");
+      capEl.className = "cap";
+      Object.assign(capEl.style, { left: cap.x - hit.x + 3 + "px", top: "5px", width: cap.w - 6 + "px", height: cap.h - 10 + "px" });
+      el.appendChild(capEl);
+      // The number a held top-row letter types.
+      let hintEl = null;
+      if (key.kind === "char" && HELD_NUMBERS[key.ch]) {
+        hintEl = document.createElement("span");
+        hintEl.className = "khint";
+        Object.assign(hintEl.style, { left: cap.x - hit.x + 3 + "px", top: "7px", width: cap.w - 10 + "px" });
+        el.appendChild(hintEl);
+      }
+      el.setAttribute("role", "button");
+      keysEl.appendChild(el);
+      wire(el, capEl, key);
+      return { el, capEl, hintEl, key, text: "" };
+    });
+    builtSig = active.signature(); builtWidth = keysEl.clientWidth; builtRowH = h;
+  }
+
+  function render() {
+    kbEl.dataset.kbTheme = settings.theme;
+    kbEl.style.height = 40 + 4 * rowH() + "px";
+    if (active.signature() !== builtSig || keysEl.clientWidth !== builtWidth || rowH() !== builtRowH) build();
+    const flash = flashNext; flashNext = false;
+    const hints = settings.holdForNumbers && active === romaji && romaji.page === "letters";
+    for (const it of items) {
+      if (it.hintEl) it.hintEl.textContent = hints ? HELD_NUMBERS[it.key.ch] : "";
+      const t = active.label(it.key);
+      if (t !== it.text) {
+        it.capEl.textContent = t;
+        it.el.classList.toggle("small", chars(t).length > 1 && !active.special(it.key));
+        it.el.setAttribute("aria-label", t);
+        if (flash && it.text) { it.capEl.classList.remove("flash"); void it.capEl.offsetWidth; it.capEl.classList.add("flash"); }
+        it.text = t;
+      }
+    }
+    renderCandidates();
+    renderDoc();
+    $("note").textContent = active === romaji
+      ? { japanese: "あ: type romaji. Tap the mode key for EN or 辞, or drag from it for the mode wheel.", english: "EN: auto-capitals and double-space full stops are on.", dictionary: "辞: type English, tap a card to insert the Japanese word, long-press for the full entry." }[romaji.mode]
+      : "Press and slide on a key. Tap the same key again to cycle. かな, bottom left, is the mode key: tap for ローマ字, drag for the wheel.";
+  }
+
+  let statusText = null, statusTimer = null;
+  function flash(text) { statusText = text; clearTimeout(statusTimer); statusTimer = setTimeout(() => { statusText = null; render(); }, 3000); render(); }
+
+  const ICONS = {
+    emoji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.3 2.2 2 3.5 2s2.5-.7 3.5-2"/><circle cx="9" cy="10" r=".6" fill="currentColor"/><circle cx="15" cy="10" r=".6" fill="currentColor"/></svg>',
+    paste: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="6" y="5" width="12" height="16" rx="2"/><path d="M9 5V3.5h6V5"/></svg>',
+  };
+  function tool(html, label, action) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "tool"; b.innerHTML = html; b.setAttribute("aria-label", label);
+    b.addEventListener("click", action);
+    return b;
+  }
+
+  function renderCandidates() {
+    candsEl.textContent = "";
+    if (searching) {
+      const x = document.createElement("button"); x.type = "button"; x.className = "sclose"; x.textContent = "✕"; x.setAttribute("aria-label", "Cancel search");
+      x.addEventListener("click", endSearch);
+      const q = (search.text + search.marked).trim();
+      const field = document.createElement("span");
+      field.className = "sfield" + (q ? "" : " empty");
+      field.textContent = (q || (searching === "emoji" ? "絵文字を検索 · Search emoji" : "GIFを検索 · Search GIFs")) + " ▏";
+      candsEl.append(x, field);
+    }
+    const list = searching === "emoji" ? emojiSearch((search.text + search.marked).trim()).map((e) => ({ text: toned(e), kind: "emoji" }))
+      : searching ? [] : active.candidates();
+    const meanings = settings.showMeanings || (active === romaji && romaji.mode === "dictionary");
+    if (!list.length && !searching) {
+      const hint = statusText || (active === romaji && romaji.mode === "dictionary" ? (romaji.query ? "No matches" : "辞書 · Type an English word") : "");
+      if (hint) {
+        const h = document.createElement("span"); h.className = "hint"; h.textContent = hint;
+        candsEl.appendChild(h);
+      } else {
+        // Nothing being typed: the bar becomes a toolbar.
+        candsEl.append(
+          tool(ICONS.emoji, "Emoji", () => showEmojiPanel(recents.length ? "recent" : 0)),
+          tool("(^_^)", "Kaomoji", () => showEmojiPanel("kaomoji")),
+          tool("GIF", "GIFs", showGIFPanel),
+          tool(ICONS.paste, "Paste", async () => {
+            // On iPhone this needs Allow Full Access; here it asks the browser for the clipboard.
+            try {
+              const text = await navigator.clipboard.readText();
+              if (text) { active.commit(); out.insertText(text); render(); } else flash("Nothing to paste");
+            } catch (_) { flash("The browser blocked the clipboard here. On iPhone, paste needs Allow Full Access"); }
+          }),
+        );
+      }
+    }
+    for (const c of list) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "cand" + (c.kind === "emoji" ? " emoji" : c.kind === "autocorrection" ? " auto" : "");
+      const w = document.createElement("span"); w.className = "w"; w.textContent = c.kind === "typed" ? "“" + c.text + "”" : c.text;
+      if (meanings && c.entry) {
+        const parts = [];
+        if (c.entry.reading !== c.text) parts.push(c.entry.reading);
+        if (settings.showRomaji) parts.push(toRomaji(c.entry.reading));
+        if (parts.length) { const r = document.createElement("span"); r.className = "r"; r.textContent = parts.join(" "); w.appendChild(r); }
+      }
+      b.appendChild(w);
+      if (meanings && c.entry && c.entry.short) { const m = document.createElement("span"); m.className = "m"; m.textContent = c.entry.short; b.appendChild(m); }
+      wireCandidate(b, c);
+      candsEl.appendChild(b);
+    }
+    candsEl.scrollLeft = 0;
+  }
+
+  function renderDoc() {
+    docEl.textContent = "";
+    if (!doc.text.length && !doc.marked) { const p = document.createElement("span"); p.className = "placeholder"; p.textContent = "ここに入力されます"; docEl.appendChild(p); }
+    docEl.appendChild(document.createTextNode(doc.text.slice(0, doc.cursor).join("")));
+    if (doc.marked) { const m = document.createElement("span"); m.className = "marked"; m.textContent = doc.marked; docEl.appendChild(m); }
+    const caret = document.createElement("span"); caret.className = "caret"; docEl.appendChild(caret);
+    docEl.appendChild(document.createTextNode(doc.text.slice(doc.cursor).join("")));
+  }
+
+  function switchKeyboard(to) { if (active === to) return; endSearch(); closePanel(); active.commit(); active = to; closeOverlays(); render(); }
+  function closeOverlays() { overlayEl.textContent = ""; entryOpen = null; }
+
+  // ---- Candidate bar: tap inserts, long-press shows the entry ---------------------------------
+  function wireCandidate(b, c) {
+    let timer = null, long = false;
+    b.addEventListener("pointerdown", () => {
+      long = false; b.classList.add("down");
+      if (c.entry) timer = setTimeout(() => { long = true; b.classList.remove("down"); showEntry(c.entry); }, 450);
+    });
+    const cancel = () => { clearTimeout(timer); b.classList.remove("down"); };
+    b.addEventListener("pointercancel", cancel);
+    b.addEventListener("pointerleave", cancel);
+    b.addEventListener("pointerup", () => { cancel(); if (!long) { selectCandidate(c); closeOverlays(); render(); } });
+    b.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
+
+  function selectCandidate(c) {
+    if (searching === "emoji") { endSearch(); useRecent(c.text); active.commit(); out.insertText(c.text); return; }
+    if (active === romaji && romaji.mode === "english" && !romaji.composing) {
+      const word = currentWord();
+      romaji.lastFix = null;
+      if (c.kind === "typed") { learn(word); out.insertText(" "); }
+      else if (c.kind === "word" || c.kind === "autocorrection") { for (let i = 0; i < chars(word).length; i++) out.deleteBackward(); out.insertText(c.text + " "); }
+      // After the word, like other keyboards: "pizza 🍕".
+      else if (c.kind === "emoji") out.insertText(word ? " " + c.text : c.text);
+      romaji.autoCap();
+      return;
+    }
+    const composer = active.composer;
+    if (c.kind === "conversion" && !(active === romaji && romaji.mode === "dictionary")) recordChoice(composer.finalized, c.text);
+    active.select(c.text);
+  }
+
+  // ---- Emoji, kaomoji and GIF panels, shown in place of the keys (EmojiPanel.swift) -------------
+  let panelEl = null, panelTab = 0;
+  function closePanel() { if (panelEl) { panelEl.remove(); panelEl = null; keysEl.hidden = false; } }
+  function openPanel() {
+    closePanel(); closeOverlays();
+    panelEl = document.createElement("div");
+    panelEl.className = "panel";
+    keysEl.hidden = true;
+    kbEl.insertBefore(panelEl, overlayEl);
+    return panelEl;
+  }
+  function barButton(label, title, action, extra = "") {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = label; b.title = title; b.setAttribute("aria-label", title);
+    if (extra) b.className = extra;
+    b.addEventListener("click", action);
+    return b;
+  }
+  // Recents and every emoji group are one continuous list: tabs jump to a section, and the
+  // highlighted tab follows the scrolling. 顔文字 is its own list.
+  function showEmojiPanel(tab, scrollTop) {
+    panelTab = tab;
+    const kao = tab === "kaomoji";
+    const panel = openPanel();
+    const grid = document.createElement("div");
+    grid.className = "egrid" + (kao ? " kao" : "");
+    const insert = (t) => { useRecent(t); active.commit(); out.insertText(t); render(); };
+    const cell = (t, e) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "ecell" + (kao ? " kao" : ""); b.textContent = t;
+      let timer = null, long = false, moved = false, y0 = 0;
+      b.addEventListener("pointerdown", (ev) => {
+        long = false; moved = false; y0 = ev.clientY;
+        if (e && e.skins.length === 5) timer = setTimeout(() => { long = true; showTones(b, e); }, 450);
+      });
+      // A scroll that starts on an emoji doesn't type it.
+      b.addEventListener("pointermove", (ev) => { if (Math.abs(ev.clientY - y0) > 8) { moved = true; clearTimeout(timer); } });
+      b.addEventListener("pointerup", () => { clearTimeout(timer); if (!long && !moved) { keyFeedback(); insert(t); } });
+      b.addEventListener("pointercancel", () => clearTimeout(timer));
+      b.addEventListener("pointerleave", () => clearTimeout(timer));
+      b.addEventListener("contextmenu", (ev) => ev.preventDefault());
+      return b;
+    };
+    const section = (id, title) => {
+      const anchor = document.createElement("div"); anchor.className = "anchor"; anchor.dataset.tab = id;
+      const h = document.createElement("h4"); h.textContent = title;
+      grid.append(anchor, h);
+    };
+    if (kao) {
+      for (const [name, faces] of KAOMOJI) {
+        const h = document.createElement("h4"); h.textContent = name; grid.appendChild(h);
+        for (const f of faces) grid.appendChild(cell(f, null));
+      }
+    } else {
+      section("recent", "よく使う · Recent");
+      for (const t of (recents.length ? recents : ["😊", "👍", "🙏", "😂", "❤️", "🎉"])) grid.appendChild(cell(t, emojiList.find((e) => e.ch === t)));
+      for (const [g, , name] of GROUPS) {
+        section(String(g), name);
+        for (const e of emojiList) if (e.group === g) grid.appendChild(cell(toned(e), e));
+      }
+    }
+    const bar = document.createElement("div");
+    bar.className = "ebar";
+    const tabs = [["recent", "🕘", "Recent"], ...GROUPS.map(([g, icon, name]) => [String(g), icon, name]), ["kaomoji", "顔", "Kaomoji"]];
+    const tabButtons = tabs.map(([id, icon, name]) => {
+      const b = barButton(icon, name, () => jump(id));
+      b.dataset.tab = id;
+      return b;
+    });
+    const highlight = (id) => { panelTab = id === "recent" || id === "kaomoji" ? id : +id; for (const b of tabButtons) b.classList.toggle("on", b.dataset.tab === id); };
+    const jump = (id) => {
+      if ((id === "kaomoji") !== kao) { showEmojiPanel(id === "kaomoji" || id === "recent" ? id : +id); return; }
+      const anchor = grid.querySelector(`.anchor[data-tab="${id}"]`);
+      grid.scrollTop = anchor ? anchor.offsetTop : 0;
+      highlight(id);
+    };
+    bar.append(
+      barButton("ABC", "Back to the keys", () => { closePanel(); render(); }, "word"),
+      barButton("🔍", "Search emoji", () => beginSearch("emoji")),
+      ...tabButtons,
+      barButton("⌫", "Delete", () => { active.press(active === romaji ? K("delete") : F("delete")); render(); }),
+    );
+    panel.append(grid, bar);
+    if (kao) highlight("kaomoji");
+    else {
+      grid.addEventListener("scroll", () => {
+        const anchors = [...grid.querySelectorAll(".anchor")];
+        let current = anchors[0];
+        for (const a of anchors) { if (a.offsetTop <= grid.scrollTop + 1) current = a; else break; }
+        if (grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 1) current = anchors[anchors.length - 1];
+        highlight(current.dataset.tab);
+      }, { passive: true });
+      if (scrollTop != null) { grid.scrollTop = scrollTop; highlight(String(tab)); }
+      else jump(String(tab));
+    }
+  }
+  function showTones(cellEl, e) {
+    overlayEl.textContent = "";
+    const box = document.createElement("div");
+    box.className = "tones";
+    [e.ch, ...e.skins].forEach((t, tone) => {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = t;
+      b.addEventListener("click", () => {
+        settings.skinTone = tone; saveSettings(); overlayEl.textContent = "";
+        useRecent(t); active.commit(); out.insertText(t);
+        const grid = panelEl && panelEl.querySelector(".egrid");
+        showEmojiPanel(panelTab, grid ? grid.scrollTop : null); render();
+      });
+      box.appendChild(b);
+    });
+    const kb = kbEl.getBoundingClientRect(), r = cellEl.getBoundingClientRect();
+    overlayEl.appendChild(box);
+    const w = box.offsetWidth;
+    Object.assign(box.style, { left: Math.min(Math.max(r.left - kb.left + r.width / 2 - w / 2, 4), kb.width - w - 4) + "px", top: Math.max(r.top - kb.top - 56, 0) + "px" });
+  }
+  function showGIFPanel() {
+    const panel = openPanel();
+    const msg = document.createElement("div");
+    msg.className = "pmsg";
+    msg.textContent = "On iPhone, GIFs come from GIPHY: add your free API key in the app (Settings → GIF), tap a GIF to copy it, then paste it. This preview can't reach GIPHY.";
+    const bar = document.createElement("div");
+    bar.className = "ebar";
+    bar.append(barButton("ABC", "Back to the keys", () => { closePanel(); render(); }, "word"), barButton("🔍", "Search GIFs", () => beginSearch("gif")));
+    panel.append(msg, bar);
+  }
+  // Search: the keys come back, and typing goes into the search field.
+  function beginSearch(target) { closePanel(); active.commit(); searching = target; search.text = ""; search.marked = ""; render(); }
+  function endSearch() { if (!searching) return; active.commit(); searching = null; render(); }
+  function submitSearch() {
+    const target = searching;
+    searching = null;
+    if (target === "gif") showGIFPanel(); else showEmojiPanel(recents.length ? "recent" : 0);
+  }
+
+  function showEntry(e) {
+    closeOverlays();
+    const box = document.createElement("div");
+    box.className = "entry";
+    box.style.top = 40 + 4 + "px";
+    const head = document.createElement("div"); head.className = "head";
+    const t = document.createElement("div");
+    const w = document.createElement("div"); w.className = "word"; w.textContent = e.word;
+    const s = document.createElement("div"); s.className = "sub"; s.textContent = [e.reading, settings.showRomaji ? toRomaji(e.reading) : "", e.pos].filter(Boolean).join("  ·  ");
+    t.append(w, s);
+    const x = document.createElement("button"); x.className = "x"; x.type = "button"; x.textContent = "✕"; x.setAttribute("aria-label", "Close");
+    x.addEventListener("click", () => { closeOverlays(); });
+    head.append(t, x);
+    const ol = document.createElement("ol");
+    for (const sense of e.senses) { const li = document.createElement("li"); li.textContent = sense.join("; "); ol.appendChild(li); }
+    const forms = document.createElement("div"); forms.className = "forms";
+    const seen = [];
+    for (const f of [e.word, e.kanji, e.reading, katakana(e.reading)]) if (f && !seen.includes(f)) seen.push(f);
+    for (const f of seen) {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = f;
+      b.addEventListener("click", () => { active.select(f); closeOverlays(); render(); });
+      forms.appendChild(b);
+    }
+    box.append(head, ol, forms);
+    overlayEl.appendChild(box);
+    entryOpen = box;
+  }
+
+  // ---- Keys ---------------------------------------------------------------------------------
+  let repeatTimer = null;
+  const stopRepeat = () => { clearTimeout(repeatTimer); clearInterval(repeatTimer); repeatTimer = null; };
+  const inside = (el, e) => { const r = el.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
+
+  function wire(el, capEl, key) {
+    let longTimer = null, mode = null, startX = 0, start = null;
+    el.addEventListener("contextmenu", (e) => e.preventDefault());
+    el.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      try { el.setPointerCapture(e.pointerId); } catch (_) {}
+      el.classList.add("down");
+      keyFeedback();
+      if (entryOpen) closeOverlays();
+      mode = null; startX = e.clientX;
+      if (key.kind === "delete") {
+        let count = 0;
+        // After about a second of holding, delete whole words.
+        const step = () => { if (count++ < 12) active.press(key); else active.deleteWord(); render(); };
+        step(); stopRepeat();
+        repeatTimer = setTimeout(() => { repeatTimer = setInterval(step, 80); }, 450);
+        return;
+      }
+      if (key.kind === "flick") { start = { x: e.clientX, y: e.clientY }; showGuide(el, key, "center"); return; }
+      if (key.kind === "char" && settings.keyPopups) showPopup(capEl, active.label(key));
+      if (key.kind === "space" && settings.spaceBarCursor) longTimer = setTimeout(() => { mode = "trackpad"; keysEl.classList.add("faint"); }, 350);
+      if (isModeKey(key)) {
+        wheel = { start: { x: e.clientX, y: e.clientY }, open: false, slot: null };
+        longTimer = setTimeout(openWheel, 300);
+        return;
+      }
+      const held = key.kind === "char" && active === romaji ? heldOptions(key.ch) : [];
+      if (held.length) {
+        longTimer = setTimeout(() => { mode = "accent"; hidePopup(); showAccents(capEl, held); }, 350);
+      }
+    });
+    el.addEventListener("pointermove", (e) => {
+      if (key.kind === "flick" && start) showGuide(el, key, direction(start, e));
+      if (mode === "trackpad") { const steps = Math.trunc((e.clientX - startX) / 9); if (steps) { active.moveCursor(steps); startX += steps * 9; render(); } }
+      if (isModeKey(key) && wheel) {
+        const slot = wheelSlot(e.clientX - wheel.start.x, e.clientY - wheel.start.y);
+        if (slot) { clearTimeout(longTimer); openWheel(); }
+        if (slot !== wheel.slot) { wheel.slot = slot; highlightWheel(); }
+      }
+      if (mode === "accent") highlightAccent(e);
+    });
+    const end = (e, cancelled) => {
+      el.classList.remove("down"); clearTimeout(longTimer); hidePopup();
+      if (key.kind === "delete") { stopRepeat(); return; }
+      if (mode === "trackpad") { keysEl.classList.remove("faint"); mode = null; return; }
+      if (mode === "accent") {
+        mode = null;
+        const on = overlayEl.querySelector(".accents .on");
+        overlayEl.textContent = "";
+        if (on && !cancelled) { romaji.press(K("char", 1, on.dataset.ch)); render(); }
+        return;
+      }
+      if (isModeKey(key)) {
+        const w = wheel; wheel = null; overlayEl.textContent = ""; keysEl.classList.remove("faint");
+        if (cancelled || !w) return;
+        if (w.slot) pickSlot(w.slot);
+        else if (!w.open) { if (active === romaji) { romaji.press(key); render(); } else switchKeyboard(romaji); }
+        return;
+      }
+      if (key.kind === "flick") { const d = start ? direction(start, e) : "center"; start = null; overlayEl.textContent = ""; if (!cancelled) { active.press(key, d); render(); } return; }
+      if (cancelled) return;
+      if (inside(el, e)) { active.press(key); render(); }
+    };
+    el.addEventListener("pointerup", (e) => end(e, false));
+    el.addEventListener("pointercancel", (e) => end(e, true));
+  }
+
+  // Hold a letter for its number (q → 1) and, outside あ mode, its accents (é, ü, ñ…).
+  const HELD_NUMBERS = Object.fromEntries(chars("qwertyuiop").map((c, i) => [c, "1234567890"[i]]));
+  function heldOptions(letter) {
+    if (romaji.page !== "letters") return [];
+    const options = settings.holdForNumbers && HELD_NUMBERS[letter] ? [HELD_NUMBERS[letter]] : [];
+    if (romaji.mode !== "japanese") options.push(...chars(ACCENTS[letter] || ""));
+    return options;
+  }
+  function showAccents(capEl, options) {
+    overlayEl.textContent = "";
+    const box = document.createElement("div");
+    box.className = "accents";
+    for (const a of options) {
+      const sp = document.createElement("span");
+      sp.dataset.ch = a; sp.textContent = romaji.shifted ? a.toUpperCase() : a;
+      box.appendChild(sp);
+    }
+    box.firstChild.classList.add("on");
+    overlayEl.appendChild(box);
+    const kb = kbEl.getBoundingClientRect(), r = capEl.getBoundingClientRect(), w = box.offsetWidth;
+    Object.assign(box.style, { left: Math.min(Math.max(r.left - kb.left - 4, 2), kb.width - w - 2) + "px", top: Math.max(r.top - kb.top - 54, 0) + "px" });
+  }
+  function highlightAccent(e) {
+    const spans = [...overlayEl.querySelectorAll(".accents span")];
+    if (!spans.length) return;
+    const first = spans[0].getBoundingClientRect();
+    const i = Math.min(Math.max(Math.floor((e.clientX - first.left) / first.width), 0), spans.length - 1);
+    spans.forEach((sp, j) => sp.classList.toggle("on", j === i));
+  }
+
+  function direction(s, e) {
+    const dx = e.clientX - s.x, dy = e.clientY - s.y, t = THRESHOLD[settings.flickSensitivity] || 20;
+    if (dx * dx + dy * dy < t * t) return "center";
+    return Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
+  }
+  const rel = (el) => { const kb = kbEl.getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - kb.left, y: r.top - kb.top, w: r.width, h: r.height, kw: kb.width, kh: kb.height }; };
+
+  function showGuide(el, key, selected) {
+    const b = rel(el);
+    overlayEl.textContent = "";
+    for (const d of DIRS) {
+      const t = key.outputs[d];
+      if (!t) continue;
+      let { x, y } = b;
+      if (d === "left") x -= b.w; if (d === "right") x += b.w; if (d === "up") y -= b.h; if (d === "down") y += b.h;
+      const left = Math.max(x + 2, 0), top = Math.max(y + 2, 0), right = Math.min(x + b.w - 2, b.kw), bottom = Math.min(y + b.h - 2, b.kh);
+      if (right <= left || bottom <= top) continue;
+      const tile = document.createElement("div");
+      tile.className = "tile" + (d === selected ? " on" : "");
+      Object.assign(tile.style, { left: left + "px", top: top + "px", width: right - left + "px", height: bottom - top + "px" });
+      tile.textContent = t;
+      overlayEl.appendChild(tile);
+    }
+  }
+
+  let popupEl = null;
+  function showPopup(capEl, text) {
+    hidePopup();
+    const b = rel(capEl), w = b.w + 16, h = b.h * 1.1;
+    popupEl = document.createElement("div");
+    popupEl.className = "popup";
+    Object.assign(popupEl.style, { left: Math.min(Math.max(b.x + b.w / 2 - w / 2, 2), b.kw - w - 2) + "px", top: Math.max(b.y - h - 2, 0) + "px", width: w + "px", height: h + "px" });
+    popupEl.textContent = text;
+    overlayEl.appendChild(popupEl);
+  }
+  function hidePopup() { if (popupEl) { popupEl.remove(); popupEl = null; } }
+
+  // ---- Mode wheel (ModeWheel.swift) ------------------------------------------------------------
+  // Slots left to right; each is always the same direction from the mode key.
+  const SLOTS = [["japanese", "あ", "Japanese romaji"], ["english", "EN", "English"], ["dictionary", "辞", "Dictionary"], ["kana", "かな", "Kana flick keyboard"], ["next", "🌐", "Next keyboard"]];
+  const SECTOR = Math.PI / SLOTS.length;
+  // Left to right; the left-handed setting mirrors it.
+  const slotOrder = () => settings.leftHandedWheel ? [...SLOTS].reverse() : SLOTS;
+  const slotAngle = (i) => Math.PI - SECTOR * (i + 0.5);
+  let wheel = null;
+  const isModeKey = (key) => key.kind === "languageToggle" || key.kind === "modeKey";
+  function wheelSlot(dx, dy) {
+    if (dx * dx + dy * dy < 22 * 22) return null;
+    let a = Math.atan2(-dy, dx);
+    if (a < 0) a = dx < 0 ? Math.PI : 0;  // below the key: the nearest end
+    return slotOrder()[Math.min(Math.floor((Math.PI - a) / SECTOR), SLOTS.length - 1)][0];
+  }
+  // Small chips around the finger, each sitting in the direction you'd swipe to pick it.
+  const WHEEL_RADIUS = 64;
+  function openWheel() {
+    if (!wheel || wheel.open) return;
+    wheel.open = true;
+    hidePopup();
+    const kb = kbEl.getBoundingClientRect(), px = wheel.start.x - kb.left, py = wheel.start.y - kb.top;
+    overlayEl.textContent = "";
+    keysEl.classList.add("faint");
+    const current = active === flick ? "kana" : romaji.mode;
+    const spots = slotOrder().map((slot, i) => {
+      const a = slotAngle(i);
+      return { slot, x: px + Math.cos(a) * WHEEL_RADIUS - 18, y: py - Math.sin(a) * WHEEL_RADIUS - 14 };
+    });
+    // Near an edge, the whole wheel slides over just enough to fit, keeping its shape.
+    const minX = Math.min(...spots.map((s) => s.x)), maxX = Math.max(...spots.map((s) => s.x));
+    const shift = minX < 2 ? 2 - minX : maxX > kb.width - 38 ? kb.width - 38 - maxX : 0;
+    for (const { slot: [id, label, name], x, y } of spots) {
+      const el = document.createElement("div");
+      el.className = "wheel-slot" + (id === current ? " cur" : "") + (id === "next" ? " next" : "");
+      el.dataset.slot = id; el.textContent = label; el.title = name;
+      Object.assign(el.style, { left: x + shift + "px", top: Math.max(y, 2) + "px" });
+      overlayEl.appendChild(el);
+    }
+    highlightWheel();
+  }
+  function highlightWheel() {
+    if (!wheel || !wheel.open) return;
+    for (const el of overlayEl.querySelectorAll(".wheel-slot")) el.classList.toggle("on", el.dataset.slot === wheel.slot);
+  }
+  function pickSlot(id) {
+    if (id === "next") { flash("🌐 On your phone, this goes to your next keyboard"); return; }
+    if (id === "kana") { flick.commit(); flick.page = "kana"; flick.toggle = null; switchKeyboard(flick); render(); return; }
+    switchKeyboard(romaji);
+    romaji.setMode(id);
+    render();
+  }
+
+  // ---- Customise panel --------------------------------------------------------------------------
+  const THEMES = [["system", "System"], ["ai", "藍 Ai"], ["sakura", "桜 Sakura"], ["matcha", "抹茶 Matcha"], ["sumi", "墨 Sumi"], ["custom", "Custom"]];
+  for (const [id, name] of THEMES) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "theme"; b.dataset.id = id;
+    const sw = document.createElement("span"); sw.className = "swatch kb"; sw.dataset.kbTheme = id;
+    for (let i = 0; i < 4; i++) sw.appendChild(document.createElement("i"));
+    b.append(sw, document.createTextNode(name));
+    b.addEventListener("click", () => { settings.theme = id; changed(); });
+    $("themes").appendChild(b);
+  }
+  function segmented(container, key, options) {
+    for (const [value, name] of options) {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = name; b.dataset.value = value;
+      b.addEventListener("click", () => { settings[key] = value; changed(); });
+      $(container).appendChild(b);
+    }
+  }
+  segmented("seg-height", "height", [["compact", "Compact"], ["standard", "Standard"], ["tall", "Tall"]]);
+  segmented("seg-sensitivity", "flickSensitivity", [["gentle", "Gentle"], ["normal", "Normal"], ["quick", "Quick"]]);
+  segmented("seg-startingMode", "startingMode", [["japanese", "あ"], ["english", "EN"], ["dictionary", "辞"], ["lastUsed", "Last used"]]);
+  segmented("seg-skinTone", "skinTone", ["👍", "👍🏻", "👍🏼", "👍🏽", "👍🏾", "👍🏿"].map((t, i) => [i, t]));
+  segmented("seg-gifRating", "gifRating", [["g", "G"], ["pg", "PG"], ["pg-13", "PG-13"], ["r", "R"]]);
+  const SEGMENTS = [["seg-height", "height"], ["seg-sensitivity", "flickSensitivity"], ["seg-startingMode", "startingMode"], ["seg-skinTone", "skinTone"], ["seg-gifRating", "gifRating"]];
+  $("giphy-key").addEventListener("input", (e) => { settings.giphyAPIKey = e.target.value.trim(); saveSettings(); });
+  $("forget").addEventListener("click", () => {
+    learned = {}; history = {}; recents = [];
+    keep("kb-learned", learned); keep("kb-history", history); keep("kb-recent", recents);
+    suggestCache = { word: null, value: null };
+    flash("Learned words, kanji choices and recent emoji forgotten");
+  });
+  $("reset-settings").addEventListener("click", () => {
+    for (const k of Object.keys(settings)) delete settings[k];
+    Object.assign(settings, DEFAULTS, { customColors: { ...PALETTES["藍 Ai light"] } });
+    changed();
+  });
+  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "holdForNumbers", "leftHandedWheel", "autocorrect", "wordSuggestions", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics"];
+  for (const key of TOGGLES) {
+    $("set-" + key).addEventListener("change", (e) => { settings[key] = e.target.checked; changed(); });
+  }
+  for (const m of ["japanese", "english", "dictionary"]) {
+    $("mode-" + m).addEventListener("change", (e) => {
+      const set = new Set(settings.languageKeyModes);
+      if (e.target.checked) set.add(m); else if (set.size > 2) set.delete(m);
+      settings.languageKeyModes = ["japanese", "english", "dictionary"].filter((x) => set.has(x));
+      changed();
+    });
+  }
+  function syncControls() {
+    for (const b of $("themes").children) b.setAttribute("aria-pressed", String(b.dataset.id === settings.theme));
+    for (const [id, key] of SEGMENTS) for (const b of $(id).children) b.setAttribute("aria-pressed", String(b.dataset.value === String(settings[key])));
+    if ($("giphy-key").value !== settings.giphyAPIKey) $("giphy-key").value = settings.giphyAPIKey;
+    for (const key of TOGGLES) $("set-" + key).checked = !!settings[key];
+    for (const [field] of FIELDS) $("color-" + field).value = settings.customColors[field];
+    $("dim").value = settings.backgroundDim; $("dim-value").textContent = Math.round(settings.backgroundDim * 100) + "%";
+    $("opacity").value = settings.keyOpacity; $("opacity-value").textContent = Math.round(settings.keyOpacity * 100) + "%";
+    $("set-backgroundBlur").checked = settings.backgroundBlur;
+    $("remove-photo").disabled = !photo;
+    for (const m of ["japanese", "english", "dictionary"]) {
+      const on = settings.languageKeyModes.includes(m);
+      $("mode-" + m).checked = on;
+      $("mode-" + m).disabled = on && settings.languageKeyModes.length <= 2;
+    }
+  }
+  function changed() { saveSettings(); syncControls(); applyLook(); romaji.autoCap(); render(); }
+
+  // ---- Custom colours and background photo (ThemeColors.swift, KeyboardViewBase.swift) ------------------
+  const FIELDS = [["background", "Background", "--kb-bg"], ["key", "Keys", "--kb-key"], ["specialKey", "Function keys", "--kb-special"],
+    ["pressedKey", "Pressed key", "--kb-pressed"], ["text", "Text", "--kb-text"], ["secondaryText", "Readings", "--kb-muted"], ["accent", "Accent", "--kb-accent"]];
+  const P = (background, key, specialKey, pressedKey, text, secondaryText, accent) => ({ background, key, specialKey, pressedKey, text, secondaryText, accent });
+  const PALETTES = {
+    "system light": P("#d1d4db", "#ffffff", "#abb0ba", "#d1d3d8", "#000000", "#6b7080", "#007aff"),
+    "system dark": P("#2b2b2e", "#6b6b6f", "#464649", "#8c8c90", "#ffffff", "#b5b5bb", "#0a84ff"),
+    "藍 Ai light": P("#d7dfea", "#ffffff", "#a9b8cf", "#c7d3e5", "#14213a", "#4a5a75", "#24477a"),
+    "藍 Ai dark": P("#141c2b", "#2a3a55", "#1e2a3f", "#3a4e70", "#e6ecf5", "#9fb0cc", "#8fb0e6"),
+    "桜 Sakura light": P("#f6e4e8", "#ffffff", "#e3bcc6", "#f2d3da", "#3a1f27", "#7a5560", "#c94f6d"),
+    "桜 Sakura dark": P("#2a1d21", "#4a353b", "#3a2a2f", "#5e444b", "#f7e8ec", "#c9a7b0", "#f08ca5"),
+    "抹茶 Matcha light": P("#e1e8d8", "#ffffff", "#b5c4a3", "#d3dec6", "#24301d", "#56654b", "#5b7f3a"),
+    "抹茶 Matcha dark": P("#1c2219", "#36422f", "#2a3325", "#46553d", "#e6eedd", "#a9b99b", "#a8cb82"),
+    "墨 Sumi": P("#1b1b1d", "#3a3a3e", "#2a2a2d", "#55555a", "#f2f2f2", "#a8a8ad", "#e0b354"),
+  };
+  if (!settings.customColors) settings.customColors = { ...PALETTES["藍 Ai light"] };
+  const colorsEl = $("colors");
+  for (const [field, name] of FIELDS) {
+    const label = document.createElement("label");
+    label.htmlFor = "color-" + field;
+    label.textContent = name;
+    const input = document.createElement("input");
+    input.type = "color"; input.id = "color-" + field;
+    input.addEventListener("input", () => { settings.customColors[field] = input.value; settings.theme = "custom"; changed(); });
+    label.appendChild(input);
+    colorsEl.appendChild(label);
+  }
+  const presetSelect = $("preset-from");
+  presetSelect.appendChild(new Option("Choose…", ""));
+  for (const name of Object.keys(PALETTES)) presetSelect.appendChild(new Option(name, name));
+  presetSelect.addEventListener("change", () => {
+    if (!presetSelect.value) return;
+    settings.customColors = { ...PALETTES[presetSelect.value] }; settings.theme = "custom";
+    presetSelect.value = ""; changed();
+  });
+
+  let photo = null;
+  try { photo = localStorage.getItem("kb-photo"); } catch (_) {}
+  function setPhoto(dataUrl) {
+    photo = dataUrl;
+    try { if (dataUrl) localStorage.setItem("kb-photo", dataUrl); else localStorage.removeItem("kb-photo"); } catch (_) {}
+    changed();
+  }
+  // Scale photos down like the app does, so they stay small.
+  $("photo").addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const img = new Image();
+    img.onload = () => {
+      const ratio = Math.min(1, 1000 / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * ratio); canvas.height = Math.round(img.height * ratio);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(img.src);
+      setPhoto(canvas.toDataURL("image/jpeg", 0.82));
+    };
+    img.src = URL.createObjectURL(file);
+    e.target.value = "";
+  });
+  // A generated night-sky-and-blossom picture, so the photo options can be tried without uploading.
+  $("sample-photo").addEventListener("click", () => {
+    const c = document.createElement("canvas"), w = 800, h = 520;
+    c.width = w; c.height = h;
+    const g = c.getContext("2d"), sky = g.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, "#1d1b4b"); sky.addColorStop(0.55, "#7a3b6e"); sky.addColorStop(1, "#f29e7c");
+    g.fillStyle = sky; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#fff4d6"; g.beginPath(); g.arc(610, 120, 54, 0, Math.PI * 2); g.fill();
+    g.fillStyle = "#2a2346"; g.beginPath(); g.moveTo(80, h); g.lineTo(330, 250); g.lineTo(390, 270); g.lineTo(640, h); g.fill();
+    g.fillStyle = "#f4f1f8"; g.beginPath(); g.moveTo(330, 250); g.lineTo(390, 270); g.lineTo(372, 300); g.lineTo(350, 285); g.lineTo(310, 305); g.fill();
+    let seed = 7;
+    const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 260; i++) {
+      g.fillStyle = `hsla(${335 + rand() * 20}, 80%, ${78 + rand() * 12}%, ${0.5 + rand() * 0.5})`;
+      g.beginPath(); g.arc(rand() * w, h * 0.55 + rand() * h * 0.5, 4 + rand() * 9, 0, Math.PI * 2); g.fill();
+    }
+    setPhoto(c.toDataURL("image/jpeg", 0.85));
+  });
+  $("remove-photo").addEventListener("click", () => setPhoto(null));
+  $("dim").addEventListener("input", (e) => { settings.backgroundDim = +e.target.value; changed(); });
+  $("opacity").addEventListener("input", (e) => { settings.keyOpacity = +e.target.value; changed(); });
+  $("set-backgroundBlur").addEventListener("change", (e) => { settings.backgroundBlur = e.target.checked; changed(); });
+
+  function applyLook() {
+    for (const [field, , cssVar] of FIELDS) {
+      if (settings.theme === "custom") kbEl.style.setProperty(cssVar, settings.customColors[field]);
+      else kbEl.style.removeProperty(cssVar);
+    }
+    kbEl.style.setProperty("--key-op", Math.round(settings.keyOpacity * 100) + "%");
+    kbEl.classList.toggle("has-photo", !!photo);
+    $("kb-photo").style.backgroundImage = photo ? `url("${photo}")` : "";
+    $("kb-photo").classList.toggle("blur", settings.backgroundBlur);
+    $("kb-dim").style.opacity = settings.backgroundDim;
+    const customSwatch = $("themes").querySelector('[data-id="custom"] .swatch');
+    if (customSwatch) for (const [field, , cssVar] of FIELDS) customSwatch.style.setProperty(cssVar, settings.customColors[field]);
+  }
+
+  // ---- Page controls ------------------------------------------------------------------------------
+  $("jump").addEventListener("click", () => {
+    document.querySelector(".device").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  });
+  $("clear").addEventListener("click", () => {
+    romaji.composer.reset(); romaji.query = ""; flick.composer.reset(); flick.toggle = null;
+    doc.text = []; doc.cursor = 0; doc.marked = ""; closeOverlays(); romaji.autoCap(); render();
+  });
+  window.addEventListener("resize", () => { if (keysEl.clientWidth !== builtWidth) render(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || active !== romaji) return;
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLButtonElement) return;
+    let key = null;
+    if (e.key === "Backspace") key = K("delete");
+    else if (e.key === "Enter") key = K("return");
+    else if (e.key === " ") key = K("space");
+    else if (e.key === "-") key = K("longVowel");
+    else if (e.key.length === 1 && /[a-z0-9.,?!'\[\]~\/]/i.test(e.key)) {
+      const upper = e.key !== e.key.toLowerCase();
+      if (romaji.page === "letters" && upper !== romaji.shifted) { romaji.shift = upper ? "once" : "off"; romaji.auto = false; }
+      key = K("char", 1, e.key.toLowerCase());
+    }
+    if (!key) return;
+    e.preventDefault(); closeOverlays(); romaji.press(key); render();
+  });
+
+  // ---- Test checklist ----------------------------------------------------------------------------
+  let ticks = load("kb-checklist", {});
+  const checkBoxes = [...document.querySelectorAll("[data-check]")];
+  const countTicks = () => { $("check-count").textContent = `${checkBoxes.filter((c) => c.checked).length} of ${checkBoxes.length} checked.`; };
+  for (const c of checkBoxes) {
+    c.checked = !!ticks[c.dataset.check];
+    c.addEventListener("change", () => { ticks[c.dataset.check] = c.checked; keep("kb-checklist", ticks); countTicks(); });
+  }
+  $("check-reset").addEventListener("click", () => { ticks = {}; keep("kb-checklist", ticks); for (const c of checkBoxes) c.checked = false; countTicks(); });
+  countTicks();
+
+  // Open in the starting mode, like the app. In EN, "Let's get sushi" shows word and emoji suggestions.
+  syncControls();
+  applyLook();
+  romaji.mode = settings.startingMode === "lastUsed" ? load("kb-last-mode", "japanese") : settings.startingMode;
+  if (!SHORT[romaji.mode]) romaji.mode = "japanese";
+  if (romaji.mode === "english") out.insertText("Let's get sushi");
+  romaji.autoCap();
+  render();
+  requestAnimationFrame(render);
+})();
+</script>

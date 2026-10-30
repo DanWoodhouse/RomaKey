@@ -2,7 +2,7 @@ import KeyboardCore
 import UIKit
 
 /// Follows a press on a board's mode key. A quick tap calls `onTap`. Dragging past the
-/// threshold, or holding, opens the half wheel; letting go over a slot picks it, and letting go
+/// threshold, or holding, opens the wheel; letting go over a slot picks it, and letting go
 /// without one closes the wheel. A fast swipe picks a slot before the wheel has even shown.
 final class ModeWheelTracker: NSObject {
     private weak var host: KeyboardViewBase?
@@ -78,6 +78,8 @@ final class ModeWheelTracker: NSObject {
         view.layout(around: start)
         view.highlight(selected)
         wheel = view
+        // The keys fade so the chips stand out.
+        host.keyArea.alpha = 0.35
     }
 
     private func finish() {
@@ -85,21 +87,22 @@ final class ModeWheelTracker: NSObject {
         holdTimer = nil
         wheel?.removeFromSuperview()
         wheel = nil
+        host?.keyArea.alpha = 1
         start = nil
         selected = nil
     }
 }
 
-/// The half wheel drawn above the mode key. The slots are always in the same places, whatever
-/// the current mode: the current one is only outlined, never moved.
+/// The mode wheel: small chips around the finger, each sitting in the direction you'd swipe to
+/// pick it. They're always in the same places, whatever the current mode, which only gets a dot.
 final class ModeWheelView: UIView {
     private let current: ModeWheelSlot
     private let theme: KeyboardTheme
     private let leftHanded: Bool
-    private let disc = CAShapeLayer()
-    private var slotLabels: [ModeWheelSlot: UILabel] = [:]
-    private let nameLabel = UILabel()
-    private static let slotSize: CGFloat = 46
+    private var chips: [ModeWheelSlot: UILabel] = [:]
+    private var dots: [ModeWheelSlot: UIView] = [:]
+    private static let chipSize = CGSize(width: 36, height: 28)
+    private static let radius: CGFloat = 64
 
     init(current: ModeWheelSlot, theme: KeyboardTheme, leftHanded: Bool) {
         self.current = current
@@ -108,30 +111,29 @@ final class ModeWheelView: UIView {
         super.init(frame: .zero)
         isUserInteractionEnabled = false
 
-        disc.shadowColor = UIColor.black.cgColor
-        disc.shadowOpacity = 0.3
-        disc.shadowRadius = 6
-        disc.shadowOffset = .zero
-        layer.addSublayer(disc)
-
         for slot in ModeWheel.slots {
-            let label = UILabel()
-            label.text = slot.label
-            label.textAlignment = .center
-            label.font = .systemFont(ofSize: slot == .nextKeyboard ? 22 : 18, weight: .medium)
-            label.adjustsFontSizeToFitWidth = true
-            label.minimumScaleFactor = 0.7
-            label.layer.cornerRadius = Self.slotSize / 2
-            label.clipsToBounds = true
-            label.layer.borderWidth = slot == current ? 2 : 0
-            addSubview(label)
-            slotLabels[slot] = label
+            let chip = UILabel()
+            chip.text = slot.label
+            chip.textAlignment = .center
+            chip.font = .systemFont(ofSize: slot == .nextKeyboard ? 15 : 13, weight: .semibold)
+            chip.adjustsFontSizeToFitWidth = true
+            chip.minimumScaleFactor = 0.7
+            chip.layer.cornerRadius = 8
+            chip.layer.masksToBounds = false
+            chip.layer.shadowColor = UIColor.black.cgColor
+            chip.layer.shadowOpacity = 0.25
+            chip.layer.shadowRadius = 2
+            chip.layer.shadowOffset = CGSize(width: 0, height: 1)
+            chip.accessibilityLabel = slot.accessibilityName
+            addSubview(chip)
+            chips[slot] = chip
+            if slot == current {
+                let dot = UIView()
+                dot.layer.cornerRadius = 2
+                chip.addSubview(dot)
+                dots[slot] = dot
+            }
         }
-
-        nameLabel.textAlignment = .center
-        nameLabel.font = .systemFont(ofSize: 12, weight: .semibold)
-        nameLabel.textColor = theme.secondaryText
-        addSubview(nameLabel)
         highlight(nil)
     }
 
@@ -140,42 +142,35 @@ final class ModeWheelView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    /// Centres the wheel on where the finger touched down, moved sideways only as far as it
-    /// takes to stay on screen. Call once added to the keyboard, so colours match light or dark mode.
+    /// Places the chips around where the finger touched down. Near an edge, the whole wheel
+    /// slides over just enough to fit, keeping its shape.
     func layout(around point: CGPoint) {
-        disc.fillColor = theme.panel.resolvedColor(with: traitCollection).cgColor
-        let outline = theme.accent.resolvedColor(with: traitCollection).cgColor
-        slotLabels.values.forEach { $0.layer.borderColor = outline }
-
-        let margin: CGFloat = 4
-        let radius = max(min(130, point.y - margin, (bounds.width - 2 * margin) / 2), Self.slotSize)
-        let centre = CGPoint(
-            x: min(max(point.x, radius + margin), bounds.width - radius - margin),
-            y: point.y
-        )
-        let path = UIBezierPath(arcCenter: centre, radius: radius, startAngle: .pi, endAngle: 0, clockwise: true)
-        path.close()
-        disc.path = path.cgPath
-
-        let slotRadius = radius - Self.slotSize / 2 - 6
-        for (slot, label) in slotLabels {
+        let size = Self.chipSize
+        let origins = ModeWheel.slots.map { slot -> (ModeWheelSlot, CGPoint) in
             let angle = CGFloat(ModeWheel.angle(of: slot, leftHanded: leftHanded))
-            label.frame = CGRect(
-                x: centre.x + cos(angle) * slotRadius - Self.slotSize / 2,
-                y: centre.y - sin(angle) * slotRadius - Self.slotSize / 2,
-                width: Self.slotSize,
-                height: Self.slotSize
-            )
+            return (slot, CGPoint(
+                x: point.x + cos(angle) * Self.radius - size.width / 2,
+                y: max(point.y - sin(angle) * Self.radius - size.height / 2, 2)
+            ))
         }
-        nameLabel.frame = CGRect(x: centre.x - 70, y: centre.y - 42, width: 140, height: 16)
+        let minX = origins.map(\.1.x).min() ?? 0
+        let maxX = origins.map(\.1.x).max() ?? 0
+        let shift = minX < 2 ? 2 - minX : (maxX > bounds.width - size.width - 2 ? bounds.width - size.width - 2 - maxX : 0)
+        for (slot, origin) in origins {
+            let chip = chips[slot]!
+            chip.bounds = CGRect(origin: .zero, size: size)
+            chip.center = CGPoint(x: origin.x + shift + size.width / 2, y: origin.y + size.height / 2)
+            dots[slot]?.frame = CGRect(x: size.width / 2 - 2, y: size.height - 7, width: 4, height: 4)
+        }
     }
 
     func highlight(_ slot: ModeWheelSlot?) {
-        for (candidate, label) in slotLabels {
+        for (candidate, chip) in chips {
             let isOn = candidate == slot
-            label.backgroundColor = isOn ? theme.accent : theme.key
-            label.textColor = isOn ? .white : theme.text
+            chip.backgroundColor = isOn ? theme.accent : theme.key
+            chip.textColor = isOn ? .white : theme.text
+            chip.transform = isOn ? CGAffineTransform(scaleX: 1.15, y: 1.15) : .identity
+            dots[candidate]?.backgroundColor = isOn ? .white : theme.accent
         }
-        nameLabel.text = slot?.accessibilityName
     }
 }

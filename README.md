@@ -1,4 +1,4 @@
-# 日本語キーボード (Japanese Keyboard)
+# RomaKey · 日本語キーボード
 
 An iOS app with two Japanese keyboards:
 
@@ -187,6 +187,10 @@ Run the logic tests without Xcode:
 cd Packages/KeyboardCore
 swift test
 ```
+
+## Web preview
+
+`preview/keyboard-preview.html` runs the keyboards' logic in a browser, with every setting and a test checklist. See [preview/README.md](preview/README.md).
 
 ## Enabling the keyboards
 
