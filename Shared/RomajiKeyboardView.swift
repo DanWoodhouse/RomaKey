@@ -186,7 +186,8 @@ final class RomajiKeyboardView: KeyboardViewBase {
                     touchFrame.size.width = bounds.width - touchFrame.minX
                 }
                 button.frame = touchFrame
-                button.keycapFrame = keyFrame.offsetBy(dx: -touchFrame.minX, dy: 0)
+                // The keycap is placed inside the button, so in the button's own coordinates.
+                button.keycapFrame = keyFrame.offsetBy(dx: -touchFrame.minX, dy: -touchFrame.minY)
             }
         }
     }
