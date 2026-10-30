@@ -262,6 +262,60 @@ input[type="range"].ccrange:active::-webkit-slider-thumb { transform: scale(1.12
 .ebar button.ccopen { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 12px; border-radius: 999px; font: 600 12px var(--font-key); color: var(--kb-text); }
 .ccopen svg { width: 13px; height: 13px; }
 .cc .qnote { margin: 0; padding: 0 12px; text-align: center; font-size: 11px; }
+/* ✨ panel: the same glass as ⚙︎. Chips carry a glyph badge; the result is its own card. */
+.aibody { padding: 8px 10px 12px; gap: 10px; grid-auto-rows: max-content; }
+.aiquote { border: 0; padding: 8px 12px; border-radius: 16px; max-height: none; font-size: 13px; line-height: 1.4; color: var(--kb-text);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.aiquote::before { content: "✨ "; }
+.aisection { gap: 6px; }
+.aihead { padding: 0 4px; color: color-mix(in srgb, var(--kb-text) 62%, transparent); }
+.aiactions { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 6px; padding: 2px 2px 4px; margin: 0 -2px; }
+.aiactions::-webkit-scrollbar { display: none; }
+.aiaction { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px 5px 5px; border-radius: 999px; font: 500 13px var(--font-key); color: var(--kb-text);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05)), color-mix(in srgb, var(--kb-key) 40%, transparent);
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.45), inset 0 0 0 0.5px rgba(255, 255, 255, 0.2), 0 4px 12px -8px rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6); backdrop-filter: blur(18px) saturate(1.6); transition: transform 260ms cubic-bezier(0.3, 1.6, 0.5, 1), background 200ms; }
+.aiaction:active:not(:disabled) { transform: scale(0.95); }
+.aiglyph { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 11px var(--font-key); flex: none;
+  background: color-mix(in srgb, var(--kb-accent) 18%, transparent); color: var(--kb-accent); }
+.aiaction.on { color: #fff; background: radial-gradient(130% 100% at 50% 0%, color-mix(in srgb, var(--kb-accent) 62%, #fff), var(--kb-accent) 60%); }
+.aiaction.on .aiglyph { background: rgba(255, 255, 255, 0.25); color: #fff; }
+.aiaction:disabled { opacity: 0.5; }
+.airesult { padding: 12px 14px; gap: 8px; }
+.airesult:empty { display: none; }
+.aimain { font-size: 18px; line-height: 1.45; }
+.aithinking { display: flex; align-items: center; gap: 8px; font: 600 13px var(--font-key); color: color-mix(in srgb, var(--kb-text) 70%, transparent); }
+.aispark { display: inline-block; }
+.kb.anim .aispark { animation: kbspark 1.2s ease-in-out infinite; }
+@keyframes kbspark { 50% { transform: scale(1.25) rotate(12deg); opacity: 0.6; } }
+.aiskel { display: grid; gap: 7px; }
+.aiskel i { display: block; height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--kb-text) 10%, transparent); }
+.kb.anim .aiskel i { background: linear-gradient(90deg, color-mix(in srgb, var(--kb-text) 8%, transparent) 30%, color-mix(in srgb, var(--kb-text) 20%, transparent) 50%, color-mix(in srgb, var(--kb-text) 8%, transparent) 70%);
+  background-size: 300% 100%; animation: kbshimmer 1.3s linear infinite; }
+@keyframes kbshimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+.aifixes { display: grid; gap: 6px; margin: 2px 0; padding: 0; list-style: none; }
+.aifixes li { display: grid; gap: 1px; font-size: 14px; }
+.aifixes s { color: #e5484d; text-decoration-thickness: 1.5px; }
+.aifixes b { color: #30a46c; font-weight: 600; }
+.aifixes .why { font-size: 12px; color: color-mix(in srgb, var(--kb-text) 62%, transparent); }
+.aiok { display: flex; align-items: center; gap: 10px; font: 600 16px var(--font-key); }
+.aiok .badge { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: radial-gradient(130% 100% at 50% 0%, #6fdb9b, #30a46c 60%); box-shadow: 0 4px 12px -4px #30a46c; }
+.kb.anim .aiok .badge { animation: kbbadge 480ms cubic-bezier(0.3, 1.7, 0.5, 1); }
+@keyframes kbbadge { from { transform: scale(0.2) rotate(-30deg); opacity: 0; } }
+.aiwarn { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.4; color: color-mix(in srgb, var(--kb-text) 85%, transparent); }
+.aiwarn .badge { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--font-key); color: #fff; background: #f5a524; }
+.aibuttons { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+.aiapply { margin: 0; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 999px; font: 600 14px var(--font-key);
+  background: radial-gradient(130% 100% at 50% 0%, color-mix(in srgb, var(--kb-accent) 62%, #fff), var(--kb-accent) 60%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.55), 0 6px 14px -6px color-mix(in srgb, var(--kb-accent) 80%, transparent); transition: transform 260ms cubic-bezier(0.3, 1.6, 0.5, 1), background 240ms; }
+.aiapply svg { width: 16px; height: 16px; }
+.aiapply:active { transform: scale(0.95); }
+.aiapply.done { background: radial-gradient(130% 100% at 50% 0%, #6fdb9b, #30a46c 60%); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.55), 0 6px 14px -6px #30a46c; }
+.kb.anim .aiapply.done { animation: kbtile 380ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+.ainote { padding: 0 6px; }
+.kb.anim .airesult.fresh > * { animation: kbccin 340ms cubic-bezier(0.2, 0.9, 0.3, 1) backwards; }
+.kb.anim .airesult.fresh > :nth-child(2) { animation-delay: 40ms; }
+.kb.anim .airesult.fresh > :nth-child(3) { animation-delay: 80ms; }
 /* Animations: the Animations setting adds .anim; Reduce Motion turns them all off. */
 .kb.anim .cap { transition: transform 140ms cubic-bezier(0.3, 1.5, 0.5, 1), background-color 80ms; }
 .kb.anim .key.down .cap { transform: scale(0.95); transition-duration: 60ms; }
@@ -584,7 +638,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="s2"><span>On a phone, <em>Settings ↓</em> at the top jumps to every option: themes, photo, height, GIF and the rest.</span></label>
       </div>
       <div class="checks"><h3>✨ AI</h3>
-        <label class="check"><input type="checkbox" data-check="a1"><span>Type a sentence with a mistake and end it (<em>Last week we goes to the beach.</em>), then tap ✨ (in the toolbar, or between words next to 😊). Apple Intelligence is the default and only answers on iPhone, so switch to <em>Claude</em> in the panel, tap <em>Check grammar</em> and allow Claude when asked. Tap <em>Use this</em> to swap the fix in.</span></label>
+        <label class="check"><input type="checkbox" data-check="a1"><span>Type a sentence with a mistake and end it (<em>Last week we goes to the beach.</em>), then tap ✨ (in the toolbar, or between words next to 😊). Apple Intelligence is the default and only answers on iPhone, so switch to <em>Claude</em> in the panel, tap <em>Check grammar</em> and allow Claude when asked. The fixes show as <s>wrong</s> → <b>right</b> with the reason. Tap <em>Use this</em>: it turns green (<em>Replaced</em>), then the fix goes in and the bar says ✨ Replaced. A sentence with no mistakes gets a green check.</span></label>
         <label class="check"><input type="checkbox" data-check="a4"><span>Under the Japanese actions there's an English row: for English text <em>Check grammar</em>, <em>Formal</em>, <em>Casual</em> and <em>Shorter</em>; for Japanese text <em>→ English</em>.</span></label>
         <label class="check"><input type="checkbox" data-check="a2"><span>English → ✨ → <em>→ 日本語 polite</em>: a translation with its reading. Japanese (<em>明日何時に来る？</em>) → ✨ → <em>敬語</em> or <em>説明 Explain</em>.</span></label>
         <label class="check"><input type="checkbox" data-check="a3"><span>On iPhone, Apple's on-device model answers by default (run the app's Apple Intelligence test first). Claude is the option there too, with your own API key in Settings → AI.</span></label>
@@ -1991,6 +2045,9 @@ Text: よろしくおねがいします
   let sampleFn = null;
   if (window.claude && window.claude.use) window.claude.use("sample").then((s) => { sampleFn = s; }).catch(() => {});
   let aiAbort = null;
+  // The glyph on each ✨ action's chip.
+  const AI_GLYPHS = { grammar: "✓", explain: "説", casual: "友", polite: "丁", honorific: "敬", kanji: "漢", toEnglish: "EN",
+    toCasual: "友", toPolite: "丁", toHonorific: "敬", formal: "Aa", friendly: "Hi", shorter: "↔" };
   async function askModel(instructions, input) {
     if (!sampleFn) throw { code: "unavailable" };
     aiAbort = new AbortController();
@@ -2024,7 +2081,7 @@ Text: よろしくおねがいします
     panel.append(body, bar);
 
     const say = (cls, text) => { const el = document.createElement("div"); el.className = cls; el.textContent = text; return el; };
-    const quote = say("aiquote", input || "");
+    const quote = say("glass aiquote", input || "");
     const note = say("ainote", apple
       ? "Apple Intelligence runs on your iPhone (iOS 26, iPhone 15 Pro or newer), so it can't answer in this browser. Switch to Claude to try these here."
       : sampleFn
@@ -2047,7 +2104,9 @@ Text: よろしくおねがいします
       row.className = "aiactions";
       for (const [label, mode] of list) {
         const b = document.createElement("button");
-        b.type = "button"; b.className = "aiaction"; b.textContent = label; b.dataset.mode = mode;
+        b.type = "button"; b.className = "aiaction"; b.dataset.mode = mode;
+        const glyph = document.createElement("span"); glyph.className = "aiglyph"; glyph.textContent = AI_GLYPHS[mode]; glyph.setAttribute("aria-hidden", "true");
+        b.append(glyph, document.createTextNode(label));
         b.disabled = !usable;
         b.addEventListener("click", () => run(mode));
         row.appendChild(b);
@@ -2056,7 +2115,7 @@ Text: よろしくおねがいします
       return box;
     };
     const result = document.createElement("div");
-    result.className = "airesult";
+    result.className = "glass airesult";
     body.append(quote, section("日本語", japanese), section("English", english), result, note);
 
     // Puts `text` in place of the input in the document, keeping any trailing space.
@@ -2065,52 +2124,90 @@ Text: よろしくおねがいします
       for (let i = 0; i < chars(input).length + chars(trailing).length; i++) out.deleteBackward();
       out.insertText(text + trailing);
       closePanel(); render();
+      flash("✨ Replaced");
     }
-    function show(main, extra, replaceWith) {
-      result.textContent = "";
-      result.appendChild(say("aimain", main));
-      for (const line of extra) result.appendChild(say("aiextra", line));
-      if (replaceWith) {
-        const b = document.createElement("button");
-        b.type = "button"; b.className = "aiapply"; b.textContent = "Use this";
-        b.addEventListener("click", () => replaceInput(replaceWith));
-        result.appendChild(b);
-      }
+    const CHECK = CC_ICON('<path d="M20 6 9 17l-5-5"/>');
+    const reveal = () => {
+      replay(result, "fresh");
       // Bring the answer into view in a long panel.
       result.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    };
+    // An answer: the text, then grammar fixes (wrong → right, and why) or extra lines, then Use this.
+    function show(main, extra, replaceWith, fixes) {
+      result.textContent = "";
+      result.appendChild(say("aimain", main));
+      if (fixes && fixes.length) {
+        const list = document.createElement("ul"); list.className = "aifixes";
+        for (const m of fixes) {
+          const li = document.createElement("li"), line = document.createElement("span");
+          const old = document.createElement("s"), fixed = document.createElement("b");
+          old.textContent = m.original; fixed.textContent = m.fix;
+          line.append(old, " → ", fixed);
+          li.append(line);
+          if (m.reason) li.append(say("why", m.reason));
+          list.appendChild(li);
+        }
+        result.appendChild(list);
+      }
+      for (const line of extra) result.appendChild(say("aiextra", line));
+      if (replaceWith) {
+        const row = document.createElement("div"); row.className = "aibuttons";
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "aiapply"; b.innerHTML = CC_ICON('<path d="M4 12h12M11 6l6 6-6 6"/><path d="M20 5v14"/>') + "<span>Use this</span>";
+        b.addEventListener("click", () => {
+          if (b.classList.contains("done")) return;
+          // A clear confirmation before the text changes.
+          b.classList.add("done"); b.innerHTML = CHECK + "<span>Replaced</span>"; keyFeedback();
+          setTimeout(() => replaceInput(replaceWith), settings.animations ? 550 : 0);
+        });
+        row.appendChild(b);
+        result.appendChild(row);
+      }
+      reveal();
+    }
+    function showOK(text) {
+      result.innerHTML = '<div class="aiok"><span class="badge">' + CHECK + "</span><span></span></div>";
+      result.querySelector(".aiok span:last-child").textContent = text;
+      reveal();
+    }
+    function showProblem(text) {
+      result.innerHTML = '<div class="aiwarn"><span class="badge">!</span><span></span></div>';
+      result.querySelector(".aiwarn span:last-child").textContent = text;
+      reveal();
     }
     async function run(mode) {
       aiAbort?.abort();
       for (const b of body.querySelectorAll(".aiaction")) b.classList.toggle("on", b.dataset.mode === mode);
-      result.textContent = ""; result.appendChild(say("aimsg", "Thinking…"));
+      result.innerHTML = '<div class="aithinking"><span class="aispark">✨</span>Thinking…</div><div class="aiskel"><i></i><i></i><i style="width: 55%"></i></div>';
+      reveal();
       try {
         if (mode === "grammar") {
           const r = validate.grammar(input, await askModel(ja ? AI_PROMPTS.grammarJa : AI_PROMPTS.grammarEn, input));
-          if (!r) show("The answer didn't look like a fix, so it isn't shown.", []);
-          else if (r.kind === "none") show("No mistakes found. ✓", []);
-          else show(r.text, r.fixes.map((m) => `${m.original} → ${m.fix}: ${m.reason || ""}`), r.text);
+          if (!r) showProblem("The answer didn't look like a fix, so it isn't shown.");
+          else if (r.kind === "none") showOK("No mistakes found");
+          else show(r.text, [], r.text, r.fixes);
         } else if (mode === "explain") {
           const r = validate.explanation(await askModel(AI_PROMPTS.explain, input));
-          if (!r) show("The answer didn't look like an explanation, so it isn't shown.", []);
+          if (!r) showProblem("The answer didn't look like an explanation, so it isn't shown.");
           else show(r.meaning, [r.reading ? r.reading + (settings.showRomaji ? "  ·  " + toRomaji(r.reading) : "") : "", ...r.notes].filter(Boolean), null);
         } else if (mode === "kanji") {
           const r = validate.kanji(input, await askModel(AI_PROMPTS.kanji, input));
-          if (!r) show("The conversion changed the words, so it isn't shown.", []); else show(r, [], r);
+          if (!r) showProblem("The conversion changed the words, so it isn't shown."); else show(r, [], r);
         } else if (mode === "toEnglish") {
           const r = validate.englishTranslation(await askModel(AI_PROMPTS.toEnglish, input));
-          if (!r) show("The answer didn't look like a translation, so it isn't shown.", []); else show(r, [], r);
+          if (!r) showProblem("The answer didn't look like a translation, so it isn't shown."); else show(r, [], r);
         } else if (["formal", "friendly", "shorter"].includes(mode)) {
           const style = mode === "friendly" ? "casual" : mode;
           const r = validate.englishRewrite(input, await askModel(AI_PROMPTS.englishRewrite(style), input));
-          if (!r) show("The answer didn't look right, so it isn't shown.", []); else show(r, [], r);
+          if (!r) showProblem("The answer didn't look right, so it isn't shown."); else show(r, [], r);
         } else if (["casual", "polite", "honorific"].includes(mode)) {
           const r = validate.rewrite(input, await askModel(AI_PROMPTS.politeness(mode), input));
-          if (!r) show("Already in that style, or the answer didn't look right.", []); else show(r, [], r);
+          if (!r) showProblem("Already in that style, or the answer didn't look right."); else show(r, [], r);
         } else {
           // English → Japanese. 敬語 is a polite translation, then a 敬語 rewrite.
           const style = mode === "toCasual" ? "casual" : "polite";
           const t = validate.translation(await askModel(AI_PROMPTS.translate(style), input));
-          if (!t) { show("The answer didn't look like a translation, so it isn't shown.", []); return; }
+          if (!t) { showProblem("The answer didn't look like a translation, so it isn't shown."); return; }
           let text = t.text, reading = t.reading;
           if (mode === "toHonorific") {
             const h = validate.rewrite(text, await askModel(AI_PROMPTS.politeness("honorific"), text));
@@ -2122,7 +2219,7 @@ Text: よろしくおねがいします
         if (e && e.code === "cancelled") return;
         const why = { not_granted: "Claude wasn't allowed for this page.", rate_limited: "Too many requests. Try again in a moment.",
           sampling_disabled: "Claude isn't available for this account.", unavailable: "AI isn't available in this view." }[e && e.code];
-        show(why || "Something went wrong. Try again.", [], null);
+        showProblem(why || "Something went wrong. Try again.");
       }
     }
   }

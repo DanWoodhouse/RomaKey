@@ -250,6 +250,7 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
             panel.onReplace = { [weak self] text in
                 self?.replaceTextBeforeCursor(input, with: text)
                 self?.closePanel()
+                self?.flash("✨ Replaced")
             }
             install(panel)
         case .settings:
