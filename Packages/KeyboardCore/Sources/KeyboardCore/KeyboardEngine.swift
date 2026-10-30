@@ -1,20 +1,6 @@
 import Foundation
 
-/// Where the engine sends text. The keyboard extension forwards these to `UITextDocumentProxy`.
-public protocol TextOutput: AnyObject {
-    func insertText(_ text: String)
-    func deleteBackward()
-    func setMarkedText(_ text: String)
-    func unmarkText()
-}
-
-public enum KeyLabel: Equatable {
-    case text(String)
-    /// SF Symbol name.
-    case systemImage(String)
-}
-
-/// Keyboard state and key handling, independent of UIKit.
+/// The romaji (QWERTY) keyboard's state and key handling, independent of UIKit.
 public final class KeyboardEngine {
     public enum ShiftState: Equatable {
         case off
@@ -51,13 +37,7 @@ public final class KeyboardEngine {
 
     public var isComposing: Bool { !composer.isEmpty }
 
-    /// Conversion choices for the current composition (kanji conversion will go here later).
-    public var candidates: [String] {
-        guard isComposing else { return [] }
-        let hiragana = composer.finalizedText
-        let katakana = KanaConverter.katakana(from: hiragana)
-        return katakana == hiragana ? [hiragana] : [hiragana, katakana]
-    }
+    public var candidates: [String] { composer.candidates }
 
     public func press(_ kind: KeyKind) {
         switch kind {
@@ -88,7 +68,7 @@ public final class KeyboardEngine {
         case .longVowel:
             if mode == .japanese {
                 composer.input("-")
-                updateMarkedText()
+                output?.show(composer)
             } else {
                 output?.insertText("-")
             }
@@ -158,7 +138,7 @@ public final class KeyboardEngine {
                     composer.input(romaji)
                 }
             }
-            updateMarkedText()
+            output?.show(composer)
         }
         if shift == .once {
             shift = .off
@@ -178,24 +158,14 @@ public final class KeyboardEngine {
     private func deleteBackward() {
         if isComposing {
             composer.deleteBackward()
-            updateMarkedText()
+            output?.show(composer)
         } else {
             output?.deleteBackward()
         }
     }
 
-    private func updateMarkedText() {
-        if composer.isEmpty {
-            output?.setMarkedText("")
-            output?.unmarkText()
-        } else {
-            output?.setMarkedText(composer.displayText)
-        }
-    }
-
     private func commit(_ text: String) {
-        output?.setMarkedText(text)
-        output?.unmarkText()
+        output?.commit(text)
         composer.reset()
     }
 }

@@ -18,8 +18,8 @@ struct ContentView: View {
             Form {
                 Section("セットアップ · Setup") {
                     Label("Settings → General → Keyboard → Keyboards", systemImage: "1.circle")
-                    Label("Add New Keyboard… → ローマ字 (Japanese Keyboard)", systemImage: "2.circle")
-                    Label("Use 🌐 to switch to it in any app", systemImage: "3.circle")
+                    Label("Add New Keyboard… → 日本語キーボード → ローマ字 and かな", systemImage: "2.circle")
+                    Label("Use 🌐 to switch between them in any app", systemImage: "3.circle")
                     Button("Open Settings") {
                         if let url = URL(string: UIApplication.openSettingsURLString) {
                             openURL(url)
@@ -31,7 +31,7 @@ struct ContentView: View {
                         .lineLimit(3...8)
                 }
             }
-            .navigationTitle("ローマ字キーボード")
+            .navigationTitle("日本語キーボード")
         }
     }
 }

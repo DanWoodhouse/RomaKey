@@ -1,19 +1,6 @@
 import XCTest
 @testable import KeyboardCore
 
-private final class RecordingOutput: TextOutput {
-    var committed = ""
-    var marked = ""
-
-    func insertText(_ text: String) { committed += text }
-    func deleteBackward() { if !committed.isEmpty { committed.removeLast() } }
-    func setMarkedText(_ text: String) { marked = text }
-    func unmarkText() {
-        committed += marked
-        marked = ""
-    }
-}
-
 final class KeyboardEngineTests: XCTestCase {
     private var output: RecordingOutput!
 

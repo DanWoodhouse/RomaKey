@@ -21,7 +21,7 @@ targets:
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: ローマ字キーボード
+        CFBundleDisplayName: 日本語キーボード
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -31,26 +31,47 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.danwoodhouse.JapaneseKeyboard
     dependencies:
-      - target: KeyboardExtension
-  KeyboardExtension:
-    type: app-extension
-    platform: iOS
-    sources: [KeyboardExtension]
+      - target: RomajiKeyboard
+      - target: KanaKeyboard
+  # Two keyboards, each listed separately in Settings and switched with 🌐.
+  RomajiKeyboard:
+    templates: [KeyboardExtension]
+    sources: [RomajiKeyboard, Shared]
     info:
-      path: KeyboardExtension/Info.plist
+      path: RomajiKeyboard/Info.plist
       properties:
         CFBundleDisplayName: ローマ字
         NSExtension:
           NSExtensionPointIdentifier: com.apple.keyboard-service
-          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
-          NSExtensionAttributes:
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).RomajiKeyboardViewController
+          NSExtensionAttributes: &keyboardAttributes
             PrimaryLanguage: ja-JP
             IsASCIICapable: false
             PrefersRightToLeft: false
             RequestsOpenAccess: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.danwoodhouse.JapaneseKeyboard.Keyboard
+        PRODUCT_BUNDLE_IDENTIFIER: com.danwoodhouse.JapaneseKeyboard.Romaji
+  KanaKeyboard:
+    templates: [KeyboardExtension]
+    sources: [KanaKeyboard, Shared]
+    info:
+      path: KanaKeyboard/Info.plist
+      properties:
+        CFBundleDisplayName: かな
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KanaKeyboardViewController
+          NSExtensionAttributes: *keyboardAttributes
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.danwoodhouse.JapaneseKeyboard.Kana
+targetTemplates:
+  KeyboardExtension:
+    type: app-extension
+    platform: iOS
+    settings:
+      base:
         APPLICATION_EXTENSION_API_ONLY: YES
     dependencies:
       - package: KeyboardCore
