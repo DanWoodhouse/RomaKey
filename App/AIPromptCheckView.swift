@@ -81,6 +81,8 @@ struct AIPromptCheckView: View {
         case .politeness: return "Politeness"
         case .explain: return "Explain"
         case .kanji: return "Kanji conversion"
+        case .englishRewrite: return "English rewrite"
+        case .toEnglish: return "Japanese → English"
         }
     }
 
@@ -115,7 +117,8 @@ struct AIPromptCheckView: View {
         [AIPrompts.grammar(for: "日本語").key, AIPrompts.grammar(for: "English").key]
             + [Politeness.casual, .polite].map { AIPrompts.translate(style: $0).key }
             + Politeness.allCases.map { AIPrompts.politeness($0).key }
-            + [AIPrompts.explain.key, AIPrompts.kanji.key]
+            + [AIPrompts.explain.key, AIPrompts.kanji.key, AIPrompts.toEnglish.key]
+            + EnglishStyle.allCases.map { AIPrompts.englishRewrite($0).key }
     }
 }
 

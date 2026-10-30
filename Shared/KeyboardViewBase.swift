@@ -13,6 +13,8 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     private(set) var theme = KeyboardTheme.named(.system)
     private var entryView: DictionaryEntryView?
     private let backgroundImageView = UIImageView()
+    /// The background colour or gradient, at the user's opacity.
+    private let gradientLayer = CAGradientLayer()
     private let dimView = UIView()
     private let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .regular))
 
@@ -50,6 +52,7 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         backgroundImageView.contentMode = .scaleAspectFill
         backgroundImageView.clipsToBounds = true
         dimView.backgroundColor = .black
+        layer.insertSublayer(gradientLayer, at: 0)
         for view in [backgroundImageView, blurView, dimView] {
             view.isHidden = true
             view.isUserInteractionEnabled = false
@@ -132,7 +135,8 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     func apply(_ settings: KeyboardSettings) {
         self.settings = settings
         theme = KeyboardTheme(settings)
-        backgroundColor = theme.background
+        backgroundColor = .clear
+        updateBackground()
 
         let image = BackgroundImageLoader.image(id: settings.backgroundImageID)
         backgroundImageView.image = image
@@ -146,12 +150,44 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         setNeedsLayout()
     }
 
+    /// A plain colour is a gradient with two equal stops. Colours are resolved here, so this runs
+    /// again when light or dark mode changes.
+    private func updateBackground() {
+        let start = theme.gradientStart
+        let end = theme.gradientEnd ?? start
+        let showsColour = theme.background != .clear || theme.gradientEnd != nil
+        gradientLayer.isHidden = !showsColour
+        gradientLayer.colors = [start, end].map {
+            $0.resolvedColor(with: traitCollection).withAlphaComponent(theme.backgroundOpacity).cgColor
+        }
+        switch theme.gradientDirection {
+        case .down:
+            gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
+            gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
+        case .diagonal:
+            gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+            gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        case .across:
+            gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
+            gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)
+        }
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        updateBackground()
+    }
+
     var rowHeight: CGFloat {
         KeyboardMetrics.rowHeight(compact: traitCollection.verticalSizeClass == .compact, height: settings.height)
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        gradientLayer.frame = bounds
+        CATransaction.commit()
         backgroundImageView.frame = bounds
         blurView.frame = bounds
         dimView.frame = bounds

@@ -82,6 +82,7 @@ final class FlickKeyboardView: KeyboardViewBase {
         let layout = engine.layout
         buttons = layout.cells.map { cell in
             let button = FlickKeyButton(kind: cell.kind)
+            button.isPrimaryAction = cell.kind == .returnKey
             button.theme = theme
             configureActions(for: button)
             keyArea.addSubview(button)

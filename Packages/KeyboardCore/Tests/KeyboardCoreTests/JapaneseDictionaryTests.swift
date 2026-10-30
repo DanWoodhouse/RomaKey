@@ -94,6 +94,15 @@ final class KeyboardSettingsTests: XCTestCase {
         settings.boldKeys = true
         settings.aiProvider = .claude
         settings.claudeAPIKey = "sk-test"
+        settings.backgroundOpacity = 0.6
+        settings.backgroundGradient = true
+        settings.gradientColor = 0xF2A7C3
+        settings.gradientDirection = .diagonal
+        settings.keyCornerRadius = 12
+        settings.keyShadows = false
+        settings.keyOutlines = true
+        settings.keySpacing = .airy
+        settings.accentReturnKey = true
         settings.save(to: defaults)
         XCTAssertEqual(KeyboardSettings(defaults: defaults), settings)
 
@@ -106,10 +115,14 @@ final class KeyboardSettingsTests: XCTestCase {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: "KeyboardSettingsTests-\(UUID())"))
         defaults.set(0.0, forKey: "keyOpacity")
         defaults.set(5.0, forKey: "backgroundDim")
+        defaults.set(0.0, forKey: "backgroundOpacity")
+        defaults.set(40.0, forKey: "keyCornerRadius")
         defaults.set(["key": 0x1000000, "text": 0x00FF00], forKey: "customColors")
         let settings = KeyboardSettings(defaults: defaults)
         XCTAssertEqual(settings.keyOpacity, 0.3)
         XCTAssertEqual(settings.backgroundDim, 0.8)
+        XCTAssertEqual(settings.backgroundOpacity, 0.2)
+        XCTAssertEqual(settings.keyCornerRadius, 16)
         // Invalid colours keep the default; valid ones are used.
         XCTAssertEqual(settings.customColors.key, KeyboardSettings().customColors.key)
         XCTAssertEqual(settings.customColors.text, 0x00FF00)

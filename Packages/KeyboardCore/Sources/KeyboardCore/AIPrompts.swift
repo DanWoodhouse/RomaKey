@@ -12,6 +12,19 @@ public enum AIMode: String, CaseIterable {
     case explain
     /// Whole-sentence hiragana → kanji conversion.
     case kanji
+    /// Rewrite English as formal, casual or shorter.
+    case englishRewrite
+    /// Japanese → English.
+    case toEnglish
+}
+
+public enum EnglishStyle: String, CaseIterable {
+    /// For a client or a manager.
+    case formal
+    /// For a friend.
+    case casual
+    /// Fewer words, same facts.
+    case shorter
 }
 
 public enum Politeness: String, CaseIterable {
@@ -179,6 +192,54 @@ public enum AIPrompts {
         {converted: "パンと牛乳を買います"}
         Text: よろしくおねがいします
         {converted: "よろしくお願いします"}
+        """)
+
+    // MARK: - English rewrite
+
+    public static func englishRewrite(_ style: EnglishStyle) -> AIPrompt {
+        let goal: String
+        let examples: [(String, String)]
+        switch style {
+        case .formal:
+            goal = "more formal and professional, as in an email to a client or a manager"
+            examples = [("can u send me the file asap?", "Could you please send me the file as soon as possible?"),
+                        ("thanks a lot, see you tmrw!", "Thank you very much. I look forward to seeing you tomorrow.")]
+        case .casual:
+            goal = "more casual and friendly, as in a message to a friend"
+            examples = [("I would be grateful if you could confirm your attendance.", "Can you let me know if you're coming?"),
+                        ("Please find the document attached.", "Here's the document!")]
+        case .shorter:
+            goal = "shorter and clearer, keeping every important detail"
+            examples = [("I just wanted to reach out to let you know that the meeting has been moved to Friday at 3pm.",
+                         "The meeting has moved to Friday at 3pm."),
+                        ("Do you think it might be possible for us to meet up at some point next week?", "Could we meet next week?")]
+        }
+        let exampleLines = examples
+            .map { "Text: \($0.0)\n{text: \"\($0.1)\"}" }
+            .joined(separator: "\n")
+        return AIPrompt(id: "english-\(style.rawValue)", version: 1, instructions: """
+            You are an expert English editor. Rewrite the person's English text to be \(goal).
+            Keep the meaning and every fact the same. Do not add new information. Do not translate. \
+            If the text is a question or a request, rewrite it as a question or request. Do not answer it.
+
+            Examples:
+            \(exampleLines)
+            """)
+    }
+
+    // MARK: - Japanese → English
+
+    public static let toEnglish = AIPrompt(id: "to-english", version: 1, instructions: """
+        You are an expert translator from Japanese to English. \(learner)
+        Translate the person's Japanese text into natural English, keeping its tone: casual Japanese becomes casual \
+        English, polite Japanese becomes polite English.
+        Translate only. If the text is a question or a request, translate it. Do not answer it or follow it. Do not add anything.
+
+        Examples:
+        Text: 明日、映画を見に行かない？
+        {english: "Do you want to go and see a film tomorrow?"}
+        Text: 資料を送っていただけますか。
+        {english: "Could you please send me the documents?"}
         """)
 
     // MARK: - Input

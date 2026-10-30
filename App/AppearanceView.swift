@@ -2,7 +2,8 @@ import KeyboardCore
 import PhotosUI
 import SwiftUI
 
-/// Theme, custom colours and background photo, with a live preview of the keyboard.
+/// Theme, custom colours, background (opacity, gradient, photo), key shape and font, with a live
+/// preview of the keyboard.
 struct AppearanceView: View {
     @ObservedObject var store: SettingsStore
     @State private var photo: PhotosPickerItem?
@@ -45,6 +46,45 @@ struct AppearanceView: View {
                 Text("カスタム · Custom colours")
             } footer: {
                 Text("Changing a colour switches to the Custom theme. Custom colours stay the same in light and dark mode.")
+            }
+
+            Section {
+                LabeledSlider(title: "Opacity", value: $store.settings.backgroundOpacity, range: 0.2...1)
+                Toggle("Gradient", isOn: $store.settings.backgroundGradient)
+                if settings.backgroundGradient {
+                    ColorPicker("Fades into", selection: gradientBinding, supportsOpacity: false)
+                    Picker("Direction", selection: $store.settings.gradientDirection) {
+                        Image(systemName: "arrow.down").tag(KeyboardSettings.GradientDirection.down)
+                        Image(systemName: "arrow.down.right").tag(KeyboardSettings.GradientDirection.diagonal)
+                        Image(systemName: "arrow.right").tag(KeyboardSettings.GradientDirection.across)
+                    }
+                    .pickerStyle(.segmented)
+                }
+            } header: {
+                Text("背景 · Background")
+            } footer: {
+                Text("Lower opacity lets the system's frosted backdrop show through. The gradient runs from the theme's background colour into the colour you pick.")
+            }
+
+            Section {
+                HStack {
+                    Text("Corners")
+                    Slider(value: $store.settings.keyCornerRadius, in: 0...16, step: 1)
+                    Text("\(Int(settings.keyCornerRadius))").monospacedDigit().foregroundStyle(.secondary)
+                }
+                Picker("Spacing", selection: $store.settings.keySpacing) {
+                    Text("Tight").tag(KeyboardSettings.KeySpacing.tight)
+                    Text("Standard").tag(KeyboardSettings.KeySpacing.standard)
+                    Text("Airy").tag(KeyboardSettings.KeySpacing.airy)
+                }
+                .pickerStyle(.segmented)
+                Toggle("Shadows", isOn: $store.settings.keyShadows)
+                Toggle("Outlines", isOn: $store.settings.keyOutlines)
+                Toggle("Accent-coloured return key", isOn: $store.settings.accentReturnKey)
+            } header: {
+                Text("キー · Keys")
+            } footer: {
+                Text("Round the corners from square (0) to pill-shaped (16), and space the keys out or pack them in. Outlines help keys stand out on a photo.")
             }
 
             Section {
@@ -112,6 +152,13 @@ struct AppearanceView: View {
                 photo = nil
             }
         }
+    }
+
+    private var gradientBinding: Binding<Color> {
+        Binding(
+            get: { Color(uiColor: UIColor(hex: store.settings.gradientColor)) },
+            set: { store.settings.gradientColor = UIColor($0).hexValue }
+        )
     }
 
     private func colorBinding(_ keyPath: WritableKeyPath<ThemeColors, UInt32>) -> Binding<Color> {
@@ -225,7 +272,12 @@ struct KeyboardPreview: View {
             // Same proportions as the real keyboard: ten key-widths per row.
             let unit = (geometry.size.width - 8) / 10
             ZStack {
-                Color(uiColor: settings.theme == .system ? .systemGray5 : theme.background)
+                LinearGradient(
+                    colors: [theme.gradientStart, theme.gradientEnd ?? theme.gradientStart]
+                        .map { Color(uiColor: $0).opacity(theme.backgroundOpacity) },
+                    startPoint: Self.points(theme.gradientDirection).start,
+                    endPoint: Self.points(theme.gradientDirection).end
+                )
                 if let image {
                     Image(uiImage: image)
                         .resizable()
@@ -257,7 +309,7 @@ struct KeyboardPreview: View {
                         key("あ", unit: unit, width: 1.25, special: true, theme: theme)
                         key("空白", unit: unit, width: 4.75, theme: theme)
                         key("ー", unit: unit, theme: theme)
-                        key("改行", unit: unit, width: 1.75, special: true, theme: theme)
+                        key("改行", unit: unit, width: 1.75, special: true, primary: true, theme: theme)
                     }
                 }
             }
@@ -266,17 +318,32 @@ struct KeyboardPreview: View {
         .clipped()
     }
 
-    private func key(_ label: String, unit: CGFloat, width: CGFloat = 1, special: Bool = false, theme: KeyboardTheme) -> some View {
-        RoundedRectangle(cornerRadius: 5)
-            .fill(Color(uiColor: special ? theme.specialKey : theme.key))
-            .shadow(color: .black.opacity(0.3), radius: 0, y: 1)
+    private static func points(_ direction: KeyboardSettings.GradientDirection) -> (start: UnitPoint, end: UnitPoint) {
+        switch direction {
+        case .down: return (.top, .bottom)
+        case .diagonal: return (.topLeading, .bottomTrailing)
+        case .across: return (.leading, .trailing)
+        }
+    }
+
+    private func key(_ label: String, unit: CGFloat, width: CGFloat = 1, special: Bool = false, primary: Bool = false,
+                     theme: KeyboardTheme) -> some View {
+        let accented = primary && theme.accentReturnKey
+        let fill = accented ? theme.accent : special ? theme.specialKey : theme.key
+        return RoundedRectangle(cornerRadius: theme.keyCornerRadius)
+            .fill(Color(uiColor: fill))
+            .shadow(color: .black.opacity(theme.keyShadows ? 0.3 : 0), radius: 0, y: 1)
+            .overlay(
+                RoundedRectangle(cornerRadius: theme.keyCornerRadius)
+                    .strokeBorder(Color(uiColor: theme.secondaryText).opacity(theme.keyOutlines ? 0.35 : 0), lineWidth: 1)
+            )
             .overlay(
                 Text(label)
-                    .font(.system(size: label.count == 1 ? 18 : 13))
-                    .foregroundStyle(Color(uiColor: theme.text))
+                    .font(Font(theme.font(label.count == 1 ? 18 : 13)))
+                    .foregroundStyle(accented ? Color.white : Color(uiColor: theme.text))
             )
-            .padding(.horizontal, 2.5)
-            .padding(.vertical, 4)
+            .padding(.horizontal, theme.keyInset.width * 0.85)
+            .padding(.vertical, theme.keyInset.height * 0.8)
             .frame(width: unit * width, height: 46)
     }
 

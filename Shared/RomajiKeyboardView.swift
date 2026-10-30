@@ -102,6 +102,7 @@ final class RomajiKeyboardView: KeyboardViewBase {
         buttons = layout.rows.map { row in
             row.keys.map { key in
                 let button = RomajiKeyButton(kind: key.kind)
+                button.isPrimaryAction = key.kind == .returnKey
                 button.theme = theme
                 configureActions(for: button)
                 keyArea.addSubview(button)

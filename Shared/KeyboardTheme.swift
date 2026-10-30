@@ -18,10 +18,40 @@ struct KeyboardTheme {
     let textScale: CGFloat
     let boldKeys: Bool
 
+    // Shape and background
+    var keyCornerRadius: CGFloat = 5
+    var keyShadows = true
+    var keyOutlines = false
+    /// How far the drawn key sits inside its touch area, horizontally and vertically.
+    var keyInset = CGSize(width: 3, height: 5)
+    var accentReturnKey = false
+    var backgroundOpacity: CGFloat = 1
+    /// The colour the background fades into, if it's a gradient.
+    var gradientEnd: UIColor?
+    var gradientDirection: KeyboardSettings.GradientDirection = .down
+
     /// The theme `settings` describe.
     init(_ settings: KeyboardSettings) {
         self.init(theme: settings.theme, custom: settings.customColors, keyOpacity: settings.keyOpacity,
                   keyFont: settings.keyFont, textScale: settings.textSize.scale, boldKeys: settings.boldKeys)
+        keyCornerRadius = CGFloat(settings.keyCornerRadius)
+        keyShadows = settings.keyShadows
+        keyOutlines = settings.keyOutlines
+        switch settings.keySpacing {
+        case .tight: keyInset = CGSize(width: 2, height: 3.5)
+        case .standard: keyInset = CGSize(width: 3, height: 5)
+        case .airy: keyInset = CGSize(width: 4.5, height: 6.5)
+        }
+        accentReturnKey = settings.accentReturnKey
+        backgroundOpacity = CGFloat(settings.backgroundOpacity)
+        gradientEnd = settings.backgroundGradient ? UIColor(hex: settings.gradientColor) : nil
+        gradientDirection = settings.gradientDirection
+    }
+
+    /// The background's start colour. The system theme has no colour of its own, so its gradient
+    /// starts from the system's grey.
+    var gradientStart: UIColor {
+        background == .clear ? .systemGray5 : background
     }
 
     init(theme: KeyboardSettings.Theme, custom: ThemeColors? = nil, keyOpacity: Double = 1,

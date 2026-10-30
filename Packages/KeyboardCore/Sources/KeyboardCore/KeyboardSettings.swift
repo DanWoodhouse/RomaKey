@@ -63,6 +63,20 @@ public struct KeyboardSettings: Equatable {
         }
     }
 
+    /// Which way the background gradient runs.
+    public enum GradientDirection: String, CaseIterable {
+        case down
+        case diagonal
+        case across
+    }
+
+    /// The gap between keys.
+    public enum KeySpacing: String, CaseIterable {
+        case tight
+        case standard
+        case airy
+    }
+
     /// Which model answers the ✨ panel.
     public enum AIProvider: String, CaseIterable {
         /// Apple Intelligence, on the phone. Needs iOS 26 and a supported iPhone.
@@ -141,6 +155,19 @@ public struct KeyboardSettings: Equatable {
     /// 0–0.8: how much the background image is darkened, to keep labels readable.
     public var backgroundDim = 0.2
     public var backgroundBlur = false
+    /// 0.2–1: how solid the background is. Lower lets the system's frosted backdrop show through.
+    public var backgroundOpacity = 1.0
+    /// Fades the background into `gradientColor`.
+    public var backgroundGradient = false
+    public var gradientColor: UInt32 = 0x8EC5FC
+    public var gradientDirection: GradientDirection = .down
+    /// 0–16 points. The system keyboard uses 5.
+    public var keyCornerRadius = 5.0
+    public var keyShadows = true
+    public var keyOutlines = false
+    public var keySpacing: KeySpacing = .standard
+    /// The return key in the accent colour, like the system's blue "Go".
+    public var accentReturnKey = false
 
     /// Written by the keyboard, for `StartingMode.lastUsed`.
     public var lastUsedMode: InputMode = .japanese
@@ -195,6 +222,15 @@ public struct KeyboardSettings: Equatable {
         static let backgroundImageID = "backgroundImageID"
         static let backgroundDim = "backgroundDim"
         static let backgroundBlur = "backgroundBlur"
+        static let backgroundOpacity = "backgroundOpacity"
+        static let backgroundGradient = "backgroundGradient"
+        static let gradientColor = "gradientColor"
+        static let gradientDirection = "gradientDirection"
+        static let keyCornerRadius = "keyCornerRadius"
+        static let keyShadows = "keyShadows"
+        static let keyOutlines = "keyOutlines"
+        static let keySpacing = "keySpacing"
+        static let accentReturnKey = "accentReturnKey"
         static let lastUsedMode = "lastUsedMode"
     }
 
@@ -254,6 +290,17 @@ public struct KeyboardSettings: Equatable {
         backgroundImageID = defaults.string(forKey: Key.backgroundImageID)
         backgroundDim = number(Key.backgroundDim, backgroundDim, in: 0...0.8)
         backgroundBlur = bool(Key.backgroundBlur, backgroundBlur)
+        backgroundOpacity = number(Key.backgroundOpacity, backgroundOpacity, in: 0.2...1)
+        backgroundGradient = bool(Key.backgroundGradient, backgroundGradient)
+        if let color = defaults.object(forKey: Key.gradientColor) as? Int {
+            gradientColor = UInt32(truncatingIfNeeded: color) & 0xFFFFFF
+        }
+        gradientDirection = value(Key.gradientDirection, gradientDirection)
+        keyCornerRadius = number(Key.keyCornerRadius, keyCornerRadius, in: 0...16)
+        keyShadows = bool(Key.keyShadows, keyShadows)
+        keyOutlines = bool(Key.keyOutlines, keyOutlines)
+        keySpacing = value(Key.keySpacing, keySpacing)
+        accentReturnKey = bool(Key.accentReturnKey, accentReturnKey)
         lastUsedMode = value(Key.lastUsedMode, lastUsedMode)
     }
 
@@ -294,6 +341,15 @@ public struct KeyboardSettings: Equatable {
         defaults.set(backgroundImageID, forKey: Key.backgroundImageID)
         defaults.set(backgroundDim, forKey: Key.backgroundDim)
         defaults.set(backgroundBlur, forKey: Key.backgroundBlur)
+        defaults.set(backgroundOpacity, forKey: Key.backgroundOpacity)
+        defaults.set(backgroundGradient, forKey: Key.backgroundGradient)
+        defaults.set(Int(gradientColor), forKey: Key.gradientColor)
+        defaults.set(gradientDirection.rawValue, forKey: Key.gradientDirection)
+        defaults.set(keyCornerRadius, forKey: Key.keyCornerRadius)
+        defaults.set(keyShadows, forKey: Key.keyShadows)
+        defaults.set(keyOutlines, forKey: Key.keyOutlines)
+        defaults.set(keySpacing.rawValue, forKey: Key.keySpacing)
+        defaults.set(accentReturnKey, forKey: Key.accentReturnKey)
         // lastUsedMode is left alone: only the keyboard writes it, via saveLastUsedMode.
     }
 

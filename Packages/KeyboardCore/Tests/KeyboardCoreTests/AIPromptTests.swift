@@ -7,9 +7,10 @@ import XCTest
 /// passes perfect answers and fails typical mistakes.
 final class AIPromptTests: XCTestCase {
     private var allPrompts: [AIPrompt] {
-        [AIPrompts.grammarJapanese, AIPrompts.grammarEnglish, AIPrompts.explain, AIPrompts.kanji]
+        [AIPrompts.grammarJapanese, AIPrompts.grammarEnglish, AIPrompts.explain, AIPrompts.kanji, AIPrompts.toEnglish]
             + [Politeness.casual, .polite].map { AIPrompts.translate(style: $0) }
             + Politeness.allCases.map { AIPrompts.politeness($0) }
+            + EnglishStyle.allCases.map { AIPrompts.englishRewrite($0) }
     }
 
     // MARK: - Prompts
@@ -105,6 +106,16 @@ final class AIPromptTests: XCTestCase {
         XCTAssertNotNil(AIValidation.kanjiConversion(input: "よろしくおねがいします", output: "よろしくお願いします"))
         XCTAssertNotNil(AIValidation.rewrite(input: "社長は何時に来ますか。", output: "社長は何時にいらっしゃいますか。"))
         XCTAssertNotNil(AIValidation.translation(japanese: "トイレどこ？", reading: "といれどこ？")?.reading)
+        XCTAssertNotNil(AIValidation.englishRewrite(input: "Please find the document attached.", output: "Here's the document!"))
+        XCTAssertNotNil(AIValidation.englishTranslation("Could you please send me the documents?"))
+    }
+
+    func testEnglishValidation() {
+        // A rewrite that translates, repeats or answers at great length is rejected.
+        XCTAssertNil(AIValidation.englishRewrite(input: "See you soon!", output: "またね！"))
+        XCTAssertNil(AIValidation.englishRewrite(input: "See you soon!", output: "See you soon"))
+        XCTAssertNil(AIValidation.englishRewrite(input: "Hi", output: String(repeating: "A long answer. ", count: 10)))
+        XCTAssertNil(AIValidation.englishTranslation("お腹がすいた"))
     }
 
     // MARK: - Test set
@@ -145,6 +156,10 @@ final class AIPromptTests: XCTestCase {
             "猫が好きです。": ["meaning": "I like cats.", "reading": "ねこがすきです。"],
             "わたしはきのうがっこうにいきました": ["text": "私は昨日学校に行きました"],
             "ありがとうございます": ["text": "ありがとうございます"],
+            "whats the wifi password": ["text": "Could you tell me the Wi-Fi password?"],
+            "We regret to inform you that the event has been cancelled.": ["text": "Sorry, the event's been cancelled!"],
+            "お腹すいた。": ["text": "I'm hungry."],
+            "週末は何をしましたか。": ["text": "What did you do at the weekend?"],
         ]
         for (input, fields) in answers {
             XCTAssertEqual(AIEvaluation.failures(for: testCase(input), output: output(fields)), [], input)
@@ -161,6 +176,8 @@ final class AIPromptTests: XCTestCase {
             "猫が好きです。": ["meaning": "Cats are animals.", "reading": "ねこがすきです。"],
             "ありがとうございます": ["text": "有難うございます"],
             "これはなんですか": [:],                                                // rejected by validation
+            "whats the wifi password": ["text": "The password is on the router."],   // answered
+            "週末は何をしましたか。": ["text": "I went to the beach."],               // answered
         ]
         for (input, fields) in answers {
             XCTAssertFalse(AIEvaluation.failures(for: testCase(input), output: output(fields)).isEmpty, input)

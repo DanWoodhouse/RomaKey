@@ -10,6 +10,11 @@ settings:
     # Foundation Models needs iOS 26; weak-linking keeps the app running on older versions.
     OTHER_LDFLAGS: ["$(inherited)", "-weak_framework", "FoundationModels"]
     CURRENT_PROJECT_VERSION: "1"
+    # Signing: put your team ID here (Xcode → Settings → Accounts → your Apple ID → the team's ID,
+    # or developer.apple.com → Membership) so it survives re-running xcodegen.
+    # See docs/setup-iphone.md.
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
     SWIFT_VERSION: "5.9"
     TARGETED_DEVICE_FAMILY: "1,2"
 packages:

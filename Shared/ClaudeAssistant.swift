@@ -9,6 +9,8 @@ protocol AIEngine {
     func rewrite(_ japanese: String, as target: Politeness) async throws -> String?
     func explain(_ japanese: String) async throws -> Explanation?
     func convertToKanji(_ hiragana: String) async throws -> String?
+    func rewriteEnglish(_ english: String, as style: EnglishStyle) async throws -> String?
+    func translateToEnglish(_ japanese: String) async throws -> String?
 }
 
 #if canImport(FoundationModels)
@@ -20,6 +22,8 @@ struct AppleAIEngine: AIEngine {
     func rewrite(_ japanese: String, as target: Politeness) async throws -> String? { try await AIAssistant.rewrite(japanese, as: target) }
     func explain(_ japanese: String) async throws -> Explanation? { try await AIAssistant.explain(japanese) }
     func convertToKanji(_ hiragana: String) async throws -> String? { try await AIAssistant.convertToKanji(hiragana) }
+    func rewriteEnglish(_ english: String, as style: EnglishStyle) async throws -> String? { try await AIAssistant.rewriteEnglish(english, as: style) }
+    func translateToEnglish(_ japanese: String) async throws -> String? { try await AIAssistant.translateToEnglish(japanese) }
 }
 #endif
 
@@ -96,6 +100,22 @@ struct ClaudeAIEngine: AIEngine {
             "converted": ["type": "string"],
         ]))
         return AIValidation.kanjiConversion(input: input, output: response.converted)
+    }
+
+    func rewriteEnglish(_ english: String, as style: EnglishStyle) async throws -> String? {
+        let input = AIPrompts.trimmedInput(english)
+        let response: RewriteJSON = try await ask(AIPrompts.englishRewrite(style), input: input, schema: Self.object([
+            "text": ["type": "string"],
+        ]))
+        return AIValidation.englishRewrite(input: input, output: response.text)
+    }
+
+    func translateToEnglish(_ japanese: String) async throws -> String? {
+        let input = AIPrompts.trimmedInput(japanese)
+        let response: EnglishJSON = try await ask(AIPrompts.toEnglish, input: input, schema: Self.object([
+            "english": ["type": "string"],
+        ]))
+        return AIValidation.englishTranslation(response.english)
     }
 
     // MARK: - Request
@@ -177,6 +197,10 @@ struct ClaudeAIEngine: AIEngine {
         let reading: String
         let meaning: String
         let notes: [String]
+    }
+
+    private struct EnglishJSON: Decodable {
+        let english: String
     }
 
     private struct ConversionJSON: Decodable {

@@ -69,6 +69,13 @@ struct ExplanationResponse {
 
 @available(iOS 26.0, *)
 @Generable
+struct EnglishTranslationResponse {
+    @Guide(description: "The English translation")
+    var english: String
+}
+
+@available(iOS 26.0, *)
+@Generable
 struct ConversionResponse {
     @Guide(description: "The text written with kanji and kana")
     var converted: String
@@ -106,6 +113,17 @@ enum AIAssistant {
     static func explain(_ japanese: String) async throws -> Explanation? {
         let response = try await explanationResponse(AIPrompts.trimmedInput(japanese))
         return AIValidation.explanation(reading: response.reading, meaning: response.meaning, notes: response.notes)
+    }
+
+    static func rewriteEnglish(_ english: String, as style: EnglishStyle) async throws -> String? {
+        let input = AIPrompts.trimmedInput(english)
+        let response = try await englishRewriteResponse(input, style: style)
+        return AIValidation.englishRewrite(input: input, output: response.text)
+    }
+
+    static func translateToEnglish(_ japanese: String) async throws -> String? {
+        let response = try await englishTranslationResponse(AIPrompts.trimmedInput(japanese))
+        return AIValidation.englishTranslation(response.english)
     }
 
     static func convertToKanji(_ hiragana: String) async throws -> String? {
@@ -156,6 +174,14 @@ enum AIAssistant {
                 let response = try await conversionResponse(input)
                 raw = response.converted
                 fields["text"] = AIValidation.kanjiConversion(input: input, output: response.converted)
+            case .englishRewrite:
+                let response = try await englishRewriteResponse(input, style: testCase.englishStyle ?? .formal)
+                raw = response.text
+                fields["text"] = AIValidation.englishRewrite(input: input, output: response.text)
+            case .toEnglish:
+                let response = try await englishTranslationResponse(input)
+                raw = response.english
+                fields["text"] = AIValidation.englishTranslation(response.english)
             }
         } catch {
             raw = "Error: \(error.localizedDescription)"
@@ -206,6 +232,18 @@ enum AIAssistant {
     private static func explanationResponse(_ input: String) async throws -> ExplanationResponse {
         try await session(for: AIPrompts.explain)
             .respond(to: AIPrompts.prompt(for: input), generating: ExplanationResponse.self, options: options(maximumTokens: 400))
+            .content
+    }
+
+    private static func englishRewriteResponse(_ input: String, style: EnglishStyle) async throws -> RewriteResponse {
+        try await session(for: AIPrompts.englishRewrite(style))
+            .respond(to: AIPrompts.prompt(for: input), generating: RewriteResponse.self, options: options(maximumTokens: 300))
+            .content
+    }
+
+    private static func englishTranslationResponse(_ input: String) async throws -> EnglishTranslationResponse {
+        try await session(for: AIPrompts.toEnglish)
+            .respond(to: AIPrompts.prompt(for: input), generating: EnglishTranslationResponse.self, options: options(maximumTokens: 300))
             .content
     }
 

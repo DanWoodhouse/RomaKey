@@ -103,7 +103,7 @@ While typing:
 - **English suggestions and autocorrect** from Apple's spell checker, your iOS text replacements (omw → On my way!) and words you use. Press delete straight after an autocorrection to undo it; the keyboard then learns the word. Contact names are never "corrected".
 - **Emoji suggestions:** type cat or ねこ and 🐈 is offered.
 - **Predictive text:** after each word, the likely next words (thank → you, going → to), from common English word pairs and from the pairs you type, which come first. In Japanese, after a word you convert, what you usually type next, then particles (猫 → は, が, を…). A 😊 button stays in front of the predictions.
-- **✨ AI (Apple Intelligence):** finish a sentence and tap ✨ in the toolbar. Japanese: check grammar, explain (reading, meaning and notes), rewrite as casual, です/ます or 敬語, or convert hiragana to kanji. English: check grammar or translate into casual, polite or 敬語 Japanese. "Use this" swaps the result in. By default it runs on Apple's on-device model, so nothing leaves the phone and there's nothing to set up beyond building with Xcode 26: it needs iOS 26 on an iPhone 15 Pro or newer with Apple Intelligence on. Whether the model runs inside a keyboard isn't documented, so run the app's **Apple Intelligence test** first. You can switch to **Claude** in Settings → AI or in the ✨ panel: it uses your own API key and Claude Opus 5.5 with the same prompts, sends the text to Anthropic, and needs Full Access. ✨ sits in the toolbar and, between words, in front of the predictions next to 😊. Prompts and their test set: [docs/ai-prompts.md](docs/ai-prompts.md).
+- **✨ AI (Apple Intelligence):** finish a sentence and tap ✨ in the toolbar. Japanese actions come first, English ones underneath. For Japanese text: check grammar, explain (reading, meaning and notes), rewrite as casual, です/ます or 敬語, convert hiragana to kanji, or translate into English. For English text: translate into casual, polite or 敬語 Japanese, check grammar, or rewrite it formal, casual or shorter. "Use this" swaps the result in. By default it runs on Apple's on-device model, so nothing leaves the phone and there's nothing to set up beyond building with Xcode 26: it needs iOS 26 on an iPhone 15 Pro or newer with Apple Intelligence on. Whether the model runs inside a keyboard isn't documented, so run the app's **Apple Intelligence test** first. You can switch to **Claude** in Settings → AI or in the ✨ panel: it uses your own API key and Claude Opus 5.5 with the same prompts, sends the text to Anthropic, and needs Full Access. ✨ sits in the toolbar and, between words, in front of the predictions next to 😊. Prompts and their test set: [docs/ai-prompts.md](docs/ai-prompts.md).
 - **Dictation:** iOS doesn't let third-party keyboards use the microphone, so there's no dictation key. The system 🎤 below the keyboard (on iPhones with Face ID) still works while RomaKey is showing, in Japanese or English.
 - **Quick settings:** clear the text and tap ⚙︎ in the toolbar to switch autocorrect, auto-capitalisation, predictive text and the other typing settings without leaving the app you're in. Without Full Access they're saved on the keyboard only.
 - **Learned kanji:** the word you picked last time for a reading comes first (きかい → 機会, if that's what you use).
@@ -131,6 +131,8 @@ The app's **設定 · Settings** screen has the following. Theme, colours, photo
 | Background photo | Any photo from your library, with darken, blur and key opacity (so it shows through the keys) |
 | Height | Compact, Standard, Tall |
 | Font | System, Rounded (Hiragino Maru Gothic), Serif (Hiragino Mincho) or Mono; small, standard or large text; bold keys |
+| Background | Opacity, and a gradient into a colour you pick (down, diagonal or across) |
+| Keys | Corner radius (square to pill), spacing (tight, standard, airy), shadows, outlines, accent-coloured return key |
 | Start in | あ, EN, 辞, or the last mode used |
 | Mode key | Which of あ / EN / 辞 a tap steps through (at least two); left-handed (mirrored) mode wheel |
 | Typing | Auto-capitalisation, double-space full stop, key popups, hold top row for numbers (q → 1 … p → 0) |
@@ -197,6 +199,10 @@ Run the logic tests without Xcode:
 cd Packages/KeyboardCore
 swift test
 ```
+
+## Trying it on your iPhone
+
+Step-by-step, from installing Xcode to typing with it: [docs/setup-iphone.md](docs/setup-iphone.md).
 
 ## Web preview
 

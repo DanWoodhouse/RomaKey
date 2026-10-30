@@ -29,6 +29,10 @@ class KeyButton: UIControl {
 
     /// Function keys (shift, delete, …) are drawn darker than character keys.
     let isSpecial: Bool
+    /// Return: drawn in the accent colour when the theme asks for it.
+    var isPrimaryAction = false {
+        didSet { applyColors() }
+    }
     private let keycap = UIView()
     private let titleLabel = UILabel()
     private let iconView = UIImageView()
@@ -75,7 +79,7 @@ class KeyButton: UIControl {
     override func layoutSubviews() {
         super.layoutSubviews()
         // Gaps between keys are drawn, but still belong to a key's touch area.
-        keycap.frame = keycapFrame.insetBy(dx: 3, dy: 5)
+        keycap.frame = keycapFrame.insetBy(dx: theme.keyInset.width, dy: theme.keyInset.height)
         titleLabel.frame = keycap.bounds.insetBy(dx: 2, dy: 0)
         iconView.frame = keycap.bounds
         hintLabel.frame = CGRect(x: 0, y: 2, width: keycap.bounds.width - 4, height: 12)
@@ -105,13 +109,21 @@ class KeyButton: UIControl {
     }
 
     private func applyColors() {
+        let accented = isPrimaryAction && theme.accentReturnKey
         if isHighlighted {
             keycap.backgroundColor = theme.pressedKey
+        } else if accented {
+            keycap.backgroundColor = theme.accent
         } else {
             keycap.backgroundColor = isSpecial ? theme.specialKey : theme.key
         }
-        titleLabel.textColor = theme.text
-        iconView.tintColor = theme.text
+        titleLabel.textColor = accented && !isHighlighted ? .white : theme.text
+        iconView.tintColor = titleLabel.textColor
+        keycap.layer.cornerRadius = theme.keyCornerRadius
+        keycap.layer.shadowOpacity = theme.keyShadows ? 0.3 : 0
+        keycap.layer.borderWidth = theme.keyOutlines ? 1 : 0
+        keycap.layer.borderColor = theme.secondaryText.withAlphaComponent(0.35).resolvedColor(with: traitCollection).cgColor
+        setNeedsLayout()
         hintLabel.textColor = theme.secondaryText
     }
 }

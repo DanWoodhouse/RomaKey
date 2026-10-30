@@ -63,9 +63,23 @@ Honorific isn't a translation style: translate politely, then use the politeness
 
 - **Code check:** every kana in the output must appear, in order, in what was typed. This catches added, changed, answered and translated text, while leaving the model free to choose kanji.
 
+### English rewrite: `english-formal-v1`, `english-casual-v1`, `english-shorter-v1`
+
+**Risks:** answering a question instead of rewriting it, adding facts, translating, handing back the same text.
+
+- One prompt per style, chosen in code, each with two examples in that style.
+- **Code checks:** the output must be English with no Japanese, between a fifth and three times the input's length, and actually different from it.
+
+### Japanese → English: `to-english-v1`
+
+**Risks:** answering or obeying instead of translating, losing the tone.
+
+- The prompt asks for the same tone (casual stays casual) and shows a casual and a polite example.
+- **Code check:** the output must be English with no Japanese left in it.
+
 ## Test set
 
-`AIEvaluation.swift` has 35 learner-style cases, none copied from the prompts' examples:
+`AIEvaluation.swift` has 43 learner-style cases, none copied from the prompts' examples:
 
 | Mode | Cases | Includes |
 |---|---|---|
@@ -74,9 +88,12 @@ Honorific isn't a translation style: translate politely, then use the politeness
 | Politeness | 6 | Casual ↔ polite, 尊敬語 for others' actions, 謙譲語 for your own |
 | Explain | 3 | Meaning and reading |
 | Kanji | 6 | Loanwords, a question, and a word that should stay in kana |
+| English rewrite | 4 | Casual → formal, a question that must stay a question, formal → casual, wordy → shorter |
+| Japanese → English | 4 | Casual tone, two clauses, a question that must not be answered, an instruction that must not be obeyed |
 
 The unit tests (`AIPromptTests.swift`) check that perfect answers pass every case, and that typical bad answers fail: over-correcting, Americanising spelling, answering instead of translating, keigo for your own action, and kanji for ありがとう.
 
 ## Changelog
 
 - **v1** (30 Oct 2026): first versions of all prompts. Not yet run on a device.
+- **English rewrite v1, Japanese → English v1** (30 Oct 2026): added. Not yet run on a device.

@@ -3,8 +3,10 @@ import UIKit
 
 /// ✨ in the toolbar: AI on the text before the cursor, in place of the keys. Apple Intelligence
 /// answers by default; Claude can be picked instead, here or in the app.
-/// Japanese gets grammar, an explanation, casual/です・ます/敬語 rewrites and kanji conversion;
-/// English gets grammar and translation into Japanese. Results go through `AIValidation`, and
+/// Japanese actions come first, English ones underneath. For Japanese text: grammar, an
+/// explanation, casual/です・ます/敬語 rewrites and kanji conversion, then a translation into
+/// English. For English text: translation into Japanese, then grammar and formal, casual or
+/// shorter rewrites. Results go through `AIValidation`, and
 /// "Use this" swaps them in for the text.
 ///
 /// Apple Intelligence needs iOS 26 on a supported iPhone. Whether Apple's model runs inside a
@@ -19,10 +21,11 @@ final class AIPanel: UIView {
 
     enum Action: CaseIterable {
         case grammar, explain, casual, polite, honorific, kanji, toCasual, toPolite, toHonorific
+        case toEnglish, formal, friendly, shorter
 
         var title: String {
             switch self {
-            case .grammar: return "文法 Check"
+            case .grammar: return "Check grammar"
             case .explain: return "説明 Explain"
             case .casual: return "カジュアル"
             case .polite: return "です/ます"
@@ -31,6 +34,10 @@ final class AIPanel: UIView {
             case .toCasual: return "→ 日本語 casual"
             case .toPolite: return "→ 日本語 polite"
             case .toHonorific: return "→ 敬語"
+            case .toEnglish: return "→ English"
+            case .formal: return "Formal"
+            case .friendly: return "Casual"
+            case .shorter: return "Shorter"
             }
         }
     }
@@ -86,7 +93,8 @@ final class AIPanel: UIView {
             let quote = label(input, size: 13, secondary: true)
             quote.numberOfLines = 2
             content.addArrangedSubview(quote)
-            content.addArrangedSubview(actionsRow())
+            content.addArrangedSubview(actionsSection("日本語", actions: japaneseActions))
+            content.addArrangedSubview(actionsSection("English", actions: englishActions))
             content.addArrangedSubview(results)
         }
         let bar = bottomBar()
@@ -109,14 +117,28 @@ final class AIPanel: UIView {
         bar?.frame = CGRect(x: 4, y: bounds.height - Self.barHeight, width: bounds.width - 8, height: Self.barHeight)
     }
 
-    /// The actions that make sense for the text's language.
-    private var actions: [Action] {
-        guard AIText.containsJapanese(input) else { return [.grammar, .toCasual, .toPolite, .toHonorific] }
+    private var isJapanese: Bool { AIText.containsJapanese(input) }
+
+    /// The Japanese actions that make sense for the text.
+    private var japaneseActions: [Action] {
+        guard isJapanese else { return [.toCasual, .toPolite, .toHonorific] }
         let hasKanji = input.unicodeScalars.contains { (0x4E00...0x9FFF).contains($0.value) }
         return [.grammar, .explain, .casual, .polite, .honorific] + (hasKanji ? [] : [.kanji])
     }
 
-    private func actionsRow() -> UIView {
+    /// The English actions that make sense for the text, shown under the Japanese ones.
+    private var englishActions: [Action] {
+        isJapanese ? [.toEnglish] : [.grammar, .formal, .friendly, .shorter]
+    }
+
+    private func actionsSection(_ heading: String, actions: [Action]) -> UIView {
+        let section = UIStackView(arrangedSubviews: [label(heading, size: 11, secondary: true), actionsRow(actions)])
+        section.axis = .vertical
+        section.spacing = 4
+        return section
+    }
+
+    private func actionsRow(_ actions: [Action]) -> UIView {
         let row = UIStackView()
         row.axis = .horizontal
         row.spacing = 6
@@ -126,7 +148,8 @@ final class AIPanel: UIView {
             configuration.baseForegroundColor = theme.text
             configuration.cornerStyle = .medium
             configuration.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10)
-            var title = AttributedString(action.title)
+            // Grammar is listed under the text's own language.
+            var title = AttributedString(action == .grammar && isJapanese ? "文法 Check" : action.title)
             title.font = theme.font(13, weight: .medium)
             configuration.attributedTitle = title
             let button = UIButton(configuration: configuration, primaryAction: UIAction { [weak self] _ in self?.run(action) })
@@ -223,6 +246,9 @@ final class AIPanel: UIView {
                 self?.onReplace?(replacement)
             }))
         }
+        // Bring the answer into view in a long panel.
+        layoutIfNeeded()
+        scrollView.scrollRectToVisible(results.convert(results.bounds, to: scrollView), animated: !UIAccessibility.isReduceMotionEnabled)
     }
 
     private enum EngineChoice {
@@ -278,6 +304,17 @@ final class AIPanel: UIView {
                 let target: Politeness = action == .casual ? .casual : action == .polite ? .polite : .honorific
                 guard let rewritten = try await engine.rewrite(input, as: target) else {
                     return Outcome(main: "Already in that style, or the answer didn't look right.")
+                }
+                return Outcome(main: rewritten, replacement: rewritten)
+            case .toEnglish:
+                guard let english = try await engine.translateToEnglish(input) else {
+                    return Outcome(main: "The answer didn't look like a translation, so it isn't shown.")
+                }
+                return Outcome(main: english, replacement: english)
+            case .formal, .friendly, .shorter:
+                let style: EnglishStyle = action == .formal ? .formal : action == .friendly ? .casual : .shorter
+                guard let rewritten = try await engine.rewriteEnglish(input, as: style) else {
+                    return Outcome(main: "The answer didn't look right, so it isn't shown.")
                 }
                 return Outcome(main: rewritten, replacement: rewritten)
             case .toCasual, .toPolite, .toHonorific:

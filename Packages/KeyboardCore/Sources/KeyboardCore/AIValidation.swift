@@ -77,6 +77,23 @@ public enum AIValidation {
         )
     }
 
+    /// An English rewrite stays in English and keeps roughly the same content: not a
+    /// translation, not an answer, not the same text again.
+    public static func englishRewrite(input: String, output: String) -> String? {
+        let output = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard AIText.containsLatinLetters(output), !AIText.containsJapanese(output) else { return nil }
+        let ratio = Double(output.count) / Double(max(input.count, 1))
+        guard (0.2...3).contains(ratio) else { return nil }
+        return AIText.normalized(output) == AIText.normalized(input) ? nil : output
+    }
+
+    /// A translation into English must be English.
+    public static func englishTranslation(_ english: String) -> String? {
+        let english = english.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard AIText.containsLatinLetters(english), !AIText.containsJapanese(english) else { return nil }
+        return english
+    }
+
     /// A conversion may only turn readings into kanji: every kana in the output must appear, in
     /// order, in the input. That rules out added, dropped, translated or answered text.
     public static func kanjiConversion(input: String, output: String) -> String? {
