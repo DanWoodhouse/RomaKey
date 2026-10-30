@@ -88,6 +88,10 @@ final class KeyboardSettingsTests: XCTestCase {
         settings.holdForNumbers = false
         settings.leftHandedWheel = true
         settings.showRomaji = true
+        settings.predictiveText = false
+        settings.keyFont = .rounded
+        settings.textSize = .large
+        settings.boldKeys = true
         settings.save(to: defaults)
         XCTAssertEqual(KeyboardSettings(defaults: defaults), settings)
 

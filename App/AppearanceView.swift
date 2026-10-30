@@ -77,6 +77,26 @@ struct AppearanceView: View {
                 }
                 .pickerStyle(.segmented)
             }
+
+            Section {
+                Picker("Font", selection: $store.settings.keyFont) {
+                    Text("System").font(.system(size: 17)).tag(KeyboardSettings.KeyFont.system)
+                    Text("Rounded 丸").font(.system(size: 17, design: .rounded)).tag(KeyboardSettings.KeyFont.rounded)
+                    Text("Serif 明朝").font(.system(size: 17, design: .serif)).tag(KeyboardSettings.KeyFont.serif)
+                    Text("Mono").font(.system(size: 17, design: .monospaced)).tag(KeyboardSettings.KeyFont.mono)
+                }
+                Picker("Text size", selection: $store.settings.textSize) {
+                    Text("Small").tag(KeyboardSettings.TextSize.small)
+                    Text("Standard").tag(KeyboardSettings.TextSize.standard)
+                    Text("Large").tag(KeyboardSettings.TextSize.large)
+                }
+                .pickerStyle(.segmented)
+                Toggle("Bold keys", isOn: $store.settings.boldKeys)
+            } header: {
+                Text("文字 · Font")
+            } footer: {
+                Text("For the keys and suggestions. Japanese uses the matching Hiragino font: Maru Gothic for rounded, Mincho for serif.")
+            }
         }
         .navigationTitle("見た目 · Look")
         .onChange(of: photo) { item in

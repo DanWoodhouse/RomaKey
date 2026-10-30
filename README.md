@@ -103,6 +103,8 @@ While typing:
 - **English suggestions and autocorrect** from Apple's spell checker, your iOS text replacements (omw → On my way!) and words you use. Press delete straight after an autocorrection to undo it; the keyboard then learns the word. Contact names are never "corrected".
 - **Emoji suggestions:** type cat or ねこ and 🐈 is offered.
 - **Predictive text:** after each word, the likely next words (thank → you, going → to), from common English word pairs and from the pairs you type, which come first. In Japanese, after a word you convert, what you usually type next, then particles (猫 → は, が, を…). A 😊 button stays in front of the predictions.
+- **✨ AI (Apple Intelligence):** finish a sentence and tap ✨ in the toolbar. Japanese: check grammar, explain (reading, meaning and notes), rewrite as casual, です/ます or 敬語, or convert hiragana to kanji. English: check grammar or translate into casual, polite or 敬語 Japanese. "Use this" swaps the result in. It runs on Apple's on-device model, so nothing leaves the phone and there's nothing to set up beyond building with Xcode 26: it needs iOS 26 on an iPhone 15 Pro or newer with Apple Intelligence on. Whether the model runs inside a keyboard isn't documented, so run the app's **Apple Intelligence test** first. Prompts and their test set: [docs/ai-prompts.md](docs/ai-prompts.md).
+- **Dictation:** iOS doesn't let third-party keyboards use the microphone, so there's no dictation key. The system 🎤 below the keyboard (on iPhones with Face ID) still works while RomaKey is showing, in Japanese or English.
 - **Quick settings:** clear the text and tap ⚙︎ in the toolbar to switch autocorrect, auto-capitalisation, predictive text and the other typing settings without leaving the app you're in. Without Full Access they're saved on the keyboard only.
 - **Learned kanji:** the word you picked last time for a reading comes first (きかい → 機会, if that's what you use).
 - **Accents:** hold a letter (EN and 辞 modes) for é, ü, ñ…
@@ -128,6 +130,7 @@ The app's **設定 · Settings** screen has the following. Theme, colours, photo
 | Custom colours | Background, keys, function keys, pressed key, text, readings, accent. Start from any preset's light or dark colours |
 | Background photo | Any photo from your library, with darken, blur and key opacity (so it shows through the keys) |
 | Height | Compact, Standard, Tall |
+| Font | System, Rounded (Hiragino Maru Gothic), Serif (Hiragino Mincho) or Mono; small, standard or large text; bold keys |
 | Start in | あ, EN, 辞, or the last mode used |
 | Mode key | Which of あ / EN / 辞 a tap steps through (at least two); left-handed (mirrored) mode wheel |
 | Typing | Auto-capitalisation, double-space full stop, key popups, hold top row for numbers (q → 1 … p → 0) |
@@ -205,14 +208,12 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 ## Next steps
 
 - Swipe (glide) typing
-- Next-word prediction (there's no system API for it; it would need an on-device model)
 - Clipboard history
 - Full kanji conversion: whole phrases and verb forms (食べた, 食べます), not just dictionary words
-- Learn from what you pick, so your choices move up the candidate list
 - Reset the composition when the user moves the cursor mid-composition
 - A bigger dictionary (all of JMdict) in SQLite, if the common words aren't enough
 - Grammar checking: see [docs/grammar-checker.md](docs/grammar-checker.md) for the options and a recommended order
-- Apple Intelligence features (grammar check, sentence translation, politeness switch): see [docs/apple-intelligence.md](docs/apple-intelligence.md). Run Settings → **Apple Intelligence test** on your iPhone first; it checks whether the on-device model works inside the keyboard. The prompts for each mode, and the test that scores them, are described in [docs/ai-prompts.md](docs/ai-prompts.md)
+- If Apple's model turns out not to run inside keyboards: offer the ✨ features as an action extension instead (see [docs/apple-intelligence.md](docs/apple-intelligence.md))
 
 ## Dictionary licence
 

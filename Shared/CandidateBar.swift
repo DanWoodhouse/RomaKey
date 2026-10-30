@@ -13,6 +13,8 @@ final class CandidateBar: UIView {
         case kaomoji
         case gif
         case paste
+        /// Apple Intelligence on the text before the cursor.
+        case ai
         /// Quick settings, in place of the keys.
         case settings
     }
@@ -74,6 +76,8 @@ final class CandidateBar: UIView {
         stack.axis = .horizontal
         stack.spacing = 2
         stack.alignment = .center
+        // Items share out the bar's width when they fit, and scroll when they don't.
+        stack.distribution = .fillProportionally
         stack.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(stack)
         NSLayoutConstraint.activate([
@@ -82,6 +86,7 @@ final class CandidateBar: UIView {
             stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
             stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
             stack.heightAnchor.constraint(equalTo: scrollView.frameLayoutGuide.heightAnchor),
+            stack.widthAnchor.constraint(greaterThanOrEqualTo: scrollView.frameLayoutGuide.widthAnchor, constant: -8),
         ])
     }
 
@@ -98,6 +103,8 @@ final class CandidateBar: UIView {
     private func rebuild() {
         stack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         scrollView.contentOffset = .zero
+        // The search field has no natural width to share out by.
+        stack.distribution = search == nil ? .fillProportionally : .fill
 
         if let search {
             addSearchField(search)
@@ -114,8 +121,9 @@ final class CandidateBar: UIView {
         if candidates.first?.kind == .prediction {
             addToolbarButton(.emoji)
         }
-        for candidate in candidates {
-            let cell = CandidateCell(candidate: candidate, showsMeaning: showsMeanings, showsRomaji: showsRomaji, theme: theme)
+        for (index, candidate) in candidates.enumerated() {
+            let cell = CandidateCell(candidate: candidate, showsMeaning: showsMeanings, showsRomaji: showsRomaji,
+                                     showsDivider: index > 0, theme: theme)
             cell.addAction(UIAction { [weak self] _ in self?.onSelect?(candidate) }, for: .touchUpInside)
             if candidate.entry != nil {
                 let press = UILongPressGestureRecognizer(target: self, action: #selector(longPressed(_:)))
@@ -156,6 +164,8 @@ final class CandidateBar: UIView {
             configuration.attributedTitle = title
         case .paste:
             configuration.image = UIImage(systemName: "doc.on.clipboard")
+        case .ai:
+            configuration.image = UIImage(systemName: "sparkles")
         case .settings:
             configuration.image = UIImage(systemName: "gearshape")
         }
@@ -167,6 +177,7 @@ final class CandidateBar: UIView {
         case .kaomoji: "Kaomoji"
         case .gif: "GIFs"
         case .paste: "Paste"
+        case .ai: "AI"
         case .settings: "Keyboard settings"
         }
         stack.addArrangedSubview(button)
@@ -214,11 +225,26 @@ private final class CandidateCell: UIControl {
     private let theme: KeyboardTheme
     private let stack = UIStackView()
 
-    init(candidate: Candidate, showsMeaning: Bool, showsRomaji: Bool, theme: KeyboardTheme) {
+    init(candidate: Candidate, showsMeaning: Bool, showsRomaji: Bool, showsDivider: Bool, theme: KeyboardTheme) {
         self.candidate = candidate
         self.theme = theme
         super.init(frame: .zero)
         layer.cornerRadius = 6
+
+        // A thin line before every suggestion but the first, like the system bar.
+        if showsDivider && candidate.kind != .autocorrection {
+            let divider = UIView()
+            divider.backgroundColor = theme.secondaryText.withAlphaComponent(0.35)
+            divider.isUserInteractionEnabled = false
+            divider.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(divider)
+            NSLayoutConstraint.activate([
+                divider.leadingAnchor.constraint(equalTo: leadingAnchor, constant: -1),
+                divider.centerYAnchor.constraint(equalTo: centerYAnchor),
+                divider.widthAnchor.constraint(equalToConstant: 1),
+                divider.heightAnchor.constraint(equalToConstant: 18),
+            ])
+        }
 
         let title = UILabel()
         let text: String
@@ -227,17 +253,17 @@ private final class CandidateCell: UIControl {
         case .typed:
             // Keep what was typed, the way iOS shows it.
             text = "“\(candidate.text)”"
-            font = .systemFont(ofSize: 17)
+            font = theme.font(17)
         case .autocorrection:
             text = candidate.text
-            font = .systemFont(ofSize: 17, weight: .semibold)
+            font = theme.font(17, weight: .semibold)
             backgroundColor = theme.panel
         case .emoji:
             text = candidate.text
             font = .systemFont(ofSize: 24)
         case .conversion, .word, .prediction:
             text = candidate.text
-            font = .systemFont(ofSize: 18)
+            font = theme.font(18)
         }
         let word = NSMutableAttributedString(string: text, attributes: [.font: font, .foregroundColor: theme.text])
         if showsMeaning, let reading = candidate.entry?.reading {
@@ -261,20 +287,22 @@ private final class CandidateCell: UIControl {
             subtitle.text = meaning
             subtitle.font = .systemFont(ofSize: 11)
             subtitle.textColor = theme.secondaryText
+            subtitle.lineBreakMode = .byTruncatingTail
             stack.addArrangedSubview(subtitle)
         }
 
         stack.axis = .vertical
-        stack.alignment = .leading
+        stack.alignment = .center
         stack.spacing = -1
         stack.isUserInteractionEnabled = false
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
+        // Centred in whatever width the bar gives it; long meanings are cut off at 200 points.
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
-            stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+            stack.centerXAnchor.constraint(equalTo: centerXAnchor),
+            stack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 10),
+            stack.widthAnchor.constraint(lessThanOrEqualToConstant: 200),
             stack.centerYAnchor.constraint(equalTo: centerYAnchor),
-            widthAnchor.constraint(lessThanOrEqualToConstant: 220),
             heightAnchor.constraint(equalToConstant: 38),
         ])
     }
@@ -282,6 +310,12 @@ private final class CandidateCell: UIControl {
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    /// The word's natural width plus padding, which the bar uses to share out its width.
+    override var intrinsicContentSize: CGSize {
+        let size = stack.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
+        return CGSize(width: min(size.width, 200) + 20, height: 38)
     }
 
     override var isHighlighted: Bool {

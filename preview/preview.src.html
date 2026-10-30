@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&family=Zen+Maru+Gothic:wght@400;500;700&family=Zen+Old+Mincho:wght@400;700&display=swap">
 <style>
 /* Layout: phone-width device (text field + keyboard) beside a Customise panel and notes; stacks on phones. */
 :root {
@@ -78,11 +78,15 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 }
 .cands { position: absolute; left: 0; right: 0; top: 0; height: 40px; display: flex; gap: 2px; align-items: center; padding: 0 4px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; }
 .cands::-webkit-scrollbar { display: none; }
-.cand { display: grid; align-content: center; text-align: left; height: 38px; max-width: 220px; flex: none; font-family: var(--font-key); color: var(--kb-text); background: transparent; border: 0; padding: 0 10px; border-radius: 6px; cursor: pointer; }
+.cand { display: grid; align-content: center; justify-items: center; text-align: center; height: 38px; flex: 1 0 auto; position: relative; font-family: var(--font-key); color: var(--kb-text); background: transparent; border: 0; padding: 0 10px; border-radius: 6px; cursor: pointer; }
 .cand.down { background: var(--kb-pressed); }
-.cand .w { font-size: 18px; line-height: 1.15; white-space: nowrap; }
+.cand .w { font-size: calc(18px * var(--key-scale, 1)); line-height: 1.15; white-space: nowrap; }
 .cand .r { font-size: 11px; color: var(--kb-muted); margin-left: 4px; }
-.cand .m { font-size: 11px; color: var(--kb-muted); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cand .m { font-size: 11px; color: var(--kb-muted); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+/* Thin dividers between suggestions, like the system bar; they share the width when they fit. */
+.cand + .cand::before { content: ""; position: absolute; left: -2px; top: 28%; height: 44%; width: 1px; background: color-mix(in srgb, var(--kb-muted) 35%, transparent); }
+.cand.down::before, .cand.down + .cand::before, .cand.auto::before, .cand.auto + .cand::before { display: none; }
+.kicon { width: 22px; height: 22px; display: block; }
 .cands .hint { font-size: 13px; color: var(--kb-muted); padding-left: 8px; white-space: nowrap; }
 .kb-photo { position: absolute; inset: -20px; background-size: cover; background-position: center; display: none; }
 .kb-photo.blur { filter: blur(12px); }
@@ -91,7 +95,12 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .keys { position: absolute; left: 0; right: 0; top: 40px; bottom: 0; transition: opacity 150ms; }
 .keys.faint { opacity: 0.35; }
 .key { position: absolute; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.cap { position: absolute; display: grid; place-items: center; border-radius: 5px; background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); color: var(--kb-text); box-shadow: 0 1px 0 var(--kb-shadow); font-size: 22px; }
+.cap { position: absolute; display: grid; place-items: center; border-radius: 5px; background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); color: var(--kb-text); box-shadow: 0 1px 0 var(--kb-shadow); font-size: calc(22px * var(--key-scale, 1)); }
+/* Key fonts (KeyboardTheme.font): the app uses SF and the matching Hiragino; the preview uses the nearest web fonts. */
+.kb[data-font="rounded"] { --font-key: ui-rounded, "Hiragino Maru Gothic ProN", "Zen Maru Gothic", system-ui, sans-serif; }
+.kb[data-font="serif"] { --font-key: ui-serif, "New York", "Hiragino Mincho ProN", "Zen Old Mincho", Georgia, serif; }
+.kb[data-font="mono"] { --font-key: ui-monospace, "SF Mono", "IBM Plex Mono", "Hiragino Sans", "Zen Kaku Gothic New", monospace; }
+.kb.bold .cap, .kb.bold .cand .w { font-weight: 600; }
 .key.special .cap { background: color-mix(in srgb, var(--kb-special) var(--key-op, 100%), transparent); font-size: 15px; }
 .key.small .cap { font-size: 15px; }
 .key.down .cap { background: var(--kb-pressed); }
@@ -100,7 +109,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .overlay { position: absolute; inset: 0; pointer-events: none; }
 .tile { position: absolute; display: grid; place-items: center; border-radius: 6px; background: var(--kb-key); color: var(--kb-text); font-size: 24px; box-shadow: 0 1px 3px var(--kb-shadow); }
 .tile.on { background: var(--kb-accent); color: #fff; }
-.popup { position: absolute; display: grid; place-items: center; border-radius: 8px; background: var(--kb-key); color: var(--kb-text); font-size: 32px; box-shadow: 0 1px 4px var(--kb-shadow); }
+.popup { position: absolute; display: grid; place-items: center; border-radius: 8px; background: var(--kb-key); color: var(--kb-text); font-size: calc(32px * var(--key-scale, 1)); box-shadow: 0 1px 4px var(--kb-shadow); }
 /* Mode wheel: a half disc above the mode key, slots at fixed angles (ModeWheelView.swift). */
 .wheel-slot { position: absolute; z-index: 2; width: 36px; height: 28px; border-radius: 8px; display: grid; place-items: center;
   font: 600 13px var(--font-key); color: var(--kb-text); background: var(--kb-key); box-shadow: 0 1px 4px var(--kb-shadow);
@@ -120,7 +129,8 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .entry .forms button:first-child { background: var(--kb-accent); color: #fff; font-weight: 600; }
 .entry .x { font: 20px var(--font-key); color: var(--kb-muted); background: transparent; border: 0; cursor: pointer; padding: 0 4px; }
 .note { margin: 0; font-size: 13px; color: var(--muted); }
-.tool { font: 600 14px var(--font-key); color: var(--kb-text); background: transparent; border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; flex: none; }
+.tool { font: 600 14px var(--font-key); color: var(--kb-text); background: transparent; border: 0; padding: 6px 10px; border-radius: 8px; cursor: pointer; flex: 1 1 0; display: grid; place-items: center; min-width: 40px; }
+.tool.lead { flex: none; }
 .tool:active, .tool.down { background: var(--kb-pressed); }
 .tool svg { width: 20px; height: 20px; display: block; }
 .cand.emoji .w { font-size: 24px; }
@@ -128,11 +138,12 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .sfield.empty { color: var(--kb-muted); }
 .sclose { font: 18px var(--font-key); color: var(--kb-muted); background: transparent; border: 0; padding: 0 6px; cursor: pointer; flex: none; }
 .panel { position: absolute; left: 0; right: 0; top: 40px; bottom: 0; display: grid; grid-template-rows: minmax(0, 1fr) 38px; }
-.egrid { position: relative; overflow-y: auto; overscroll-behavior: contain; display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); align-content: start; padding: 2px 4px; touch-action: pan-y; }
-.egrid.kao { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; }
+.egrid { position: relative; overflow-y: auto; overscroll-behavior: contain; padding: 0 4px 4px; touch-action: pan-y; }
+.esec { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); align-content: start; }
+.egrid.kao { padding: 0 6px 6px; }
+.egrid.kao .esec { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding-bottom: 6px; }
 .egrid h4 { width: 100%; margin: 0; padding: 4px 2px 2px; font: 600 11px var(--font-key); color: var(--kb-muted); grid-column: 1 / -1;
-  position: sticky; top: -2px; z-index: 1; background: var(--kb-bg); }
-.egrid .anchor { grid-column: 1 / -1; width: 100%; height: 0; }
+  position: sticky; top: 0; z-index: 1; background: var(--kb-bg); padding: 6px 2px 4px; }
 .khint { position: absolute; font: 500 10px var(--font-key); color: var(--kb-muted); text-align: right; pointer-events: none; }
 .cand.auto { background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); }
 .cand.auto .w { font-weight: 600; }
@@ -153,6 +164,18 @@ input[type="checkbox"].qswitch::before { content: ""; position: absolute; top: 2
 input[type="checkbox"].qswitch:checked { background: var(--kb-accent); }
 input[type="checkbox"].qswitch:checked::before { transform: translateX(18px); }
 .qswitch:focus-visible { outline: 2px solid var(--kb-accent); outline-offset: 2px; }
+.aibody { overflow-y: auto; overscroll-behavior: contain; padding: 8px 12px; display: grid; gap: 8px; align-content: start; font-family: var(--font-key); color: var(--kb-text); }
+.aiquote { font-size: 13px; color: var(--kb-muted); border-left: 2px solid var(--kb-accent); padding-left: 8px; max-height: 3.2em; overflow: hidden; }
+.aiactions { display: flex; flex-wrap: wrap; gap: 6px; }
+.aiaction { font: 500 13px var(--font-key); color: var(--kb-text); background: var(--kb-key); border: 0; border-radius: 8px; padding: 7px 10px; cursor: pointer; box-shadow: 0 1px 0 var(--kb-shadow); }
+.aiaction.on { background: var(--kb-accent); color: #fff; }
+.aiaction:disabled { opacity: 0.45; cursor: default; }
+.airesult { display: grid; gap: 4px; }
+.aimain { font-size: 17px; line-height: 1.4; }
+.aiextra { font-size: 13px; color: var(--kb-muted); line-height: 1.4; }
+.aimsg { font-size: 14px; color: var(--kb-muted); }
+.aiapply { justify-self: start; margin-top: 4px; font: 600 13px var(--font-key); color: #fff; background: var(--kb-accent); border: 0; border-radius: 8px; padding: 7px 14px; cursor: pointer; }
+.ainote { font-size: 11px; color: var(--kb-muted); line-height: 1.4; }
 .qnote { margin: 8px 0 0; font: 12px var(--font-key); color: var(--kb-muted); }
 .qhead { flex: 4; text-align: center; font: 600 12px var(--font-key); color: var(--kb-muted); }
 @media (prefers-reduced-motion: reduce) { .qswitch, .qswitch::before { transition: none; } }
@@ -286,6 +309,13 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <div class="row"><span>Height</span><span class="seg" id="seg-height"></span></div>
       </div>
       <div class="group">
+        <h3>文字 · Font</h3>
+        <div class="row"><span>Font</span><span class="seg" id="seg-keyFont"></span></div>
+        <div class="row"><span>Text size</span><span class="seg" id="seg-textSize"></span></div>
+        <div class="row"><label for="set-boldKeys">Bold keys</label><input type="checkbox" id="set-boldKeys"></div>
+        <p class="help">On iPhone: San Francisco with the matching Hiragino for Japanese (Maru Gothic for rounded, Mincho for serif).</p>
+      </div>
+      <div class="group">
         <h3>ローマ字 · Mode key</h3>
         <div class="row"><span>Start in</span><span class="seg" id="seg-startingMode"></span></div>
         <p class="help">A tap on the mode key steps through:</p>
@@ -387,8 +417,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="s1"><span>Clear the text and tap ⚙︎ in the toolbar. Switch off <em>Autocorrect</em> and <em>Auto-capitalisation</em>: <em>teh</em> stays as typed and new sentences start lowercase.</span></label>
         <label class="check"><input type="checkbox" data-check="s2"><span>On a phone, <em>Settings ↓</em> at the top jumps to every option: themes, photo, height, GIF and the rest.</span></label>
       </div>
+      <div class="checks"><h3>✨ AI</h3>
+        <label class="check"><input type="checkbox" data-check="a1"><span>Type a sentence with a mistake and end it (<em>Last week we goes to the beach.</em>), then tap ✨ → <em>Check grammar</em>. Allow Claude when asked. Tap <em>Use this</em> to swap the fix in.</span></label>
+        <label class="check"><input type="checkbox" data-check="a2"><span>English → ✨ → <em>→ 日本語 polite</em>: a translation with its reading. Japanese (<em>明日何時に来る？</em>) → ✨ → <em>敬語</em> or <em>説明 Explain</em>.</span></label>
+        <label class="check"><input type="checkbox" data-check="a3"><span>In the preview Claude answers, with the app's exact instructions and checks. On iPhone it's Apple's on-device model: run the app's Apple Intelligence test first.</span></label>
+      </div>
       <div class="checks"><h3>Look</h3>
         <label class="check"><input type="checkbox" data-check="l1"><span>Themes, custom colours, a background photo with darken, blur and key opacity, and the three heights.</span></label>
+        <label class="check"><input type="checkbox" data-check="l3"><span>Font: Rounded, Serif or Mono, text size S/M/L and bold keys, under Customise → Font.</span></label>
         <label class="check"><input type="checkbox" data-check="l2"><span>On a phone: <em>Try it full screen</em> puts the keyboard at the bottom of the screen, where the real one sits.</span></label>
       </div>
       <div class="checks"><h3>iPhone only (once built in Xcode)</h3>
@@ -396,6 +432,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="p2"><span>GIFs: add your GIPHY key in the app, search, tap a GIF to copy, then paste it.</span></label>
         <label class="check"><input type="checkbox" data-check="p3"><span>Paste from the toolbar (needs Allow Full Access). This preview tries your browser's clipboard.</span></label>
         <label class="check"><input type="checkbox" data-check="p4"><span>Your iOS text replacements (omw) and contact names in suggestions; English uses Apple's spell checker.</span></label>
+        <label class="check"><input type="checkbox" data-check="p6"><span>Dictation: iOS doesn't let keyboards use the microphone, so use the system 🎤 below the keyboard. It works while RomaKey is showing.</span></label>
         <label class="check"><input type="checkbox" data-check="p5"><span>Haptics, key sounds, and the Apple Intelligence test in the app.</span></label>
       </div>
       <p class="credit">English suggestions in this preview: the most common words from <a href="https://github.com/rspeer/wordfreq">wordfreq</a> by Robyn Speer (data under CC BY-SA 4.0).</p>
@@ -416,7 +453,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     spaceBarCursor: true, theme: "system", height: "standard",
     customColors: null, keyOpacity: 1, backgroundDim: 0.2, backgroundBlur: false,
     emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
-    keySounds: true, haptics: false, predictiveText: true, giphyAPIKey: "", gifRating: "pg", holdForNumbers: true, leftHandedWheel: false, showRomaji: false,
+    keySounds: true, haptics: false, predictiveText: true, keyFont: "system", textSize: "standard", boldKeys: false, giphyAPIKey: "", gifRating: "pg", holdForNumbers: true, leftHandedWheel: false, showRomaji: false,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
@@ -1049,6 +1086,15 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     builtSig = active.signature(); builtWidth = keysEl.clientWidth; builtRowH = h;
   }
 
+  // Drawn icons for shift, caps lock and delete, matching the SF Symbols the app uses.
+  const KEY_ICONS = {
+    "⇧": '<svg class="kicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.5 3.5 12.5H8v7h8v-7h4.5z"/></svg>',
+    "⬆︎": '<svg class="kicon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.5 3.5 12.5H8v7h8v-7h4.5z"/></svg>',
+    "⇪": '<svg class="kicon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.5 3.5 11.5H8v5h8v-5h4.5z"/><path d="M8 20h8" fill="none" stroke-linecap="round"/></svg>',
+    "⌫": '<svg class="kicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M8.5 5H20a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 20 19H8.5L2.5 12z"/><path d="m11.5 9 6 6m0-6-6 6"/></svg>',
+  };
+  const KEY_NAMES = { "⇧": "Shift", "⬆︎": "Shift on", "⇪": "Caps lock", "⌫": "Delete" };
+
   function render() {
     kbEl.dataset.kbTheme = settings.theme;
     kbEl.style.height = 40 + 4 * rowH() + "px";
@@ -1059,7 +1105,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       if (it.hintEl) it.hintEl.textContent = hints ? HELD_NUMBERS[it.key.ch] : "";
       const t = active.label(it.key);
       if (t !== it.text) {
-        it.capEl.textContent = t;
+        if (KEY_ICONS[t]) { it.capEl.innerHTML = KEY_ICONS[t]; it.capEl.setAttribute("aria-label", KEY_NAMES[t]); }
+        else it.capEl.textContent = t;
         it.el.classList.toggle("small", chars(t).length > 1 && !active.special(it.key));
         it.el.setAttribute("aria-label", t);
         if (flash && it.text) { it.capEl.classList.remove("flash"); void it.capEl.offsetWidth; it.capEl.classList.add("flash"); }
@@ -1080,6 +1127,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     emoji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.3 2.2 2 3.5 2s2.5-.7 3.5-2"/><circle cx="9" cy="10" r=".6" fill="currentColor"/><circle cx="15" cy="10" r=".6" fill="currentColor"/></svg>',
     paste: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="6" y="5" width="12" height="16" rx="2"/><path d="M9 5V3.5h6V5"/></svg>',
     // Feather's "settings" icon (MIT).
+    sparkle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7z"/><path d="M19 15.5c.25 1.6 1 2.35 2.5 2.5-1.5.25-2.25 1-2.5 2.5-.25-1.5-1-2.25-2.5-2.5 1.5-.15 2.25-.9 2.5-2.5z"/></svg>',
     gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   };
   function tool(html, label, action) {
@@ -1121,12 +1169,17 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
               if (text) { active.commit(); out.insertText(text); render(); } else flash("Nothing to paste");
             } catch (_) { flash("The browser blocked the clipboard here. On iPhone, paste needs Allow Full Access"); }
           }),
+          tool(ICONS.sparkle, "AI", showAIPanel),
           tool(ICONS.gear, "Keyboard settings", showQuickSettings),
         );
       }
     }
     // Predictions keep an emoji button in front, so emoji stay one tap away.
-    if (list.length && list[0].kind === "prediction") candsEl.appendChild(tool(ICONS.emoji, "Emoji", () => showEmojiPanel(recents.length ? "recent" : 0)));
+    if (list.length && list[0].kind === "prediction") {
+      const lead = tool(ICONS.emoji, "Emoji", () => showEmojiPanel(recents.length ? "recent" : 0));
+      lead.classList.add("lead");
+      candsEl.appendChild(lead);
+    }
     for (const c of list) {
       const b = document.createElement("button");
       b.type = "button"; b.className = "cand" + (c.kind === "emoji" ? " emoji" : c.kind === "autocorrection" ? " auto" : "");
@@ -1234,22 +1287,25 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       b.addEventListener("contextmenu", (ev) => ev.preventDefault());
       return b;
     };
+    // Each section is its own box, so its pinned heading slides away with it when the next one arrives.
     const section = (id, title) => {
-      const anchor = document.createElement("div"); anchor.className = "anchor"; anchor.dataset.tab = id;
+      const box = document.createElement("section"); box.className = "esec"; box.dataset.tab = id;
       const h = document.createElement("h4"); h.textContent = title;
-      grid.append(anchor, h);
+      box.appendChild(h);
+      grid.appendChild(box);
+      return box;
     };
     if (kao) {
       for (const [name, faces] of KAOMOJI) {
-        const h = document.createElement("h4"); h.textContent = name; grid.appendChild(h);
-        for (const f of faces) grid.appendChild(cell(f, null));
+        const box = section("kaomoji", name);
+        for (const f of faces) box.appendChild(cell(f, null));
       }
     } else {
-      section("recent", "よく使う · Recent");
-      for (const t of (recents.length ? recents : ["😊", "👍", "🙏", "😂", "❤️", "🎉"])) grid.appendChild(cell(t, emojiList.find((e) => e.ch === t)));
+      const recent = section("recent", "よく使う · Recent");
+      for (const t of (recents.length ? recents : ["😊", "👍", "🙏", "😂", "❤️", "🎉"])) recent.appendChild(cell(t, emojiList.find((e) => e.ch === t)));
       for (const [g, , name] of GROUPS) {
-        section(String(g), name);
-        for (const e of emojiList) if (e.group === g) grid.appendChild(cell(toned(e), e));
+        const box = section(String(g), name);
+        for (const e of emojiList) if (e.group === g) box.appendChild(cell(toned(e), e));
       }
     }
     const bar = document.createElement("div");
@@ -1263,8 +1319,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     const highlight = (id) => { panelTab = id === "recent" || id === "kaomoji" ? id : +id; for (const b of tabButtons) b.classList.toggle("on", b.dataset.tab === id); };
     const jump = (id) => {
       if ((id === "kaomoji") !== kao) { showEmojiPanel(id === "kaomoji" || id === "recent" ? id : +id); return; }
-      const anchor = grid.querySelector(`.anchor[data-tab="${id}"]`);
-      grid.scrollTop = anchor ? anchor.offsetTop : 0;
+      const box = grid.querySelector(`.esec[data-tab="${id}"]`);
+      grid.scrollTop = box ? box.offsetTop : 0;
       highlight(id);
     };
     bar.append(
@@ -1277,7 +1333,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     if (kao) highlight("kaomoji");
     else {
       grid.addEventListener("scroll", () => {
-        const anchors = [...grid.querySelectorAll(".anchor")];
+        const anchors = [...grid.querySelectorAll(".esec")];
         let current = anchors[0];
         for (const a of anchors) { if (a.offsetTop <= grid.scrollTop + 1) current = a; else break; }
         if (grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 1) current = anchors[anchors.length - 1];
@@ -1306,6 +1362,254 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     const w = box.offsetWidth;
     Object.assign(box.style, { left: Math.min(Math.max(r.left - kb.left + r.width / 2 - w / 2, 4), kb.width - w - 4) + "px", top: Math.max(r.top - kb.top - 56, 0) + "px" });
   }
+  // ---- AI (AIPrompts.swift, AIValidation.swift, AIAssistant.swift) ---------------------------------
+  // On iPhone these prompts run on Apple's on-device model. Here the same instructions go to Claude,
+  // through the page's `sample` capability, and the answers go through the same checks.
+  const LEARNER = "The person is an English speaker learning Japanese.";
+  const AI_PROMPTS = {
+    grammarJa: `You are an expert Japanese teacher. ${LEARNER}
+Find the mistakes in the person's Japanese text: wrong particles, verb and adjective forms, spelling and kanji. Fix only real mistakes. Keep their words, meaning and politeness level. Do not rewrite for style.
+First list each mistake with the wrong part, the fix and a short reason in English. Then write the whole text with the fixes applied. If there are no mistakes, list nothing and return the text unchanged.
+
+Examples:
+Text: 週末は海を行きました。
+{mistakes: [{original: "海を", fix: "海に", reason: "行く marks where you go with に, not を."}], corrected: "週末は海に行きました。"}
+Text: 先週はとても忙しいでした。
+{mistakes: [{original: "忙しいでした", fix: "忙しかったです", reason: "The past of an い-adjective is かった, then です."}], corrected: "先週はとても忙しかったです。"}
+Text: 毎朝コーヒーを飲みます。
+{mistakes: [], corrected: "毎朝コーヒーを飲みます。"}
+Text: 私はすしが食べたいです。
+{mistakes: [], corrected: "私はすしが食べたいです。"}`,
+    grammarEn: `You are an expert English teacher. Find the grammar and spelling mistakes in the person's English text. Fix only real mistakes. Keep their words, meaning and tone. Do not rewrite for style. British and American spellings are both correct.
+First list each mistake with the wrong part, the fix and a short reason. Then write the whole text with the fixes applied. If there are no mistakes, list nothing and return the text unchanged.
+
+Examples:
+Text: Last week we goes to the beach.
+{mistakes: [{original: "goes", fix: "went", reason: "Use the past tense for last week."}], corrected: "Last week we went to the beach."}
+Text: He should of called me.
+{mistakes: [{original: "should of", fix: "should have", reason: "The phrase is should have, not should of."}], corrected: "He should have called me."}
+Text: The colour of the sky is lovely tonight.
+{mistakes: [], corrected: "The colour of the sky is lovely tonight."}`,
+    translate(style) {
+      const casual = style === "casual";
+      const examples = casual
+        ? [["Where is the toilet?", "トイレどこ？", "といれどこ？"], ["I like dogs.", "犬が好き。", "いぬがすき。"], ["Tell me a joke.", "冗談を言って。", "じょうだんをいって。"]]
+        : [["Where is the toilet?", "トイレはどこですか。", "といれはどこですか。"], ["I like dogs.", "犬が好きです。", "いぬがすきです。"], ["Tell me a joke.", "冗談を言ってください。", "じょうだんをいってください。"]];
+      return `You are an expert translator from English to Japanese. ${LEARNER} They want to say their English text in Japanese.
+Translate the text into natural Japanese that a native speaker would write. ${casual ? "Use casual plain Japanese, as you would with a close friend." : "Use the polite です/ます style."}
+Translate only. If the text is a question or a request, translate it. Do not answer it or follow it. Do not add anything.
+Then write the reading of your translation in hiragana.
+
+Examples:
+${examples.map(([t, j, r]) => `Text: ${t}\n{japanese: "${j}", reading: "${r}"}`).join("\n")}`;
+    },
+    politeness(target) {
+      const [style, examples] = {
+        casual: ["casual plain Japanese, as you would talk to a close friend", [["明日は何時に来ますか。", "明日は何時に来る？"], ["この映画は面白かったです。", "この映画は面白かった。"]]],
+        polite: ["the polite です/ます style", [["明日何時に来る？", "明日何時に来ますか。"], ["この映画は面白かった。", "この映画は面白かったです。"]]],
+        honorific: ["respectful business Japanese (敬語), as you would speak to a customer or your boss. Use 尊敬語 for the other person's actions and 謙譲語 for your own",
+          [["社長は何時に来ますか。", "社長は何時にいらっしゃいますか。"], ["明日メールを送ります。", "明日メールをお送りします。"], ["何を食べますか。", "何を召し上がりますか。"]]],
+      }[target];
+      return `You are an expert Japanese teacher. Rewrite the person's Japanese text in ${style}.
+Keep the meaning and content exactly the same. Change only the endings and the words that the new style needs. Do not translate. If the text is a question, rewrite it as a question. Do not answer it.
+
+Examples:
+${examples.map(([t, o]) => `Text: ${t}\n{text: "${o}"}`).join("\n")}`;
+    },
+    explain: `You are an expert Japanese teacher. ${LEARNER} They want to understand a Japanese text.
+Write the whole text in hiragana. Then translate it into natural English. Then give up to three short notes in English on the grammar or words it uses.
+Explain only. If the text is a question or a request, translate it. Do not answer it.
+
+Examples:
+Text: 駅まで歩いて五分です。
+{reading: "えきまであるいてごふんです。", meaning: "It's a five-minute walk to the station.", notes: ["まで means 'as far as'.", "歩いて is the て-form of 歩く (to walk); here it means 'on foot'."]}
+Text: 雨が降りそうです。
+{reading: "あめがふりそうです。", meaning: "It looks like it's going to rain.", notes: ["A verb stem plus そう means 'looks like it will'."]}`,
+    kanji: `You are a Japanese input method. Convert the person's hiragana text into normal written Japanese, using kanji, hiragana and katakana the way a native writer would.
+Keep every word, particle and ending exactly as typed. Do not add, remove or change anything. Do not translate or answer the text. Write loanwords in katakana. Keep words that are usually written in hiragana as hiragana.
+
+Examples:
+Text: ともだちとえいがをみました
+{converted: "友達と映画を見ました"}
+Text: ぱんとぎゅうにゅうをかいます
+{converted: "パンと牛乳を買います"}
+Text: よろしくおねがいします
+{converted: "よろしくお願いします"}`,
+  };
+
+  // AIText
+  const hasJapanese = (t) => /[ぁ-ゟ゠-ヿ一-鿿㐀-䶿々]/.test(t);
+  const hasLatin = (t) => /[A-Za-z]/.test(t);
+  const isReading = (t) => { t = t.trim(); return !!t && /^[ぁ-ゟー、。？！・「」 ?!,.　]+$/.test(t); };
+  const normalizedAI = (t) => t.toLowerCase().replace(/\s/g, "").replace(/[。．.！!？?、,]+$/, "");
+  function similarity(a, b) {
+    a = chars(a); b = chars(b);
+    const longest = Math.max(a.length, b.length);
+    if (!longest) return 1;
+    let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 0; i < a.length; i++) {
+      const cur = [i + 1];
+      for (let j = 0; j < b.length; j++) cur[j + 1] = Math.min(prev[j + 1] + 1, cur[j] + 1, prev[j] + (a[i] === b[j] ? 0 : 1));
+      prev = cur;
+    }
+    return 1 - prev[b.length] / longest;
+  }
+  // AIPrompts.trimmedInput: the last few sentences that fit in 300 characters.
+  function trimmedInput(text, max = 300) {
+    const t = text.trim();
+    if (chars(t).length <= max) return t;
+    const tail = chars(t).slice(-max).join("");
+    const cut = tail.search(/[。！？.!?\n]/);
+    return cut >= 0 && cut < tail.length - 1 ? tail.slice(cut + 1).trim() : tail;
+  }
+  // AIValidation: show nothing rather than something wrong.
+  const validate = {
+    grammar(input, r) {
+      const corrected = String(r.corrected || "").trim();
+      if (!corrected || normalizedAI(corrected) === normalizedAI(input)) return { kind: "none" };
+      if (similarity(input, corrected) < 0.4 || hasJapanese(input) !== hasJapanese(corrected)) return null;
+      const fixes = (Array.isArray(r.mistakes) ? r.mistakes : []).filter((m) => m && m.original && input.includes(m.original) && m.original !== m.fix);
+      return { kind: "fixed", text: corrected, fixes };
+    },
+    translation(r) {
+      const japanese = String(r.japanese || "").trim();
+      if (!hasJapanese(japanese) || hasLatin(japanese)) return null;
+      return { text: japanese, reading: isReading(String(r.reading || "")) ? r.reading : null };
+    },
+    rewrite(input, r) {
+      const out = String(r.text || "").trim();
+      if (!out || !hasJapanese(out)) return null;
+      const ratio = chars(out).length / Math.max(chars(input).length, 1);
+      if (ratio < 0.5 || ratio > 2.5 || normalizedAI(out) === normalizedAI(input)) return null;
+      return out;
+    },
+    explanation(r) {
+      const meaning = String(r.meaning || "").trim();
+      if (!hasLatin(meaning)) return null;
+      return { meaning, reading: isReading(String(r.reading || "")) ? r.reading : null, notes: (Array.isArray(r.notes) ? r.notes : []).slice(0, 3).map((n) => String(n).trim()).filter(Boolean) };
+    },
+    kanji(input, r) {
+      const out = String(r.converted || "").trim();
+      if (!out || (hasLatin(out) && !hasLatin(input))) return null;
+      const source = chars(hiragana(input));
+      let pos = 0;
+      for (const c of chars(hiragana(out))) {
+        if (!/[ぁ-ゟ゠-ヿ]/.test(c)) continue;
+        const found = source.indexOf(c, pos);
+        if (found < 0) return null;
+        pos = found + 1;
+      }
+      return out;
+    },
+  };
+
+  let sampleFn = null;
+  if (window.claude && window.claude.use) window.claude.use("sample").then((s) => { sampleFn = s; }).catch(() => {});
+  let aiAbort = null;
+  async function askModel(instructions, input) {
+    if (!sampleFn) throw { code: "unavailable" };
+    aiAbort = new AbortController();
+    return sampleFn.json(`${instructions}\n\nReply with only a JSON object in the same shape as the examples, with the keys in double quotes.\n\nText: ${input}`,
+      { modelTier: "quick", signal: aiAbort.signal });
+  }
+
+  // ✨ in the toolbar: AI for the text before the cursor, in place of the keys.
+  function showAIPanel() {
+    active.commit();
+    const panel = openPanel();
+    const body = document.createElement("div");
+    body.className = "aibody";
+    const input = trimmedInput(out.textBeforeCursor);
+    const bar = document.createElement("div");
+    bar.className = "ebar";
+    const heading = document.createElement("span");
+    heading.className = "qhead"; heading.textContent = "✨ AI";
+    bar.append(barButton("ABC", "Back to the keys", () => { aiAbort?.abort(); closePanel(); render(); }, "word"), heading);
+    panel.append(body, bar);
+
+    const say = (cls, text) => { const el = document.createElement("div"); el.className = cls; el.textContent = text; return el; };
+    const quote = say("aiquote", input || "");
+    const note = say("ainote", sampleFn
+      ? "Preview: Claude answers here, using your Claude usage. On iPhone, Apple's on-device model answers with the same instructions."
+      : "AI needs this page open in Claude (the claude.ai page or app). On iPhone it runs on Apple Intelligence.");
+    if (!input) { body.append(say("aimsg", "Type something first, then tap ✨. AI works on the text before the cursor."), note); return; }
+
+    const ja = hasJapanese(input), allKana = ja && !/[一-鿿㐀-䶿]/.test(input);
+    const actions = ja
+      ? [["文法 Check", "grammar"], ["説明 Explain", "explain"], ["カジュアル", "casual"], ["です/ます", "polite"], ["敬語", "honorific"], ...(allKana ? [["漢字に", "kanji"]] : [])]
+      : [["Check grammar", "grammar"], ["→ 日本語 casual", "toCasual"], ["→ 日本語 polite", "toPolite"], ["→ 敬語", "toHonorific"]];
+    const row = document.createElement("div");
+    row.className = "aiactions";
+    for (const [label, mode] of actions) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "aiaction"; b.textContent = label;
+      b.disabled = !sampleFn;
+      b.addEventListener("click", () => run(mode));
+      row.appendChild(b);
+    }
+    const result = document.createElement("div");
+    result.className = "airesult";
+    body.append(quote, row, result, note);
+
+    // Puts `text` in place of the input in the document, keeping any trailing space.
+    function replaceInput(text) {
+      const before = out.textBeforeCursor, trailing = before.slice(before.trimEnd().length);
+      for (let i = 0; i < chars(input).length + chars(trailing).length; i++) out.deleteBackward();
+      out.insertText(text + trailing);
+      closePanel(); render();
+    }
+    function show(main, extra, replaceWith) {
+      result.textContent = "";
+      result.appendChild(say("aimain", main));
+      for (const line of extra) result.appendChild(say("aiextra", line));
+      if (replaceWith) {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "aiapply"; b.textContent = "Use this";
+        b.addEventListener("click", () => replaceInput(replaceWith));
+        result.appendChild(b);
+      }
+    }
+    async function run(mode) {
+      aiAbort?.abort();
+      for (const b of row.children) b.classList.toggle("on", b.textContent === actions.find((a) => a[1] === mode)[0]);
+      result.textContent = ""; result.appendChild(say("aimsg", "Thinking…"));
+      try {
+        if (mode === "grammar") {
+          const r = validate.grammar(input, await askModel(ja ? AI_PROMPTS.grammarJa : AI_PROMPTS.grammarEn, input));
+          if (!r) show("The answer didn't look like a fix, so it isn't shown.", []);
+          else if (r.kind === "none") show("No mistakes found. ✓", []);
+          else show(r.text, r.fixes.map((m) => `${m.original} → ${m.fix}: ${m.reason || ""}`), r.text);
+        } else if (mode === "explain") {
+          const r = validate.explanation(await askModel(AI_PROMPTS.explain, input));
+          if (!r) show("The answer didn't look like an explanation, so it isn't shown.", []);
+          else show(r.meaning, [r.reading ? r.reading + (settings.showRomaji ? "  ·  " + toRomaji(r.reading) : "") : "", ...r.notes].filter(Boolean), null);
+        } else if (mode === "kanji") {
+          const r = validate.kanji(input, await askModel(AI_PROMPTS.kanji, input));
+          if (!r) show("The conversion changed the words, so it isn't shown.", []); else show(r, [], r);
+        } else if (["casual", "polite", "honorific"].includes(mode)) {
+          const r = validate.rewrite(input, await askModel(AI_PROMPTS.politeness(mode), input));
+          if (!r) show("Already in that style, or the answer didn't look right.", []); else show(r, [], r);
+        } else {
+          // English → Japanese. 敬語 is a polite translation, then a 敬語 rewrite.
+          const style = mode === "toCasual" ? "casual" : "polite";
+          const t = validate.translation(await askModel(AI_PROMPTS.translate(style), input));
+          if (!t) { show("The answer didn't look like a translation, so it isn't shown.", []); return; }
+          let text = t.text, reading = t.reading;
+          if (mode === "toHonorific") {
+            const h = validate.rewrite(text, await askModel(AI_PROMPTS.politeness("honorific"), text));
+            if (h) { text = h; reading = null; }
+          }
+          show(text, reading ? [reading + (settings.showRomaji ? "  ·  " + toRomaji(reading) : "")] : [], text);
+        }
+      } catch (e) {
+        if (e && e.code === "cancelled") return;
+        const why = { not_granted: "Claude wasn't allowed for this page.", rate_limited: "Too many requests. Try again in a moment.",
+          sampling_disabled: "Claude isn't available for this account.", unavailable: "AI isn't available in this view." }[e && e.code];
+        show(why || "Something went wrong. Try again.", [], null);
+      }
+    }
+  }
+
   // ⚙︎ in the toolbar: the typing settings, in place of the keys (QuickSettingsPanel.swift).
   const QUICK = [["autocorrect", "Autocorrect"], ["autoCapitalization", "Auto-capitalisation"], ["predictiveText", "Predictive text"],
     ["wordSuggestions", "Word suggestions"], ["emojiSuggestions", "Emoji suggestions"], ["doubleSpacePeriod", "Double-space for full stop"],
@@ -1598,10 +1902,12 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   }
   segmented("seg-height", "height", [["compact", "Compact"], ["standard", "Standard"], ["tall", "Tall"]]);
   segmented("seg-sensitivity", "flickSensitivity", [["gentle", "Gentle"], ["normal", "Normal"], ["quick", "Quick"]]);
+  segmented("seg-keyFont", "keyFont", [["system", "System"], ["rounded", "Rounded 丸"], ["serif", "Serif 明朝"], ["mono", "Mono"]]);
+  segmented("seg-textSize", "textSize", [["small", "S"], ["standard", "M"], ["large", "L"]]);
   segmented("seg-startingMode", "startingMode", [["japanese", "あ"], ["english", "EN"], ["dictionary", "辞"], ["lastUsed", "Last used"]]);
   segmented("seg-skinTone", "skinTone", ["👍", "👍🏻", "👍🏼", "👍🏽", "👍🏾", "👍🏿"].map((t, i) => [i, t]));
   segmented("seg-gifRating", "gifRating", [["g", "G"], ["pg", "PG"], ["pg-13", "PG-13"], ["r", "R"]]);
-  const SEGMENTS = [["seg-height", "height"], ["seg-sensitivity", "flickSensitivity"], ["seg-startingMode", "startingMode"], ["seg-skinTone", "skinTone"], ["seg-gifRating", "gifRating"]];
+  const SEGMENTS = [["seg-height", "height"], ["seg-sensitivity", "flickSensitivity"], ["seg-startingMode", "startingMode"], ["seg-skinTone", "skinTone"], ["seg-gifRating", "gifRating"], ["seg-keyFont", "keyFont"], ["seg-textSize", "textSize"]];
   $("giphy-key").addEventListener("input", (e) => { settings.giphyAPIKey = e.target.value.trim(); saveSettings(); });
   $("forget").addEventListener("click", () => {
     learned = {}; history = {}; recents = [];
@@ -1614,7 +1920,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     Object.assign(settings, DEFAULTS, { customColors: { ...PALETTES["藍 Ai light"] } });
     changed();
   });
-  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "holdForNumbers", "leftHandedWheel", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics"];
+  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "holdForNumbers", "leftHandedWheel", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics", "boldKeys"];
   for (const key of TOGGLES) {
     $("set-" + key).addEventListener("change", (e) => { settings[key] = e.target.checked; changed(); });
   }
@@ -1732,6 +2038,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       else kbEl.style.removeProperty(cssVar);
     }
     kbEl.style.setProperty("--key-op", Math.round(settings.keyOpacity * 100) + "%");
+    kbEl.dataset.font = settings.keyFont;
+    kbEl.style.setProperty("--key-scale", { small: 0.88, standard: 1, large: 1.14 }[settings.textSize] || 1);
+    kbEl.classList.toggle("bold", !!settings.boldKeys);
     kbEl.classList.toggle("has-photo", !!photo);
     $("kb-photo").style.backgroundImage = photo ? `url("${photo}")` : "";
     $("kb-photo").classList.toggle("blur", settings.backgroundBlur);

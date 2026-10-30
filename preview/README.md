@@ -2,7 +2,9 @@
 
 `keyboard-preview.html` is a single-page copy of the keyboards' logic, for trying the layout,
 mode wheel, suggestions, emoji panel and settings in a browser. It has a test checklist
-covering every feature. Open it directly, or rebuild it after changing `preview.src.html`:
+covering every feature. Opened in Claude (claude.ai or the Claude app), its ✨ AI panel sends
+the app's exact prompts to Claude, with the viewer's permission, and runs the same checks on the
+answers; on iPhone the same prompts run on Apple's on-device model. Open it directly, or rebuild it after changing `preview.src.html`:
 
 ```sh
 python3 build.py

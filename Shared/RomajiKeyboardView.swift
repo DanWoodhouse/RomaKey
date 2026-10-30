@@ -63,6 +63,10 @@ final class RomajiKeyboardView: KeyboardViewBase {
         engine.output = output ?? documentOutput
     }
 
+    override func commitTyping() {
+        engine.commitComposition()
+    }
+
     override var searchLanguage: String {
         engine.mode == .english ? "en" : "ja"
     }
@@ -282,7 +286,7 @@ private final class AccentPickerView: UIView {
             let label = UILabel()
             label.text = option
             label.textAlignment = .center
-            label.font = .systemFont(ofSize: 24)
+            label.font = theme.font(24)
             label.layer.cornerRadius = 6
             label.clipsToBounds = true
             addSubview(label)

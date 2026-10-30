@@ -61,6 +61,10 @@ final class FlickKeyboardView: KeyboardViewBase {
         engine.output = output ?? documentOutput
     }
 
+    override func commitTyping() {
+        engine.commitComposition()
+    }
+
     override var searchLanguage: String { "ja" }
 
     override func reload() {
@@ -252,6 +256,7 @@ final class FlickGuideView: UIView {
             case .down: frame.origin.y += keyFrame.height
             }
             tile.isHidden = false
+            tile.font = theme.font(24)
             tile.text = text
             tile.frame = frame.insetBy(dx: 2, dy: 2).intersection(bounds)
             let isSelected = direction == selected

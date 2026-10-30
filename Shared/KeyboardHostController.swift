@@ -142,6 +142,7 @@ class KeyboardHostController: UIInputViewController {
             }
             boardView.onModeWheel = { [weak self] slot in self?.select(slot) }
             boardView.onSettingsChange = { [weak self] newSettings in self?.update(newSettings) }
+            boardView.document = textOutput
         }
         show(openingBoard)
 

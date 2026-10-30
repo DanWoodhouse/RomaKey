@@ -26,6 +26,8 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     var onModeWheel: ((ModeWheelSlot) -> Void)?
     /// Settings changed in the quick settings panel. The controller saves and applies them.
     var onSettingsChange: ((KeyboardSettings) -> Void)?
+    /// The text field being edited, for the AI panel to read and replace text.
+    var document: TextOutput?
 
     enum SearchTarget {
         case emoji
@@ -102,6 +104,9 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
 
     /// Sends typing to `output` (the search field) or, when nil, back to the document.
     func routeTyping(to output: TextOutput?) {}
+
+    /// Confirms any composition, so the document holds everything typed.
+    func commitTyping() {}
 
     /// "ja" or "en", for GIF search.
     var searchLanguage: String { "en" }
@@ -186,6 +191,16 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
             } else {
                 flash(hasFullAccess ? "Nothing to paste" : "Paste needs Allow Full Access")
             }
+        case .ai:
+            commitTyping()
+            let input = AIPrompts.trimmedInput(document?.textBeforeCursor ?? "")
+            let panel = AIPanel(input: input, theme: theme, showsRomaji: settings.showRomaji)
+            panel.onClose = { [weak self] in self?.closePanel() }
+            panel.onReplace = { [weak self] text in
+                self?.replaceTextBeforeCursor(input, with: text)
+                self?.closePanel()
+            }
+            install(panel)
         case .settings:
             let quickSettings = QuickSettingsPanel(settings: settings, theme: theme, sharesWithApp: hasFullAccess)
             quickSettings.onChange = { [weak self] newSettings in self?.onSettingsChange?(newSettings) }
@@ -290,6 +305,21 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         case .emoji:
             showEmojiPanel(tab: .recent)
         }
+    }
+
+    /// Swaps `original`, the end of the text before the cursor (ignoring trailing spaces), for
+    /// `replacement`, keeping the trailing spaces.
+    func replaceTextBeforeCursor(_ original: String, with replacement: String) {
+        guard let document, let before = document.textBeforeCursor else { return }
+        let trailing = String(before.reversed().prefix { $0.isWhitespace }.reversed())
+        guard !original.isEmpty, before.dropLast(trailing.count).hasSuffix(original) else {
+            flash("The text changed, so nothing was replaced")
+            return
+        }
+        for _ in 0..<(original.count + trailing.count) {
+            document.deleteBackward()
+        }
+        document.insertText(replacement + trailing)
     }
 
     /// A short message in the candidate bar.

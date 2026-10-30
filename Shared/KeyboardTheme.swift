@@ -14,13 +14,21 @@ struct KeyboardTheme {
     let accent: UIColor
     /// The key colour at full opacity, for popups and panels that sit on top of the keys.
     let panel: UIColor
+    let keyFont: KeyboardSettings.KeyFont
+    let textScale: CGFloat
+    let boldKeys: Bool
 
     /// The theme `settings` describe.
     init(_ settings: KeyboardSettings) {
-        self.init(theme: settings.theme, custom: settings.customColors, keyOpacity: settings.keyOpacity)
+        self.init(theme: settings.theme, custom: settings.customColors, keyOpacity: settings.keyOpacity,
+                  keyFont: settings.keyFont, textScale: settings.textSize.scale, boldKeys: settings.boldKeys)
     }
 
-    init(theme: KeyboardSettings.Theme, custom: ThemeColors? = nil, keyOpacity: Double = 1) {
+    init(theme: KeyboardSettings.Theme, custom: ThemeColors? = nil, keyOpacity: Double = 1,
+         keyFont: KeyboardSettings.KeyFont = .system, textScale: Double = 1, boldKeys: Bool = false) {
+        self.keyFont = keyFont
+        self.textScale = CGFloat(textScale)
+        self.boldKeys = boldKeys
         func color(_ keyPath: KeyPath<ThemeColors, UInt32>, alpha: Double = 1) -> UIColor {
             if theme == .custom, let custom {
                 return UIColor(hex: custom[keyPath: keyPath], alpha: alpha)
@@ -50,6 +58,35 @@ struct KeyboardTheme {
 
     static func named(_ theme: KeyboardSettings.Theme) -> KeyboardTheme {
         KeyboardTheme(theme: theme)
+    }
+
+    /// The user's key font at `size` (scaled by their text size). Bold keys turn regular into
+    /// semibold. Japanese falls back to the Hiragino font that matches the design.
+    func font(_ size: CGFloat, weight: UIFont.Weight = .regular) -> UIFont {
+        let weight: UIFont.Weight = boldKeys && weight == .regular ? .semibold : weight
+        let pointSize = size * textScale
+        let base = UIFont.systemFont(ofSize: pointSize, weight: weight)
+        let heavy = weight != .regular
+        let design: UIFontDescriptor.SystemDesign
+        let japanese: String?
+        switch keyFont {
+        case .system:
+            return base
+        case .rounded:
+            design = .rounded
+            japanese = "HiraMaruProN-W4"
+        case .serif:
+            design = .serif
+            japanese = heavy ? "HiraMinProN-W6" : "HiraMinProN-W3"
+        case .mono:
+            design = .monospaced
+            japanese = nil
+        }
+        guard var descriptor = base.fontDescriptor.withDesign(design) else { return base }
+        if let japanese {
+            descriptor = descriptor.addingAttributes([.cascadeList: [UIFontDescriptor(name: japanese, size: pointSize)]])
+        }
+        return UIFont(descriptor: descriptor, size: pointSize)
     }
 }
 

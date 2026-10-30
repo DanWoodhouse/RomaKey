@@ -37,6 +37,32 @@ public struct KeyboardSettings: Equatable {
         case custom
     }
 
+    /// The typeface on the keys and suggestions. Japanese uses the matching Hiragino font.
+    public enum KeyFont: String, CaseIterable {
+        /// San Francisco and Hiragino Sans, like the system keyboard.
+        case system
+        /// SF Rounded and Hiragino Maru Gothic.
+        case rounded
+        /// New York and Hiragino Mincho.
+        case serif
+        /// SF Mono.
+        case mono
+    }
+
+    public enum TextSize: String, CaseIterable {
+        case small
+        case standard
+        case large
+
+        public var scale: Double {
+            switch self {
+            case .small: return 0.88
+            case .standard: return 1
+            case .large: return 1.14
+            }
+        }
+    }
+
     public enum Height: String, CaseIterable {
         case compact
         case standard
@@ -71,6 +97,9 @@ public struct KeyboardSettings: Equatable {
     public var haptics = false
     public var theme: Theme = .system
     public var height: Height = .standard
+    public var keyFont: KeyFont = .system
+    public var textSize: TextSize = .standard
+    public var boldKeys = false
 
     // Suggestions
     public var autocorrect = true
@@ -135,6 +164,9 @@ public struct KeyboardSettings: Equatable {
         static let haptics = "haptics"
         static let theme = "theme"
         static let height = "height"
+        static let keyFont = "keyFont"
+        static let textSize = "textSize"
+        static let boldKeys = "boldKeys"
         static let autocorrect = "autocorrect"
         static let wordSuggestions = "wordSuggestions"
         static let emojiSuggestions = "emojiSuggestions"
@@ -186,6 +218,9 @@ public struct KeyboardSettings: Equatable {
         haptics = bool(Key.haptics, haptics)
         theme = value(Key.theme, theme)
         height = value(Key.height, height)
+        keyFont = value(Key.keyFont, keyFont)
+        textSize = value(Key.textSize, textSize)
+        boldKeys = bool(Key.boldKeys, boldKeys)
         autocorrect = bool(Key.autocorrect, autocorrect)
         wordSuggestions = bool(Key.wordSuggestions, wordSuggestions)
         emojiSuggestions = bool(Key.emojiSuggestions, emojiSuggestions)
@@ -224,6 +259,9 @@ public struct KeyboardSettings: Equatable {
         defaults.set(haptics, forKey: Key.haptics)
         defaults.set(theme.rawValue, forKey: Key.theme)
         defaults.set(height.rawValue, forKey: Key.height)
+        defaults.set(keyFont.rawValue, forKey: Key.keyFont)
+        defaults.set(textSize.rawValue, forKey: Key.textSize)
+        defaults.set(boldKeys, forKey: Key.boldKeys)
         defaults.set(autocorrect, forKey: Key.autocorrect)
         defaults.set(wordSuggestions, forKey: Key.wordSuggestions)
         defaults.set(emojiSuggestions, forKey: Key.emojiSuggestions)

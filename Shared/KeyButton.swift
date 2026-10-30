@@ -13,7 +13,10 @@ class KeyButton: UIControl {
     }
 
     var theme = KeyboardTheme.named(.system) {
-        didSet { applyColors() }
+        didSet {
+            applyColors()
+            applyLabel()
+        }
     }
 
     /// A small label in the top corner, e.g. the number a held letter types.
@@ -90,7 +93,7 @@ class KeyButton: UIControl {
             titleLabel.isHidden = false
             iconView.isHidden = true
             let isSingleCharacter = text.count == 1 && !isSpecial
-            titleLabel.font = .systemFont(ofSize: isSingleCharacter ? 23 : 16, weight: .regular)
+            titleLabel.font = theme.font(isSingleCharacter ? 23 : 16)
         case .systemImage(let name):
             iconView.image = UIImage(
                 systemName: name,
@@ -146,6 +149,7 @@ final class KeyPopupView: UIView {
         self.frame = frame
         label.frame = CGRect(origin: .zero, size: frame.size)
         label.text = text
+        label.font = theme.font(32)
         label.textColor = theme.text
         backgroundColor = theme.panel
         isHidden = false
