@@ -205,29 +205,62 @@ input[type="checkbox"].qswitch:checked::before { transform: translateX(18px); }
 .ainote { font-size: 11px; color: var(--kb-muted); line-height: 1.4; }
 .qnote { margin: 8px 0 0; font: 12px var(--font-key); color: var(--kb-muted); }
 .qhead { flex: 4; text-align: center; font: 600 12px var(--font-key); color: var(--kb-muted); }
-.cc { overflow-y: auto; overscroll-behavior: contain; padding: 6px 10px 8px; display: grid; gap: 8px; align-content: start; font-family: var(--font-key); }
-.cctop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-.cccol { display: grid; gap: 8px; }
-.ccmod { background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); border-radius: 18px; padding: 8px; box-shadow: 0 1px 0 var(--kb-shadow); min-width: 0; }
-.ccgrid { display: grid; gap: 6px 2px; }
-.ccgrid.c2 { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: center; height: 100%; }
+.cc { overflow-y: auto; overscroll-behavior: contain; padding: 8px 10px 12px; display: grid; gap: 10px; align-content: start; font-family: var(--font-key); color: var(--kb-text); }
+/* Liquid Glass, as in iOS 26's Control Centre: a translucent, blurred pane with a bright rim and a soft drop. */
+.glass { position: relative; min-width: 0; border-radius: 24px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0.08)), color-mix(in srgb, var(--kb-key) 34%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8);
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.5), inset 0 -1px 1px rgba(255, 255, 255, 0.1), inset 0 0 0 0.5px rgba(255, 255, 255, 0.22), 0 10px 26px -12px rgba(0, 0, 0, 0.35); }
+.ccmod { padding: 10px 8px 9px; display: grid; gap: 8px; }
+.cctitle { padding: 0 6px; font: 600 11px var(--font-key); color: color-mix(in srgb, var(--kb-text) 62%, transparent); letter-spacing: 0.02em; display: flex; justify-content: space-between; gap: 8px; }
+.cctitle b { font-weight: 600; color: var(--kb-text); opacity: 0.8; }
+.ccpair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.ccgrid { display: grid; gap: 8px 2px; }
+.ccgrid.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .ccgrid.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.cctile { display: grid; justify-items: center; gap: 4px; background: transparent; border: 0; padding: 2px 0; cursor: pointer; color: var(--kb-text); font: 500 10px var(--font-key); min-width: 0; }
-.ccircle { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--kb-special); color: var(--kb-text); transition: background-color 160ms, color 160ms; }
-.cctile[aria-pressed="true"] .ccircle { background: var(--kb-accent); color: #fff; }
+.cctile { display: grid; justify-items: center; gap: 5px; background: transparent; border: 0; padding: 0; cursor: pointer; color: var(--kb-text); font: 500 10px var(--font-key); min-width: 0; -webkit-tap-highlight-color: transparent; }
+.ccircle { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--kb-text);
+  background: color-mix(in srgb, var(--kb-text) 9%, transparent);
+  box-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.4), inset 0 0 0 0.5px rgba(255, 255, 255, 0.16);
+  transition: background 220ms, color 220ms, box-shadow 220ms, transform 260ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+.ccgrid.c3 .ccircle { width: 40px; height: 40px; }
+.cctile[aria-pressed="true"] .ccircle { color: #fff;
+  background: radial-gradient(130% 100% at 50% 0%, color-mix(in srgb, var(--kb-accent) 62%, #fff) 0%, var(--kb-accent) 58%, color-mix(in srgb, var(--kb-accent) 88%, #000) 100%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 -1px 1px rgba(0, 0, 0, 0.12), 0 6px 14px -6px color-mix(in srgb, var(--kb-accent) 80%, transparent); }
 .ccircle svg { width: 20px; height: 20px; display: block; }
-.cctile:active .ccircle { opacity: 0.7; }
+.ccgrid.c3 .ccircle svg { width: 18px; height: 18px; }
+.cctile:active .ccircle { transform: scale(0.9); }
 .cctile:focus-visible { outline: none; }
 .cctile:focus-visible .ccircle { outline: 2px solid var(--kb-accent); outline-offset: 2px; }
-.cclabel { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ccpick { display: grid; gap: 6px; align-content: center; }
-.ccpick > span { font: 600 12px var(--font-key); color: var(--kb-muted); }
-.ccseg { display: flex; gap: 2px; padding: 2px; border-radius: 9px; background: var(--kb-special); }
-.ccseg button { flex: 1; min-width: 0; height: 28px; border: 0; border-radius: 7px; background: transparent; color: var(--kb-text); font: 600 12px var(--font-key); cursor: pointer; padding: 0; }
-.ccseg button[aria-pressed="true"] { background: var(--kb-accent); color: #fff; }
-.ccopen { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; border: 0; border-radius: 14px; background: var(--kb-accent); color: #fff; font: 600 15px var(--font-key); cursor: pointer; padding: 0 12px; }
-.ccopen svg { width: 18px; height: 18px; }
-.cc .qnote { margin: 0; text-align: center; font-size: 11px; }
+.cclabel { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: color-mix(in srgb, var(--kb-text) 78%, transparent); }
+/* Sliders: a recessed glass track and a floating glass knob, snapping to three stops. */
+.ccslide { display: flex; align-items: center; gap: 6px; padding: 0 4px; min-width: 0; }
+.ccslide .end { flex: none; width: 16px; text-align: center; color: var(--kb-muted); font-weight: 600; line-height: 1; }
+.ccslide .end svg { width: 16px; height: 16px; display: block; }
+.ccmod > * { min-width: 0; }
+input[type="range"].ccrange { -webkit-appearance: none; appearance: none; flex: 1 1 0; min-width: 0; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; --p: 50%; }
+input[type="range"].ccrange:focus-visible { outline: 2px solid var(--kb-accent); outline-offset: 2px; border-radius: 14px; }
+input[type="range"].ccrange::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(90deg, var(--kb-accent) var(--p), color-mix(in srgb, var(--kb-text) 14%, transparent) var(--p)); }
+input[type="range"].ccrange::-moz-range-track { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--kb-text) 14%, transparent); }
+input[type="range"].ccrange::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--kb-accent); }
+input[type="range"].ccrange::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; margin-top: -9px; border-radius: 50%; border: 0;
+  background: radial-gradient(120% 100% at 50% 0%, #fff, #f1f1f4); box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.25); transition: transform 160ms; }
+input[type="range"].ccrange::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); }
+input[type="range"].ccrange:active::-webkit-slider-thumb { transform: scale(1.12); }
+/* The AI tile, shaped like Control Centre's Focus button. */
+.ccai { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 14px 8px 8px; border: 0; border-radius: 999px; cursor: pointer; text-align: left; color: var(--kb-text); font-family: var(--font-key); -webkit-tap-highlight-color: transparent; transition: transform 260ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+.ccai:active { transform: scale(0.97); }
+.ccai:focus-visible { outline: 2px solid var(--kb-accent); outline-offset: 2px; }
+.ccai .ccircle { width: 40px; height: 40px; flex: none; }
+.ccai .txt { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.ccai .txt small { font: 600 11px var(--font-key); color: var(--kb-muted); }
+.ccai .txt span { font: 600 15px var(--font-key); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ccai .swap { flex: none; font: 600 11px var(--font-key); color: var(--kb-muted); padding: 5px 9px; border-radius: 999px; background: color-mix(in srgb, var(--kb-text) 8%, transparent); }
+/* Open RomaKey: a small glass capsule in the bottom bar. */
+.ebar button.ccopen { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 12px; border-radius: 999px; font: 600 12px var(--font-key); color: var(--kb-text); }
+.ccopen svg { width: 13px; height: 13px; }
+.cc .qnote { margin: 0; padding: 0 12px; text-align: center; font-size: 11px; }
 /* Animations: the Animations setting adds .anim; Reduce Motion turns them all off. */
 .kb.anim .cap { transition: transform 140ms cubic-bezier(0.3, 1.5, 0.5, 1), background-color 80ms; }
 .kb.anim .key.down .cap { transform: scale(0.95); transition-duration: 60ms; }
@@ -244,11 +277,13 @@ input[type="checkbox"].qswitch:checked::before { transform: translateX(18px); }
 @keyframes kbpop { from { transform: scale(0.6); opacity: 0; } }
 .kb.anim .cands.swap { animation: kbfade 180ms ease-out; }
 @keyframes kbfade { from { opacity: 0; } }
-.kb.anim .cctile.pop .ccircle { animation: kbtile 260ms cubic-bezier(0.3, 1.6, 0.5, 1); }
-@keyframes kbtile { from { transform: scale(0.88); } }
+.kb.anim .cctile.pop .ccircle { animation: kbtile 380ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes kbtile { from { transform: scale(0.86); } }
+.kb.anim .cc > * { animation: kbccin 360ms cubic-bezier(0.2, 0.9, 0.3, 1) backwards; }
+@keyframes kbccin { from { transform: translateY(10px) scale(0.97); opacity: 0; } }
 .kb.anim .popup.up { animation: kbfade 120ms ease-out; }
 @media (prefers-reduced-motion: reduce) {
-  .kb.anim .cap, .kb.anim .keys, .kb.anim .panel, .kb.anim .egrid, .kb.anim .eind, .kb.anim .wheel-slot, .kb.anim .cands, .kb.anim .ccircle, .kb.anim .popup { animation: none !important; transition: none !important; }
+  .kb.anim .cap, .kb.anim .keys, .kb.anim .panel, .kb.anim .egrid, .kb.anim .eind, .kb.anim .wheel-slot, .kb.anim .cands, .kb.anim .ccircle, .kb.anim .popup, .kb.anim .cc > *, .kb.anim .ccai { animation: none !important; transition: none !important; }
   .ccircle { transition: none; }
 }
 .xkeys { display: grid; gap: 5px; margin: 8px 0 4px; }
@@ -535,8 +570,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="n3"><span>Turn <em>Animations</em> off (in ⚙︎ or Customise): everything works the same, without motion.</span></label>
       </div>
       <div class="checks"><h3>Settings</h3>
-        <label class="check"><input type="checkbox" data-check="s1"><span>Clear the text and tap ⚙︎ in the toolbar: it looks like Control Centre. Tap the round <em>Autocorrect</em> and <em>Capitals</em> tiles off: <em>teh</em> stays as typed and new sentences start lowercase.</span></label>
-        <label class="check"><input type="checkbox" data-check="s3"><span>In ⚙︎, change <em>Height</em> and <em>Text size</em>: the keyboard changes straight away. <em>Open RomaKey</em> jumps to the full settings (on iPhone it opens the app).</span></label>
+        <label class="check"><input type="checkbox" data-check="s1"><span>Clear the text and tap ⚙︎ in the toolbar: glass modules like iOS 26's Control Centre. Tap the round <em>Autocorrect</em> and <em>Capitals</em> tiles off: <em>teh</em> stays as typed and new sentences start lowercase.</span></label>
+        <label class="check"><input type="checkbox" data-check="s3"><span>In ⚙︎, drag the <em>Text size</em> and <em>Height</em> sliders: they snap to three stops and the keyboard changes straight away. Tap the ✨ AI tile to switch between Apple Intelligence and Claude. <em>RomaKey ↗</em> (bottom right) jumps to the full settings (on iPhone it opens the app).</span></label>
         <label class="check"><input type="checkbox" data-check="s2"><span>On a phone, <em>Settings ↓</em> at the top jumps to every option: themes, photo, height, GIF and the rest.</span></label>
       </div>
       <div class="checks"><h3>✨ AI</h3>
@@ -1869,39 +1904,53 @@ Text: よろしくおねがいします
   // (QuickSettingsPanel.swift). Everything else is in the app: Open RomaKey.
   const CC_ICON = (body) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + "</svg>";
   const CC_TEXT = (t, size) => '<text x="12" y="' + (size > 9 ? 16 : 14.5) + '" text-anchor="middle" font-size="' + size + '" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui, sans-serif">' + t + "</text>";
-  const CC_ESSENTIALS = [
+  const CC_TYPING = [
     ["autocorrect", "Autocorrect", CC_TEXT("abc", 9) + '<path d="M5 18.5c1.2-1 2.3-1 3.5 0s2.3 1 3.5 0 2.3-1 3.5 0 2.3 1 3.5 0"/>'],
     ["autoCapitalization", "Capitals", '<path d="M12 4 4 12.5h4.5V19h7v-6.5H20z"/>'],
     ["predictiveText", "Predictive", '<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 10h.01M12 10h.01M15.5 10h.01" stroke-width="2.6"/>'],
     ["wordSuggestions", "Suggestions", '<rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M9 6v12M15 6v12"/>'],
   ];
-  const CC_MORE = [
+  const CC_KEYS = [
     ["swipeUpSecondaries", "Swipe up", '<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M12 16V8m-3.5 3.5L12 8l3.5 3.5"/>'],
     ["keySecondaries", "Key extras", '<rect x="4" y="4" width="16" height="16" rx="3.5"/>' + CC_TEXT("1", 9).replace('x="12" y="14.5"', 'x="15" y="11.5"') + '<path d="M8.5 16h3"/>'],
-    ["emojiSuggestions", "Emoji", '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c1 1.3 2.2 2 3.5 2s2.5-.7 3.5-2"/><path d="M9 9.8h.01M15 9.8h.01" stroke-width="2.4"/>'],
-    ["doubleSpacePeriod", "Double space", '<path d="M3.5 12v3.5h11V12"/><path d="M19 15.5h.01" stroke-width="3"/>'],
     ["keyPopups", "Popups", '<rect x="6" y="3.5" width="12" height="11" rx="2.5"/><path d="M9 14.5v4a1.5 1.5 0 0 0 1.5 1.5h3a1.5 1.5 0 0 0 1.5-1.5v-4"/>'],
-    ["showMeanings", "Meanings", '<path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5v13"/>'],
-    ["showRomaji", "Romaji", CC_TEXT("Aa", 11)],
-    ["spaceBarCursor", "Space cursor", '<path d="M3.5 12h17M7 8.5 3.5 12 7 15.5M17 8.5l3.5 3.5-3.5 3.5"/>'],
+    ["doubleSpacePeriod", "Space . ", '<path d="M3.5 12v3.5h11V12"/><path d="M19 15.5h.01" stroke-width="3"/>'],
+    ["spaceBarCursor", "Trackpad", '<path d="M3.5 12h17M7 8.5 3.5 12 7 15.5M17 8.5l3.5 3.5-3.5 3.5"/>'],
     ["leftHandedWheel", "Left hand", '<path d="M19 16a7 7 0 0 0-14 0"/><path d="m3 13 2 3 3-2"/>'],
     ["flickOnly", "Flick only", '<rect x="8.5" y="8.5" width="7" height="7" rx="1.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>'],
+    ["fullWidthSpace", "Wide space", '<path d="M3 12v3.5h18V12"/>'],
+  ];
+  const CC_SHOW = [
+    ["emojiSuggestions", "Emoji", '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c1 1.3 2.2 2 3.5 2s2.5-.7 3.5-2"/><path d="M9 9.8h.01M15 9.8h.01" stroke-width="2.4"/>'],
+    ["showMeanings", "Meanings", '<path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5v13"/>'],
+    ["showRomaji", "Romaji", CC_TEXT("Aa", 11)],
+  ];
+  const CC_FEEL = [
     ["keySounds", "Sounds", '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>'],
     ["haptics", "Haptics", '<rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4.5 9v6M19.5 9v6"/>'],
-    ["animations", "Animations", '<path d="M4 20 14.5 9.5"/><path d="M16 3v3M19.5 4.5l-2 2M21 8h-3M14 6.5l3.5 3.5"/>'],
+    ["animations", "Motion", '<path d="M4 20 14.5 9.5"/><path d="M16 3v3M19.5 4.5l-2 2M21 8h-3M14 6.5l3.5 3.5"/>'],
   ];
   function ccTile([key, name, icon]) {
     const b = document.createElement("button");
     b.type = "button"; b.className = "cctile"; b.setAttribute("aria-pressed", String(!!settings[key])); b.dataset.key = key;
     b.innerHTML = '<span class="ccircle">' + CC_ICON(icon) + '</span><span class="cclabel"></span>';
-    b.lastChild.textContent = name;
+    b.lastChild.textContent = name.trim();
     b.addEventListener("click", () => {
       settings[key] = !settings[key];
       b.setAttribute("aria-pressed", String(settings[key]));
       replay(b, "pop");
+      keyFeedback();
       changed();
     });
     return b;
+  }
+  // A glass module: an optional small title, then its content.
+  function ccModule(title, ...children) {
+    const m = document.createElement("div");
+    m.className = "glass ccmod";
+    if (title) { const t = document.createElement("div"); t.className = "cctitle"; t.textContent = title; m.appendChild(t); }
+    m.append(...children);
+    return m;
   }
   function ccGrid(list, columns) {
     const g = document.createElement("div");
@@ -1909,32 +1958,47 @@ Text: よろしくおねがいします
     for (const t of list) g.appendChild(ccTile(t));
     return g;
   }
-  function ccModule(child, extraClass) {
-    const m = document.createElement("div");
-    m.className = "ccmod" + (extraClass ? " " + extraClass : "");
-    m.appendChild(child);
-    return m;
+  // Three stops on a slider, like Control Centre's brightness, with the current value named.
+  function ccSlider(title, key, values, names, ends) {
+    const box = ccModule(null);
+    const head = document.createElement("div"); head.className = "cctitle";
+    const value = document.createElement("b");
+    head.append(title, value);
+    const row = document.createElement("div"); row.className = "ccslide";
+    const [lo, hi] = ends.map((html) => { const e = document.createElement("span"); e.className = "end"; e.innerHTML = html; e.setAttribute("aria-hidden", "true"); return e; });
+    const range = document.createElement("input");
+    range.type = "range"; range.className = "ccrange"; range.min = 0; range.max = values.length - 1; range.step = 1;
+    range.setAttribute("aria-label", title); range.dataset.key = key;
+    const show = () => {
+      const i = Math.max(values.indexOf(settings[key]), 0);
+      range.value = i; range.style.setProperty("--p", (i / (values.length - 1)) * 100 + "%");
+      value.textContent = names[i]; range.setAttribute("aria-valuetext", names[i]);
+    };
+    range.addEventListener("input", () => {
+      const v = values[+range.value];
+      if (v !== settings[key]) { settings[key] = v; keyFeedback(); changed(); }
+      show();
+    });
+    show();
+    row.append(lo, range, hi);
+    box.append(head, row);
+    return box;
   }
-  function ccPicker(title, key, options) {
-    const box = document.createElement("div");
-    box.className = "ccpick";
-    const label = document.createElement("span"); label.textContent = title;
-    const seg = document.createElement("div"); seg.className = "ccseg"; seg.setAttribute("role", "group"); seg.setAttribute("aria-label", title);
-    for (const [value, name, aria, size] of options) {
-      const b = document.createElement("button");
-      b.type = "button"; b.textContent = name; b.dataset.value = value;
-      if (aria) b.setAttribute("aria-label", aria);
-      if (size) b.style.fontSize = size + "px";
-      b.setAttribute("aria-pressed", String(settings[key] === value));
-      b.addEventListener("click", () => {
-        settings[key] = value;
-        for (const o of seg.children) o.setAttribute("aria-pressed", String(o === b));
-        changed();
-      });
-      seg.appendChild(b);
-    }
-    box.append(label, seg);
-    return ccModule(box);
+  function ccAITile() {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "glass ccai";
+    const paint = () => {
+      const apple = settings.aiProvider === "apple";
+      b.innerHTML = '<span class="ccircle" style="color:#fff;background:radial-gradient(130% 100% at 50% 0%,#c9a7ff,#8b5cf6 60%,#6d3fd8)">' +
+        CC_ICON('<path d="M12 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7z"/>') +
+        '</span><span class="txt"><small>✨ AI answers with</small><span></span></span><span class="swap"></span>';
+      b.querySelector(".txt span").textContent = apple ? "Apple Intelligence" : "Claude";
+      b.querySelector(".swap").textContent = apple ? "Use Claude" : "Use Apple";
+      b.setAttribute("aria-label", "AI answers with " + (apple ? "Apple Intelligence" : "Claude") + ". Tap to switch.");
+    };
+    b.addEventListener("click", () => { settings.aiProvider = settings.aiProvider === "apple" ? "claude" : "apple"; paint(); keyFeedback(); changed(); });
+    paint();
+    return b;
   }
   function openAppSettings() {
     closePanel(); render();
@@ -1945,28 +2009,27 @@ Text: よろしくおねがいします
     const panel = openPanel();
     const cc = document.createElement("div");
     cc.className = "cc";
-    const top = document.createElement("div");
-    top.className = "cctop";
-    const col = document.createElement("div");
-    col.className = "cccol";
-    col.append(ccPicker("✨ AI", "aiProvider", [["apple", "Apple"], ["claude", "Claude"]]),
-      ccPicker("Height", "height", [["compact", "Low", "Compact"], ["standard", "Mid", "Standard"], ["tall", "Tall"]]));
-    top.append(ccModule(ccGrid(CC_ESSENTIALS, 2)), col);
-    const open = document.createElement("button");
-    open.type = "button"; open.className = "ccopen";
-    open.innerHTML = CC_ICON('<rect x="3.5" y="6.5" width="14" height="14" rx="3.5"/><path d="M12 3.5h8.5V12M20.5 3.5 11 13"/>') + "<span>Open RomaKey · アプリを開く</span>";
-    open.addEventListener("click", openAppSettings);
-    const note = document.createElement("p");
-    note.className = "qnote";
-    note.textContent = "Looks, fonts, each key's extras, AI keys and GIFs are in the app (here: Customise, below).";
-    cc.append(top,
-      ccPicker("Text size", "textSize", [["small", "A", "Small", 11], ["standard", "A", "Standard", 14], ["large", "A", "Large", 18]]),
-      ccModule(ccGrid(CC_MORE, 4)), open, note);
+    const pair = (a, b) => { const p = document.createElement("div"); p.className = "ccpair"; p.append(a, b); return p; };
+    const bigA = (size) => '<span style="font-size:' + size + 'px">A</span>';
+    const bars = (h) => CC_ICON('<rect x="4" y="' + (20 - h) + '" width="16" height="' + h + '" rx="2.5"/>');
+    cc.append(
+      ccModule(null, ccGrid(CC_TYPING, 4)),
+      pair(ccSlider("Text size", "textSize", ["small", "standard", "large"], ["Small", "Standard", "Large"], [bigA(11), bigA(17)]),
+        ccSlider("Height", "height", ["compact", "standard", "tall"], ["Compact", "Standard", "Tall"], [bars(8), bars(15)])),
+      ccAITile(),
+      ccModule("Keys", ccGrid(CC_KEYS, 4)),
+      pair(ccModule("Show", ccGrid(CC_SHOW, 3)), ccModule("Feel", ccGrid(CC_FEEL, 3))),
+    );
+    [...cc.children].forEach((el, i) => { el.style.animationDelay = i * 30 + "ms"; });
     const bar = document.createElement("div");
     bar.className = "ebar";
     const heading = document.createElement("span");
     heading.className = "qhead"; heading.textContent = "設定 · Settings";
-    bar.append(barButton("ABC", "Back to the keys", () => { closePanel(); render(); }, "word"), heading);
+    const open = document.createElement("button");
+    open.type = "button"; open.className = "glass ccopen"; open.setAttribute("aria-label", "Open RomaKey settings");
+    open.innerHTML = "<span>RomaKey</span>" + CC_ICON('<path d="M8 4.5h11.5V16M19.5 4.5 5 19"/>');
+    open.addEventListener("click", openAppSettings);
+    bar.append(barButton("ABC", "Back to the keys", () => { closePanel(); render(); }, "word"), heading, open);
     panel.append(cc, bar);
   }
 
