@@ -66,6 +66,7 @@ final class QuickSettingsPanel: UIView {
         content.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(content)
         scrollView.alwaysBounceVertical = true
+        scrollView.removeEdgeEffects()
         scrollView.showsVerticalScrollIndicator = false
         addSubview(scrollView)
         NSLayoutConstraint.activate([

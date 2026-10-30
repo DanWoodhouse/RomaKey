@@ -59,7 +59,8 @@ enum EmojiLoader {
         }
         let parts = UIDevice.current.systemVersion.split(separator: ".").compactMap { Int($0) }
         let maxVersion = EmojiCatalog.maxSupportedVersion(iOSMajor: parts.first ?? 16, minor: parts.dropFirst().first ?? 0)
-        DispatchQueue.global(qos: .userInitiated).async {
+        // After the dictionary, which matters more while typing.
+        DispatchQueue.global(qos: .utility).async {
             let loaded = EmojiCatalog.bundled(maxVersion: maxVersion)
             DispatchQueue.main.async {
                 catalog = loaded

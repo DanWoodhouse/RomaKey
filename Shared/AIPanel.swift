@@ -74,6 +74,7 @@ final class AIPanel: UIView {
         content.spacing = 8
         content.alignment = .fill
         content.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.removeEdgeEffects()
         scrollView.addSubview(content)
         addSubview(scrollView)
         NSLayoutConstraint.activate([
@@ -157,6 +158,7 @@ final class AIPanel: UIView {
             row.addArrangedSubview(button)
         }
         let scroll = UIScrollView()
+        scroll.removeEdgeEffects()
         scroll.showsHorizontalScrollIndicator = false
         scroll.addSubview(row)
         row.translatesAutoresizingMaskIntoConstraints = false

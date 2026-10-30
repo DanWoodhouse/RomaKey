@@ -76,7 +76,7 @@ final class FlickKeyboardView: KeyboardViewBase {
         for button in buttons {
             button.label = engine.label(for: button.kind)
         }
-        showCandidates(engine.candidates, showsMeanings: settings.showMeanings, placeholder: "")
+        showCandidates(engine.candidates, showsMeanings: settings.showMeanings, placeholder: "", notice: engine.loadingMessage)
     }
 
     private func rebuildKeys() {

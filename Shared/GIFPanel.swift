@@ -101,6 +101,7 @@ final class GIFPanel: UIView, UICollectionViewDataSource, UICollectionViewDelega
         Self.previews.countLimit = 60
 
         collection.backgroundColor = .clear
+        collection.removeEdgeEffects()
         collection.dataSource = self
         collection.delegate = self
         collection.register(GIFCell.self, forCellWithReuseIdentifier: "cell")

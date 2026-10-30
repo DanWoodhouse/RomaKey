@@ -117,11 +117,12 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     var searchLanguage: String { "en" }
 
     /// Subclasses show their engine's candidates through this, so search results aren't replaced.
-    func showCandidates(_ candidates: [Candidate], showsMeanings: Bool, placeholder: String) {
+    func showCandidates(_ candidates: [Candidate], showsMeanings: Bool, placeholder: String, notice: String? = nil) {
         guard searchTarget == nil else { return }
         candidateBar.showsMeanings = showsMeanings
         candidateBar.showsRomaji = settings.showRomaji
         candidateBar.placeholder = placeholder
+        candidateBar.notice = notice
         candidateBar.candidates = candidates
     }
 
@@ -140,12 +141,16 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         backgroundColor = .clear
         updateBackground()
 
-        let image = BackgroundImageLoader.image(id: settings.backgroundImageID)
-        backgroundImageView.image = image
-        backgroundImageView.isHidden = image == nil
-        blurView.isHidden = image == nil || !settings.backgroundBlur
-        dimView.isHidden = image == nil
-        dimView.alpha = settings.backgroundDim
+        // Decoded off the main thread, so a photo never holds up the keys appearing.
+        let imageID = settings.backgroundImageID
+        BackgroundImageLoader.load(id: imageID) { [weak self] image in
+            guard let self, self.settings.backgroundImageID == imageID else { return }
+            self.backgroundImageView.image = image
+            self.backgroundImageView.isHidden = image == nil
+            self.blurView.isHidden = image == nil || !self.settings.backgroundBlur
+            self.dimView.isHidden = image == nil
+            self.dimView.alpha = self.settings.backgroundDim
+        }
         candidateBar.theme = theme
         candidateBar.animates = animates
         settingsDidChange()
@@ -481,11 +486,30 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
 enum BackgroundImageLoader {
     private static var cached: (id: String, image: UIImage)?
 
-    static func image(id: String?) -> UIImage? {
-        guard let id, let url = KeyboardSettings.backgroundImageURL else { return nil }
-        if let cached, cached.id == id {
-            return cached.image
+    /// Calls back straight away if there's no photo or it's already decoded, otherwise on the
+    /// main thread once it is.
+    static func load(id: String?, _ completion: @escaping (UIImage?) -> Void) {
+        guard let id else {
+            completion(nil)
+            return
         }
+        if let cached, cached.id == id {
+            completion(cached.image)
+            return
+        }
+        DispatchQueue.global(qos: .userInitiated).async {
+            let image = decode(id: id)
+            DispatchQueue.main.async {
+                if let image {
+                    cached = (id, image)
+                }
+                completion(image)
+            }
+        }
+    }
+
+    private static func decode(id: String) -> UIImage? {
+        guard let url = KeyboardSettings.backgroundImageURL else { return nil }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary) else {
             return nil
         }
@@ -496,8 +520,20 @@ enum BackgroundImageLoader {
             kCGImageSourceThumbnailMaxPixelSize: 1400,
         ] as CFDictionary
         guard let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, options) else { return nil }
-        let image = UIImage(cgImage: thumbnail)
-        cached = (id, image)
-        return image
+        return UIImage(cgImage: thumbnail)
+    }
+}
+
+extension UIScrollView {
+    /// iOS 26 blurs a scroll view's content near its edges, which in a keyboard's small bar and
+    /// panels just smears the top row, and safe-area insets can shift it. Both are turned off.
+    func removeEdgeEffects() {
+        contentInsetAdjustmentBehavior = .never
+        if #available(iOS 26.0, *) {
+            topEdgeEffect.isHidden = true
+            bottomEdgeEffect.isHidden = true
+            leftEdgeEffect.isHidden = true
+            rightEdgeEffect.isHidden = true
+        }
     }
 }

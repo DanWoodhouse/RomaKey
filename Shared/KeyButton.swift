@@ -122,6 +122,8 @@ class KeyButton: UIControl {
         let capFrame = keycapFrame.insetBy(dx: theme.keyInset.width, dy: theme.keyInset.height)
         keycap.bounds = CGRect(origin: .zero, size: capFrame.size)
         keycap.center = CGPoint(x: capFrame.midX, y: capFrame.midY)
+        // An explicit shadow shape, so iOS doesn't work it out offscreen for every key.
+        keycap.layer.shadowPath = UIBezierPath(roundedRect: keycap.bounds, cornerRadius: theme.keyCornerRadius).cgPath
         // With a hint in the corner, the letter sits a little lower to leave it room.
         titleLabel.frame = keycap.bounds.insetBy(dx: 2, dy: 0).offsetBy(dx: 0, dy: hint == nil ? 0 : 3)
         iconView.frame = keycap.bounds
@@ -202,6 +204,7 @@ final class KeyPopupView: UIView {
         frame.origin.x = min(max(frame.minX, bounds.minX + 2), bounds.maxX - width - 2)
         frame.origin.y = max(frame.minY, bounds.minY)
         self.frame = frame
+        layer.shadowPath = UIBezierPath(roundedRect: CGRect(origin: .zero, size: frame.size), cornerRadius: 8).cgPath
         label.frame = CGRect(origin: .zero, size: frame.size)
         label.text = text
         label.font = theme.font(32)

@@ -52,6 +52,11 @@ final class CandidateBar: UIView {
         didSet { if placeholder != oldValue { rebuild() } }
     }
 
+    /// Shown in front of the candidates, e.g. while the dictionary is loading.
+    var notice: String? {
+        didSet { if notice != oldValue { rebuild() } }
+    }
+
     /// A temporary message that takes the placeholder's place, e.g. "GIF copied".
     var status: String? {
         didSet { if status != oldValue { rebuild() } }
@@ -75,6 +80,7 @@ final class CandidateBar: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         scrollView.showsHorizontalScrollIndicator = false
+        scrollView.removeEdgeEffects()
         addSubview(scrollView)
         stack.axis = .horizontal
         stack.spacing = 2
@@ -120,7 +126,7 @@ final class CandidateBar: UIView {
         if let search {
             addSearchField(search)
         } else if candidates.isEmpty {
-            let message = status ?? placeholder
+            let message = status ?? notice ?? placeholder
             if message.isEmpty {
                 addToolbar()
             } else {
@@ -129,6 +135,9 @@ final class CandidateBar: UIView {
             return
         }
 
+        if let notice {
+            stack.addArrangedSubview(label(notice))
+        }
         // Between words: emoji and AI stay one tap away in front of the predictions.
         if candidates.first?.kind == .prediction {
             addToolbarButton(.emoji)

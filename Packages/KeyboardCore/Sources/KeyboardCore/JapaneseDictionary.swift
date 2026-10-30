@@ -51,9 +51,50 @@ public final class JapaneseDictionary {
         var words: [IndexItem] = []
     }
 
-    /// English → Japanese search needs two large indexes, so they're built on the first 辞
-    /// search rather than at launch: keyboards get only about 50 MB, and あ mode never needs them.
-    private lazy var english: EnglishIndex = Self.englishIndex(for: entries)
+    /// English → Japanese search needs two large indexes, so they're built when 辞 is first used
+    /// rather than at launch: keyboards get only about 50 MB, and あ mode never needs them.
+    private var englishIndex: EnglishIndex?
+    private var englishWaiting: [() -> Void] = []
+
+    private var english: EnglishIndex {
+        if let englishIndex {
+            return englishIndex
+        }
+        let built = Self.englishIndex(for: entries)
+        englishIndex = built
+        return built
+    }
+
+    /// Builds the English search indexes on this thread (for tests).
+    func prepareEnglishSearchNow() {
+        _ = english
+    }
+
+    /// Whether English search can answer straight away.
+    public var isEnglishSearchReady: Bool { englishIndex != nil }
+
+    /// Builds the English search indexes in the background. Call on the main thread; the
+    /// completion runs on the main thread too.
+    public func prepareEnglishSearch(_ completion: @escaping () -> Void) {
+        if englishIndex != nil {
+            completion()
+            return
+        }
+        englishWaiting.append(completion)
+        guard englishWaiting.count == 1 else { return }
+        let entries = self.entries
+        DispatchQueue.global(qos: .userInitiated).async {
+            let built = Self.englishIndex(for: entries)
+            DispatchQueue.main.async {
+                if self.englishIndex == nil {
+                    self.englishIndex = built
+                }
+                let waiting = self.englishWaiting
+                self.englishWaiting = []
+                waiting.forEach { $0() }
+            }
+        }
+    }
     /// Readings in hiragana. Sorted by key.
     private let readings: [IndexItem]
     /// The stems of words that conjugate (食べ, 書, 勉強), in hiragana. Sorted by key.

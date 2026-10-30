@@ -18,7 +18,27 @@ public final class KeyboardEngine {
     public var settings = KeyboardSettings()
     /// Loaded in the background; until then there are no kanji or 辞書 results.
     public var dictionary: JapaneseDictionary? {
-        didSet { onChange?() }
+        didSet {
+            prepareEnglishSearchIfNeeded()
+            onChange?()
+        }
+    }
+
+    /// Shown in the candidate bar while what's needed is still loading.
+    public var loadingMessage: String? {
+        let waiting: Bool
+        switch mode {
+        case .japanese: waiting = isComposing && dictionary == nil
+        case .dictionary: waiting = dictionary?.isEnglishSearchReady != true
+        case .english: waiting = false
+        }
+        return waiting ? "辞書を読み込み中… · Loading dictionary…" : nil
+    }
+
+    /// 辞 needs the English indexes, built in the background the first time it's used.
+    private func prepareEnglishSearchIfNeeded() {
+        guard mode == .dictionary, let dictionary, !dictionary.isEnglishSearchReady else { return }
+        dictionary.prepareEnglishSearch { [weak self] in self?.onChange?() }
     }
 
     /// Words picked for each reading before, so they come first.
@@ -97,6 +117,7 @@ public final class KeyboardEngine {
     public var candidates: [Candidate] {
         switch mode {
         case .dictionary:
+            guard dictionary?.isEnglishSearchReady == true else { return [] }
             if typesDirectly {
                 guard let word = dictionaryWord else { return [] }
                 return dictionary?.search(english: word.word).map { Candidate($0.word, entry: $0) } ?? []
@@ -205,6 +226,7 @@ public final class KeyboardEngine {
     public func setMode(_ newMode: InputMode) {
         commitComposition()
         mode = newMode
+        prepareEnglishSearchIfNeeded()
         page = .letters
         shift = .off
         shiftIsAutomatic = false

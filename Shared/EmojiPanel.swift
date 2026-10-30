@@ -61,6 +61,7 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
         }
 
         collection.backgroundColor = .clear
+        collection.removeEdgeEffects()
         collection.dataSource = self
         collection.delegate = self
         collection.register(EmojiCell.self, forCellWithReuseIdentifier: "cell")

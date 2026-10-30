@@ -185,7 +185,7 @@ final class KeyboardEngineTests: XCTestCase {
 
     func testDictionaryModeLooksUpEnglish() {
         let engine = makeEngine(mode: .dictionary)
-        engine.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        engine.dictionary = .sample
         type("dog", into: engine)
         XCTAssertEqual(output.marked, "dog")
         XCTAssertEqual(engine.candidates.map(\.text), ["犬", "戌"])
@@ -198,7 +198,7 @@ final class KeyboardEngineTests: XCTestCase {
 
     func testDictionaryModeMultiWordAndReturn() {
         let engine = makeEngine(mode: .dictionary)
-        engine.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        engine.dictionary = .sample
         type("thank you", into: engine)
         XCTAssertEqual(output.marked, "thank you")
         XCTAssertEqual(engine.candidates.map(\.text), ["どうも", "ありがとう"])
@@ -209,7 +209,7 @@ final class KeyboardEngineTests: XCTestCase {
 
     func testDictionaryKeyNextToReturnSwitchesToTypingEnglish() {
         let engine = makeEngine(mode: .dictionary)
-        engine.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        engine.dictionary = .sample
         var saved: KeyboardSettings?
         engine.onSettingsChange = { saved = $0 }
         XCTAssertEqual(engine.label(for: .longVowel), .systemImage("magnifyingglass"))
@@ -240,7 +240,7 @@ final class KeyboardEngineTests: XCTestCase {
 
     func testJapaneseModeOffersKanji() {
         let engine = makeEngine(mode: .japanese)
-        engine.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        engine.dictionary = .sample
         type("inu", into: engine)
         XCTAssertEqual(engine.candidates.map(\.text), ["いぬ", "犬", "戌", "イヌ"])
         engine.press(.returnKey)
@@ -304,5 +304,22 @@ final class KeyboardEngineTests: XCTestCase {
         engine.moveCursor(by: -1)
         XCTAssertEqual(output.committed, "か")
         XCTAssertEqual(output.cursorMoves, -1)
+    }
+}
+
+final class LoadingTests: XCTestCase {
+    func testLoadingMessageWhileTheDictionaryLoads() {
+        let engine = KeyboardEngine(mode: .japanese)
+        XCTAssertNil(engine.loadingMessage)
+        engine.press(.character("k"))
+        engine.press(.character("a"))
+        XCTAssertNotNil(engine.loadingMessage, "composing with no dictionary yet")
+        engine.dictionary = .sample
+        XCTAssertNil(engine.loadingMessage)
+
+        let lookUp = KeyboardEngine(mode: .dictionary)
+        lookUp.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        XCTAssertNotNil(lookUp.loadingMessage, "English search still being built")
+        XCTAssertTrue(lookUp.candidates.isEmpty)
     }
 }

@@ -99,7 +99,8 @@ final class RomajiKeyboardView: KeyboardViewBase {
         showCandidates(
             engine.candidates,
             showsMeanings: settings.showMeanings || engine.mode == .dictionary,
-            placeholder: placeholder
+            placeholder: placeholder,
+            notice: engine.loadingMessage
         )
     }
 

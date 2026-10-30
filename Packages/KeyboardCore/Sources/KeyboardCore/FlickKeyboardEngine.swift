@@ -12,6 +12,11 @@ public final class FlickKeyboardEngine {
         didSet { onChange?() }
     }
 
+    /// Shown in the candidate bar while the dictionary is still loading.
+    public var loadingMessage: String? {
+        isComposing && dictionary == nil ? "辞書を読み込み中… · Loading dictionary…" : nil
+    }
+
     /// Words picked for each reading before, so they come first.
     public var history: ConversionHistory?
     /// Predictive text. Loaded in the background; until then there are no predictions.

@@ -15,6 +15,15 @@ enum SampleDictionary {
     ].joined(separator: "\n")
 }
 
+extension JapaneseDictionary {
+    /// The sample dictionary, with English search ready (the keyboard builds it in the background).
+    static var sample: JapaneseDictionary {
+        let dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        dictionary.prepareEnglishSearchNow()
+        return dictionary
+    }
+}
+
 final class JapaneseDictionaryTests: XCTestCase {
     private let dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
 

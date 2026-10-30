@@ -42,6 +42,7 @@ final class DictionaryEntryView: UIView {
             .map { index, glosses in "\(index + 1). " + glosses.joined(separator: "; ") }
             .joined(separator: "\n")
         let scroll = UIScrollView()
+        scroll.removeEdgeEffects()
         scroll.addSubview(senses)
         senses.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
