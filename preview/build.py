@@ -2,8 +2,8 @@
 
 Run from this folder: python3 build.py
 
-It fills preview.src.html's placeholders with the romaji table, the dictionary and emoji
-from KeyboardCore, and the English word list.
+It fills preview.src.html's placeholders with the romaji table, the dictionary, emoji and
+English word pairs from KeyboardCore, and the English word list.
 """
 import json
 from pathlib import Path
@@ -16,5 +16,6 @@ html = (
     .replace("__DICT__", json.dumps((resources / "dictionary.tsv").read_text(), ensure_ascii=False))
     .replace("__EMOJI__", json.dumps((resources / "emoji.tsv").read_text(), ensure_ascii=False))
     .replace("__WORDS__", json.dumps((here / "words.txt").read_text()))
+    .replace("__BIGRAMS__", json.dumps((resources / "bigrams.tsv").read_text()))
 )
 (here / "keyboard-preview.html").write_text(html)

@@ -111,6 +111,7 @@ struct SettingsView: View {
             Section {
                 Toggle("Autocorrect", isOn: $store.settings.autocorrect)
                 Toggle("Word suggestions", isOn: $store.settings.wordSuggestions)
+                Toggle("Predictive text", isOn: $store.settings.predictiveText)
                 Toggle("Emoji suggestions", isOn: $store.settings.emojiSuggestions)
                 Button("Forget learned words and kanji choices", role: .destructive) {
                     store.settings.learningResetID = UUID().uuidString
@@ -118,7 +119,7 @@ struct SettingsView: View {
             } header: {
                 Text("候補 · Suggestions")
             } footer: {
-                Text("English suggestions and autocorrect use Apple's built-in spell checker, your text replacements and words you type often. Press delete straight after an autocorrection to undo it. The keyboard also remembers which kanji you pick for each reading. All of this stays on your phone.")
+                Text("English suggestions and autocorrect use Apple's built-in spell checker, your text replacements and words you type often. Press delete straight after an autocorrection to undo it. Predictive text offers the next word after each word you finish, learning the pairs you type (in Japanese too). The keyboard also remembers which kanji you pick for each reading. All of this stays on your phone. You can also switch these from the keyboard: clear the text and tap ⚙︎.")
             }
 
             Section {

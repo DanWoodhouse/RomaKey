@@ -45,6 +45,8 @@ public struct Candidate: Hashable {
         /// Keep the English word exactly as typed.
         case typed
         case emoji
+        /// A likely next word, shown after a word is finished (predictive text).
+        case prediction
     }
 
     public let text: String

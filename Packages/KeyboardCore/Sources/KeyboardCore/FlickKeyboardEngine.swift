@@ -14,6 +14,11 @@ public final class FlickKeyboardEngine {
 
     /// Words picked for each reading before, so they come first.
     public var history: ConversionHistory?
+    /// Predictive text. Loaded in the background; until then there are no predictions.
+    public var predictor: NextWordPredictor? {
+        didSet { onChange?() }
+    }
+    private var predictionContext = JapanesePredictionContext()
     public var emojiCatalog: EmojiCatalog? {
         didSet { onChange?() }
     }
@@ -40,7 +45,13 @@ public final class FlickKeyboardEngine {
     }
     public var isComposing: Bool { !composer.isEmpty }
     public var candidates: [Candidate] {
-        composer.candidates(using: dictionary, history: history, emoji: settings.emojiSuggestions ? emojiCatalog : nil)
+        if composer.isEmpty {
+            // Straight after a word is committed: the words likely to come next.
+            guard settings.predictiveText, let predictor,
+                  let previous = predictionContext.previous(textBefore: output?.textBeforeCursor) else { return [] }
+            return predictor.japanese(after: previous).map { Candidate($0, kind: .prediction) }
+        }
+        return composer.candidates(using: dictionary, history: history, emoji: settings.emojiSuggestions ? emojiCatalog : nil)
     }
 
     public func press(_ kind: FlickKeyKind, direction: FlickDirection = .center) {
@@ -128,6 +139,10 @@ public final class FlickKeyboardEngine {
         if candidate.kind == .conversion {
             history?.record(reading: composer.finalizedText, word: candidate.text)
         }
+        if candidate.kind == .prediction {
+            predictionContext.compositionStarted(textBefore: output?.textBeforeCursor)
+        }
+        predictionContext.committed(candidate.text, predictor: predictor)
         output?.commit(candidate.text)
         composer.reset()
         toggle = nil
@@ -157,6 +172,7 @@ public final class FlickKeyboardEngine {
 
     public func commitComposition() {
         guard isComposing else { return }
+        predictionContext.committed(composer.finalizedText, predictor: predictor)
         output?.commit(composer.finalizedText)
         composer.reset()
     }
@@ -183,6 +199,9 @@ public final class FlickKeyboardEngine {
 
     private func insert(_ text: String) {
         if page == .kana {
+            if composer.isEmpty {
+                predictionContext.compositionStarted(textBefore: output?.textBeforeCursor)
+            }
             composer.inputLiteral(text)
             output?.show(composer)
         } else {

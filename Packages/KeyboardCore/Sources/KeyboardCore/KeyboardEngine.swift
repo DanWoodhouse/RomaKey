@@ -28,6 +28,10 @@ public final class KeyboardEngine {
     }
     /// English suggestions and autocorrect.
     public var suggester: WordSuggester?
+    /// Predictive text. Loaded in the background; until then there are no predictions.
+    public var predictor: NextWordPredictor? {
+        didSet { onChange?() }
+    }
 
     public weak var output: TextOutput?
     public var onChange: (() -> Void)?
@@ -41,6 +45,7 @@ public final class KeyboardEngine {
     private var lastKeyWasSpace = false
     /// The last autocorrection, so pressing delete straight after it can undo it.
     private var lastAutocorrection: (original: String, corrected: String)?
+    private var japaneseContext = JapanesePredictionContext()
     private static let doubleTapInterval: TimeInterval = 0.35
 
     public init(mode: InputMode = .japanese, now: @escaping () -> Date = Date.init) {
@@ -59,6 +64,9 @@ public final class KeyboardEngine {
         case .dictionary:
             return dictionary?.search(english: englishQuery).map { Candidate($0.word, entry: $0) } ?? []
         case .japanese:
+            if composer.isEmpty {
+                return japanesePredictions
+            }
             return composer.candidates(using: dictionary, history: history, emoji: settings.emojiSuggestions ? emojiCatalog : nil)
         case .english:
             return englishCandidates
@@ -70,7 +78,7 @@ public final class KeyboardEngine {
     private var englishCandidates: [Candidate] {
         guard page == .letters || page == .numbers, let before = output?.textBeforeCursor else { return [] }
         let word = WordSuggester.currentWord(in: before)
-        guard !word.isEmpty else { return [] }
+        guard !word.isEmpty else { return englishPredictions(before: before) }
         var result: [Candidate] = []
         if settings.wordSuggestions, let suggestions = suggester?.suggestions(for: word) {
             if let correction = suggestions.autocorrection {
@@ -88,6 +96,20 @@ public final class KeyboardEngine {
                 .map { Candidate($0.withSkinTone(settings.skinTone), kind: .emoji) }
         }
         return result
+    }
+
+    /// After an English word and a space: the words likely to come next.
+    private func englishPredictions(before: String) -> [Candidate] {
+        guard settings.predictiveText, page == .letters, let predictor,
+              let previous = NextWordPredictor.wordBeforeSpace(in: before) else { return [] }
+        return predictor.english(after: previous).map { Candidate($0, kind: .prediction) }
+    }
+
+    /// Straight after a Japanese word is committed: the words likely to come next.
+    private var japanesePredictions: [Candidate] {
+        guard settings.predictiveText, let predictor,
+              let previous = japaneseContext.previous(textBefore: output?.textBeforeCursor) else { return [] }
+        return predictor.japanese(after: previous).map { Candidate($0, kind: .prediction) }
     }
 
     public func press(_ kind: KeyKind) {
@@ -156,10 +178,17 @@ public final class KeyboardEngine {
             switch candidate.kind {
             case .typed:
                 suggester?.learned.learn(word)
+                learnPair(endingWith: word)
                 output?.insertText(" ")
             case .word, .autocorrection:
+                learnPair(endingWith: word, as: candidate.text)
                 replaceCurrentWord(word, with: candidate.text)
                 output?.insertText(" ")
+            case .prediction:
+                if let previous = NextWordPredictor.wordBeforeSpace(in: output?.textBeforeCursor ?? "") {
+                    predictor?.learn(previous: previous, next: candidate.text)
+                }
+                output?.insertText(candidate.text + " ")
             case .emoji:
                 // After the word, like other keyboards: "pizza 🍕".
                 output?.insertText(word.isEmpty ? candidate.text : " " + candidate.text)
@@ -169,6 +198,9 @@ public final class KeyboardEngine {
         } else {
             if mode == .japanese && candidate.kind == .conversion {
                 history?.record(reading: composer.finalizedText, word: candidate.text)
+            }
+            if candidate.kind == .prediction {
+                japaneseContext.compositionStarted(textBefore: output?.textBeforeCursor)
             }
             commit(candidate.text)
         }
@@ -293,6 +325,9 @@ public final class KeyboardEngine {
             }
             output?.insertText(text)
         case .japanese:
+            if composer.isEmpty {
+                japaneseContext.compositionStarted(textBefore: output?.textBeforeCursor)
+            }
             if isShifted {
                 composer.inputLiteral(text)
             } else {
@@ -342,11 +377,21 @@ public final class KeyboardEngine {
         let word = WordSuggester.currentWord(in: output?.textBeforeCursor ?? "")
         guard !word.isEmpty else { return }
         if settings.autocorrect, let correction = suggester?.correction(for: word), correction != word {
+            learnPair(endingWith: word, as: correction)
             replaceCurrentWord(word, with: correction)
             lastAutocorrection = (word, correction)
         } else {
             suggester?.learned.learn(word)
+            learnPair(endingWith: word)
         }
+    }
+
+    /// Remembers the word before the one being finished, for predictive text ("see you").
+    private func learnPair(endingWith word: String, as finalWord: String? = nil) {
+        let before = output?.textBeforeCursor ?? ""
+        guard before.hasSuffix(word),
+              let previous = NextWordPredictor.wordBeforeSpace(in: String(before.dropLast(word.count))) else { return }
+        predictor?.learn(previous: previous, next: finalWord ?? word)
     }
 
     /// Delete straight after an autocorrection puts back what was typed, and remembers it.
@@ -401,6 +446,9 @@ public final class KeyboardEngine {
     }
 
     private func commit(_ text: String) {
+        if mode == .japanese {
+            japaneseContext.committed(text, predictor: predictor)
+        }
         output?.commit(text)
         composer.reset()
         englishQuery = ""

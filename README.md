@@ -102,6 +102,8 @@ While typing:
 
 - **English suggestions and autocorrect** from Apple's spell checker, your iOS text replacements (omw → On my way!) and words you use. Press delete straight after an autocorrection to undo it; the keyboard then learns the word. Contact names are never "corrected".
 - **Emoji suggestions:** type cat or ねこ and 🐈 is offered.
+- **Predictive text:** after each word, the likely next words (thank → you, going → to), from common English word pairs and from the pairs you type, which come first. In Japanese, after a word you convert, what you usually type next, then particles (猫 → は, が, を…). A 😊 button stays in front of the predictions.
+- **Quick settings:** clear the text and tap ⚙︎ in the toolbar to switch autocorrect, auto-capitalisation, predictive text and the other typing settings without leaving the app you're in. Without Full Access they're saved on the keyboard only.
 - **Learned kanji:** the word you picked last time for a reading comes first (きかい → 機会, if that's what you use).
 - **Accents:** hold a letter (EN and 辞 modes) for é, ü, ñ…
 
@@ -129,7 +131,7 @@ The app's **設定 · Settings** screen has the following. Theme, colours, photo
 | Start in | あ, EN, 辞, or the last mode used |
 | Mode key | Which of あ / EN / 辞 a tap steps through (at least two); left-handed (mirrored) mode wheel |
 | Typing | Auto-capitalisation, double-space full stop, key popups, hold top row for numbers (q → 1 … p → 0) |
-| Suggestions | Autocorrect, word suggestions, emoji suggestions; forget learned words and kanji choices |
+| Suggestions | Autocorrect, word suggestions, predictive text, emoji suggestions; forget learned words and kanji choices |
 | GIF | Your GIPHY API key and content rating |
 | Flick | Flick only (no tap cycling), sensitivity: gentle / normal / quick |
 | Both | English meanings under suggestions, romaji readings (猫 ねこ neko), full-width space, space-bar cursor, key sounds, haptics |
@@ -162,11 +164,15 @@ Packages/KeyboardCore/           UI-free logic, unit-tested with `swift test`
   RomajiTable.swift              The romaji table
   Emoji.swift, Kaomoji.swift     Emoji search and ranking, kaomoji, accented letters
   WordSuggester.swift            English suggestions and autocorrect (spell checker behind a protocol)
+  Prediction.swift               Predictive text: next words in English and Japanese
+  ModeWheel.swift                The mode wheel's slots and swipe directions
   Learning.swift                 Learned words, kanji choices, recent emoji
   Resources/emoji.tsv            Emoji with English and Japanese keywords (Emojibase, MIT)
   Resources/dictionary.tsv       ~22,000 common JMdict entries, most frequent first
+  Resources/bigrams.tsv          Likely next words for ~14,500 English words
 tools/build_dictionary.py        Rebuilds dictionary.tsv from JMdict
 tools/build_emoji.py             Rebuilds emoji.tsv from Emojibase
+tools/build_bigrams.py           Rebuilds bigrams.tsv (predictive text) from SymSpell's bigram list
 ```
 
 ## Building
@@ -212,4 +218,4 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 
 The dictionary is built from [JMdict](https://www.edrdg.org/jmdict/j_jmdict.html), the property of the [Electronic Dictionary Research and Development Group](https://www.edrdg.org/), and is used in conformance with the Group's [licence](https://www.edrdg.org/edrdg/licence.html) (Creative Commons Attribution-ShareAlike 3.0). `Packages/KeyboardCore/Sources/KeyboardCore/Resources/dictionary.tsv` is a derived file and is under the same licence; a copy of the licence is next to it. The data came from the `jamdict-data` package (JMdict 1.08, 2020 snapshot).
 
-Emoji names and keywords come from [Emojibase](https://emojibase.dev) (MIT licence, copy next to `emoji.tsv`). GIF search is powered by GIPHY.
+Emoji names and keywords come from [Emojibase](https://emojibase.dev) (MIT licence, copy next to `emoji.tsv`). English word pairs for predictive text come from [SymSpell](https://github.com/wolfgarbe/SymSpell)'s bigram list (MIT), built from [Google Books Ngrams](https://books.google.com/ngrams) (CC BY 3.0); rebuild with `tools/build_bigrams.py`. GIF search is powered by GIPHY.

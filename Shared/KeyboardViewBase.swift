@@ -24,6 +24,8 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     var onSkinTone: ((Int) -> Void)?
     /// A slot picked on the mode wheel. The controller switches mode or board.
     var onModeWheel: ((ModeWheelSlot) -> Void)?
+    /// Settings changed in the quick settings panel. The controller saves and applies them.
+    var onSettingsChange: ((KeyboardSettings) -> Void)?
 
     enum SearchTarget {
         case emoji
@@ -184,6 +186,11 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
             } else {
                 flash(hasFullAccess ? "Nothing to paste" : "Paste needs Allow Full Access")
             }
+        case .settings:
+            let quickSettings = QuickSettingsPanel(settings: settings, theme: theme, sharesWithApp: hasFullAccess)
+            quickSettings.onChange = { [weak self] newSettings in self?.onSettingsChange?(newSettings) }
+            quickSettings.onClose = { [weak self] in self?.closePanel() }
+            install(quickSettings)
         }
     }
 

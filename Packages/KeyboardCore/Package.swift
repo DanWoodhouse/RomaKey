@@ -17,6 +17,9 @@ let package = Package(
                 // Emoji names and keywords from Emojibase (MIT). Rebuild with tools/build_emoji.py.
                 .copy("Resources/emoji.tsv"),
                 .copy("Resources/emojibase-LICENSE"),
+                // English word pairs for predictive text, from SymSpell's bigram list (MIT), built
+                // from Google Books Ngrams (CC BY 3.0). Rebuild with tools/build_bigrams.py.
+                .copy("Resources/bigrams.tsv"),
             ]
         ),
         .testTarget(name: "KeyboardCoreTests", dependencies: ["KeyboardCore"]),

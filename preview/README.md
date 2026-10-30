@@ -9,6 +9,7 @@ python3 build.py
 ```
 
 - `table.json`: the romaji table, matching `RomajiTable.swift`.
+- English word pairs for predictive text come from KeyboardCore's `bigrams.tsv`, the same table the app uses.
 - `words.txt`: the 25,000 most common English words, most frequent first, from
   [wordfreq](https://github.com/rspeer/wordfreq) by Robyn Speer (data under CC BY-SA 4.0).
   The app uses Apple's spell checker instead; this list stands in for it in the browser.

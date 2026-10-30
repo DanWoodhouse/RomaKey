@@ -144,6 +144,18 @@ input[type="password"], input[type="text"] { font: 13px var(--font-mono); color:
 .ebar button { flex: 1; min-width: 0; height: 32px; font: 15px var(--font-key); color: var(--kb-text); background: transparent; border: 0; border-radius: 6px; cursor: pointer; padding: 0; }
 .ebar button.on { background: var(--kb-pressed); }
 .ebar button.word { font-size: 12px; font-weight: 600; flex: 1.6; }
+.qlist { overflow-y: auto; overscroll-behavior: contain; padding: 2px 14px 8px; }
+.qrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; font: 15px var(--font-key); color: var(--kb-text); cursor: pointer;
+  border-bottom: 1px solid color-mix(in srgb, var(--kb-muted) 22%, transparent); }
+input[type="checkbox"].qswitch { appearance: none; accent-color: auto; -webkit-appearance: none; flex: none; position: relative; width: 44px; height: 26px; margin: 0; border-radius: 13px; cursor: pointer;
+  background: color-mix(in srgb, var(--kb-muted) 45%, transparent); transition: background-color 150ms; }
+input[type="checkbox"].qswitch::before { content: ""; position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 150ms; }
+input[type="checkbox"].qswitch:checked { background: var(--kb-accent); }
+input[type="checkbox"].qswitch:checked::before { transform: translateX(18px); }
+.qswitch:focus-visible { outline: 2px solid var(--kb-accent); outline-offset: 2px; }
+.qnote { margin: 8px 0 0; font: 12px var(--font-key); color: var(--kb-muted); }
+.qhead { flex: 4; text-align: center; font: 600 12px var(--font-key); color: var(--kb-muted); }
+@media (prefers-reduced-motion: reduce) { .qswitch, .qswitch::before { transition: none; } }
 .pmsg { display: grid; place-items: center; padding: 16px 28px; text-align: center; color: var(--kb-muted); font: 14px/1.5 var(--font-key); }
 .tones, .accents { position: absolute; display: flex; gap: 2px; padding: 4px; background: var(--kb-key); border-radius: 10px; box-shadow: 0 2px 8px var(--kb-shadow); pointer-events: auto; }
 .tones button { font-size: 28px; background: transparent; border: 0; border-radius: 6px; padding: 2px 6px; cursor: pointer; }
@@ -190,6 +202,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
 .credit a { color: var(--ai); }
 
 .jump { display: none; }
+.jumps { display: flex; flex-wrap: wrap; gap: 8px; }
 /* Phones: the keyboard area is exactly one screen tall, with the keyboard pinned to its bottom
    edge, so scrolling it into view puts the keyboard where a real one sits. */
 @media (max-width: 760px) {
@@ -223,7 +236,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   <header>
     <span class="eyebrow">Interactive preview · web copy of the Swift logic</span>
     <h1>ローマ字・かな・辞書キーボード</h1>
-    <button class="jump" id="jump" type="button">Try it full screen ↓</button>
+    <div class="jumps"><button class="jump" id="jump" type="button">Try it full screen ↓</button><button class="jump" id="jump-settings" type="button">Settings ↓</button></div>
     <p class="lede">Both keyboards from the iOS project, now with everything you need to use them all day. Type, and emoji are suggested (sushi → 🍣, ねこ → 🐈). Clear the text and the bar above the keys becomes a toolbar: emoji, 顔文字, GIF and paste. No key ever moves.</p>
   </header>
 
@@ -245,7 +258,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   <div class="side">
     <section class="settings" aria-labelledby="custom-title">
       <h2 id="custom-title">Customise <span class="tag">設定</span></h2>
-      <p class="help">The same options as the app's Settings screen. Changes apply to the keyboard straight away.</p>
+      <p class="help">The same options as the app's Settings screen. Changes apply to the keyboard straight away. The typing ones are also in the keyboard: clear the text and tap ⚙︎.</p>
 
       <div class="group">
         <h3>Theme</h3>
@@ -294,6 +307,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <h3>候補 · Suggestions</h3>
         <div class="row"><label for="set-autocorrect">Autocorrect</label><input type="checkbox" id="set-autocorrect"></div>
         <div class="row"><label for="set-wordSuggestions">Word suggestions</label><input type="checkbox" id="set-wordSuggestions"></div>
+        <div class="row"><label for="set-predictiveText">Predictive text</label><input type="checkbox" id="set-predictiveText"></div>
         <div class="row"><label for="set-emojiSuggestions">Emoji suggestions</label><input type="checkbox" id="set-emojiSuggestions"></div>
         <div class="row"><span>Skin tone</span><span class="seg" id="seg-skinTone"></span></div>
         <div class="btns"><button class="btn" type="button" id="forget">Forget learned words and kanji choices</button></div>
@@ -345,6 +359,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="j1"><span>Type <em>neko</em>: 猫 appears with its meaning. Long-press it for the full entry with kanji, hiragana and katakana buttons.</span></label>
         <label class="check"><input type="checkbox" data-check="j2"><span>Type <em>kikai</em> and pick 機会. Type <em>kikai</em> again: 機会 now comes first.</span></label>
         <label class="check"><input type="checkbox" data-check="j3"><span>Type <em>ra</em> <span class="k">ー</span> <em>men</em>: らーめん. Type <em>ko-hi-</em>: コーヒー is offered.</span></label>
+        <label class="check"><input type="checkbox" data-check="j5"><span>Type <em>neko</em> and pick 猫: particles (は, が, を…) are predicted. Pick a word you type after it a couple of times, and it comes first.</span></label>
         <label class="check"><input type="checkbox" data-check="j4"><span>Turn on <em>Show romaji readings</em>: suggestions read 猫 ねこ neko.</span></label>
       </div>
       <div class="checks"><h3>辞書 dictionary</h3>
@@ -355,6 +370,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="e2"><span>Type <em>helo</em>: “helo” and <strong>hello</strong> appear. Type <em>wor</em>: completions (work, world…). Turn off <em>Autocorrect</em> and the fix becomes a plain suggestion.</span></label>
         <label class="check"><input type="checkbox" data-check="e3"><span>A new sentence starts with a capital, and two spaces type a full stop.</span></label>
         <label class="check"><input type="checkbox" data-check="e4"><span>Hold <span class="k">e</span> and slide to é. Hold <span class="k">q</span> for 1 (in あ mode too). The digits show in the key corners.</span></label>
+        <label class="check"><input type="checkbox" data-check="e6"><span>Type <em>thank</em> and space: <strong>you</strong> is predicted. Tap it and the next word is predicted too. Type a pair of your own twice (<em>see ya</em>): it comes first next time.</span></label>
         <label class="check"><input type="checkbox" data-check="e5"><span>Type <em>pizza</em>: 🍕 is offered and goes in after the word.</span></label>
       </div>
       <div class="checks"><h3>Emoji, 顔文字 and toolbar</h3>
@@ -366,6 +382,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       </div>
       <div class="checks"><h3>Cursor and delete</h3>
         <label class="check"><input type="checkbox" data-check="c1"><span>Hold the space bar and slide to move the cursor. Hold delete: it speeds up to whole words.</span></label>
+      </div>
+      <div class="checks"><h3>Settings</h3>
+        <label class="check"><input type="checkbox" data-check="s1"><span>Clear the text and tap ⚙︎ in the toolbar. Switch off <em>Autocorrect</em> and <em>Auto-capitalisation</em>: <em>teh</em> stays as typed and new sentences start lowercase.</span></label>
+        <label class="check"><input type="checkbox" data-check="s2"><span>On a phone, <em>Settings ↓</em> at the top jumps to every option: themes, photo, height, GIF and the rest.</span></label>
       </div>
       <div class="checks"><h3>Look</h3>
         <label class="check"><input type="checkbox" data-check="l1"><span>Themes, custom colours, a background photo with darken, blur and key opacity, and the three heights.</span></label>
@@ -396,7 +416,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     spaceBarCursor: true, theme: "system", height: "standard",
     customColors: null, keyOpacity: 1, backgroundDim: 0.2, backgroundBlur: false,
     emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
-    keySounds: true, haptics: false, giphyAPIKey: "", gifRating: "pg", holdForNumbers: true, leftHandedWheel: false, showRomaji: false,
+    keySounds: true, haptics: false, predictiveText: true, giphyAPIKey: "", gifRating: "pg", holdForNumbers: true, leftHandedWheel: false, showRomaji: false,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
@@ -669,6 +689,47 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     return value;
   }
 
+  // ---- Predictive text (Prediction.swift) --------------------------------------------------------
+  // English: common word pairs (Google Books Ngrams via SymSpell), with pairs you type first.
+  // Japanese: what you typed after a word before, then particles after a noun.
+  const BIGRAMS = new Map(__BIGRAMS__.split("\n").filter(Boolean).map((line) => { const [w, next] = line.split("\t"); return [w, next.split(" ")]; }));
+  const SEP = "\u001f";
+  let nextWords = load("kb-next", {});
+  function learnNext(previous, next) {
+    previous = previous.trim().toLowerCase(); next = next.trim().toLowerCase();
+    if (!previous || !next) return;
+    const k = previous + SEP + next;
+    nextWords[k] = (nextWords[k] || 0) + 1;
+    keep("kb-next", nextWords);
+  }
+  const learnedNext = (previous) => Object.entries(nextWords).filter(([k]) => k.startsWith(previous + SEP))
+    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).map(([k]) => k.slice(previous.length + 1));
+  function predictEnglish(previous) {
+    previous = previous.toLowerCase();
+    const words = learnedNext(previous);
+    for (const w of BIGRAMS.get(previous) || []) if (!words.includes(w)) words.push(w);
+    return words.slice(0, 3).map((w) => (w === "i" || w.startsWith("i'") ? "I" + w.slice(1) : w));
+  }
+  const PARTICLES = ["は", "が", "を", "に", "の", "で", "も"];
+  function predictJapanese(previous) {
+    const words = learnedNext(previous.toLowerCase());
+    if (/[一-鿿ァ-ヺー]$/.test(previous)) for (const p of PARTICLES) if (!words.includes(p)) words.push(p);
+    return words.slice(0, 5);
+  }
+  // The word just before a single trailing space ("I like " → "like").
+  const wordBeforeSpace = (t) => { if (!t.endsWith(" ") || t.endsWith("  ")) return null; const m = t.slice(0, -1).match(/[\p{L}']+$/u); return m ? m[0] : null; };
+  // The last word committed in Japanese, so the next can be predicted, and the pair learned.
+  const jaContext = () => ({
+    last: null, previousForComposition: null,
+    previous() { return this.last && out.textBeforeCursor.endsWith(this.last) ? this.last : null; },
+    started() { this.previousForComposition = this.previous(); },
+    committed(t) { if (this.previousForComposition) learnNext(this.previousForComposition, t); this.previousForComposition = null; this.last = t; },
+  });
+  function jaPredictions(ctx) {
+    const previous = settings.predictiveText ? ctx.previous() : null;
+    return previous ? predictJapanese(previous).map((text) => ({ text, kind: "prediction" })) : [];
+  }
+
   // ---- Romaji readings (KanaConverter.romaji in RomajiComposer.swift) ----------------------------
   const ROMAJI_SINGLE = (() => {
     const kana = chars("あいうえおかきくけこがぎぐげごさしすせそざじずぜぞたちつてとだぢづでどなにぬねのはひふへほばびぶべぼぱぴぷぺぽまみむめもやゆよらりるれろわゐゑをんぁぃぅぇぉゃゅょゎゔ");
@@ -744,7 +805,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   }
   const SHORT = { japanese: "あ", english: "EN", dictionary: "辞" };
   const romaji = {
-    mode: "dictionary", page: "letters", shift: "off", auto: false, lastShift: 0, lastSpace: false, query: "", composer: new Composer(),
+    mode: "dictionary", page: "letters", shift: "off", auto: false, lastShift: 0, lastSpace: false, query: "", composer: new Composer(), ja: jaContext(),
     get composing() { return !this.composer.isEmpty || !!this.query; },
     get shifted() { return this.page === "letters" && this.shift !== "off"; },
     signature() { return "q:" + this.page; },
@@ -754,7 +815,11 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       if (this.mode === "english") {
         // The word being typed: keep-as-typed and the autocorrection (when space would change it), completions, then emoji.
         const word = this.page === "symbols" ? "" : currentWord();
-        if (!word) return [];
+        if (!word) {
+          // After a word and a space: the words likely to come next.
+          const previous = settings.predictiveText && this.page === "letters" ? wordBeforeSpace(out.textBeforeCursor) : null;
+          return previous ? predictEnglish(previous).map((text) => ({ text, kind: "prediction" })) : [];
+        }
         const list = [], s = settings.wordSuggestions ? wordSuggestions(word) : null;
         if (s) {
           if (s.auto) {
@@ -766,7 +831,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         if (settings.emojiSuggestions) for (const e of emojiSuggestions(word, 2)) list.push({ text: toned(e), kind: "emoji" });
         return list;
       }
-      return this.composer.candidates();
+      return this.composer.isEmpty ? jaPredictions(this.ja) : this.composer.candidates();
     },
     get nextMode() { const m = settings.languageKeyModes.length >= 2 ? settings.languageKeyModes : DEFAULTS.languageKeyModes; const i = m.indexOf(this.mode); return i < 0 ? m[0] : m[(i + 1) % m.length]; },
     setMode(m) { this.commit(); this.mode = m; keep("kb-last-mode", m); this.page = "letters"; this.shift = "off"; this.auto = false; flashNext = true; this.autoCap(); },
@@ -779,7 +844,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
           const t = this.shifted ? k.ch.toUpperCase() : k.ch;
           if (this.mode === "english") out.insertText(t);
           else if (this.mode === "dictionary") this.appendQuery(t);
-          else { if (this.shifted) c.inputLiteral(t); else for (const ch of t) c.input(ch); out.show(c); }
+          else { if (c.isEmpty) this.ja.started(); if (this.shifted) c.inputLiteral(t); else for (const ch of t) c.input(ch); out.show(c); }
           if (this.shift === "once") { this.shift = "off"; this.auto = false; }
           break;
         }
@@ -824,6 +889,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       const word = currentWord();
       if (!word) return;
       const fix = settings.autocorrect ? correction(word) : null;
+      const before = out.textBeforeCursor, previous = wordBeforeSpace(before.slice(0, before.length - word.length));
+      if (previous) learnNext(previous, fix || word);
       if (fix && fix !== word) { for (let i = 0; i < chars(word).length; i++) out.deleteBackward(); out.insertText(fix); this.lastFix = [word, fix]; }
       else learn(word);
     },
@@ -834,8 +901,12 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       out.insertText(original); learn(original);
       return true;
     },
-    commit() { if (this.query) out.commit(this.query); else if (!this.composer.isEmpty) out.commit(this.composer.finalized); this.query = ""; this.composer.reset(); },
-    select(t) { out.commit(t); this.query = ""; this.composer.reset(); this.autoCap(); },
+    commit() {
+      if (this.query) out.commit(this.query);
+      else if (!this.composer.isEmpty) { if (this.mode === "japanese") this.ja.committed(this.composer.finalized); out.commit(this.composer.finalized); }
+      this.query = ""; this.composer.reset();
+    },
+    select(t) { if (this.mode === "japanese") this.ja.committed(t); out.commit(t); this.query = ""; this.composer.reset(); this.autoCap(); },
     moveCursor(n) { this.commit(); out.moveCursor(n); },
     deleteWord() {
       if (this.composing) { this.press(K("delete")); return; }
@@ -892,7 +963,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   const MODIFIER = {};
   for (const g of ["かが", "きぎ", "くぐ", "けげ", "こご", "さざ", "しじ", "すず", "せぜ", "そぞ", "ただ", "ちぢ", "つっづ", "てで", "とど", "はばぱ", "ひびぴ", "ふぶぷ", "へべぺ", "ほぼぽ", "あぁ", "いぃ", "うぅゔ", "えぇ", "おぉ", "やゃ", "ゆゅ", "よょ", "わゎ"]) { const c = chars(g); c.forEach((ch, i) => { MODIFIER[ch] = c[(i + 1) % c.length]; }); }
   const flick = {
-    page: "kana", composer: new Composer(), toggle: null, lastDirect: null,
+    page: "kana", composer: new Composer(), toggle: null, lastDirect: null, ja: jaContext(),
     get composing() { return !this.composer.isEmpty; },
     signature() { return "f:" + this.page; },
     frames(width, rowH) {
@@ -902,7 +973,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       CENTER[this.page].forEach((r, row) => r.forEach((key, i) => cells.push({ key, col: i + 1, row, span: 1 })));
       return cells.map((c) => { const cap = { x: xs[c.col], y: c.row * rowH, w: xs[c.col + 1] - xs[c.col], h: c.span * rowH }; return { key: c.key, cap, hit: cap }; });
     },
-    candidates() { return this.composer.candidates(); },
+    candidates() { return this.composer.isEmpty ? jaPredictions(this.ja) : this.composer.candidates(); },
     press(k, dir = "center") {
       const pt = this.toggle, pd = this.lastDirect, c = this.composer;
       this.toggle = null; this.lastDirect = null;
@@ -922,10 +993,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         case "return": if (this.composing) this.commit(); else out.insertText("\n"); break;
       }
     },
-    insert(t) { if (this.page === "kana") { this.composer.inputLiteral(t); out.show(this.composer); } else { this.commit(); out.insertText(t); this.lastDirect = t; } },
+    insert(t) { if (this.page === "kana") { if (this.composer.isEmpty) this.ja.started(); this.composer.inputLiteral(t); out.show(this.composer); } else { this.commit(); out.insertText(t); this.lastDirect = t; } },
     replaceLast(t) { if (this.page === "kana") { this.composer.deleteBackward(); this.composer.inputLiteral(t); out.show(this.composer); } else { out.deleteBackward(); out.insertText(t); this.lastDirect = t; } },
-    commit() { if (this.composing) { out.commit(this.composer.finalized); this.composer.reset(); } },
-    select(t) { out.commit(t); this.composer.reset(); this.toggle = null; },
+    commit() { if (this.composing) { this.ja.committed(this.composer.finalized); out.commit(this.composer.finalized); this.composer.reset(); } },
+    select(t) { this.ja.committed(t); out.commit(t); this.composer.reset(); this.toggle = null; },
     moveCursor(n) { this.commit(); this.toggle = null; out.moveCursor(n); },
     deleteWord() { this.press(F("delete")); },
     label(k) {
@@ -1008,6 +1079,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   const ICONS = {
     emoji: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.3 2.2 2 3.5 2s2.5-.7 3.5-2"/><circle cx="9" cy="10" r=".6" fill="currentColor"/><circle cx="15" cy="10" r=".6" fill="currentColor"/></svg>',
     paste: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="6" y="5" width="12" height="16" rx="2"/><path d="M9 5V3.5h6V5"/></svg>',
+    // Feather's "settings" icon (MIT).
+    gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   };
   function tool(html, label, action) {
     const b = document.createElement("button");
@@ -1048,9 +1121,12 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
               if (text) { active.commit(); out.insertText(text); render(); } else flash("Nothing to paste");
             } catch (_) { flash("The browser blocked the clipboard here. On iPhone, paste needs Allow Full Access"); }
           }),
+          tool(ICONS.gear, "Keyboard settings", showQuickSettings),
         );
       }
     }
+    // Predictions keep an emoji button in front, so emoji stay one tap away.
+    if (list.length && list[0].kind === "prediction") candsEl.appendChild(tool(ICONS.emoji, "Emoji", () => showEmojiPanel(recents.length ? "recent" : 0)));
     for (const c of list) {
       const b = document.createElement("button");
       b.type = "button"; b.className = "cand" + (c.kind === "emoji" ? " emoji" : c.kind === "autocorrection" ? " auto" : "");
@@ -1100,8 +1176,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     if (active === romaji && romaji.mode === "english" && !romaji.composing) {
       const word = currentWord();
       romaji.lastFix = null;
-      if (c.kind === "typed") { learn(word); out.insertText(" "); }
-      else if (c.kind === "word" || c.kind === "autocorrection") { for (let i = 0; i < chars(word).length; i++) out.deleteBackward(); out.insertText(c.text + " "); }
+      const before = out.textBeforeCursor, previous = wordBeforeSpace(before.slice(0, before.length - word.length));
+      if (c.kind === "typed") { learn(word); if (previous) learnNext(previous, word); out.insertText(" "); }
+      else if (c.kind === "word" || c.kind === "autocorrection") { if (previous) learnNext(previous, c.text); for (let i = 0; i < chars(word).length; i++) out.deleteBackward(); out.insertText(c.text + " "); }
+      else if (c.kind === "prediction") { const p = wordBeforeSpace(before); if (p) learnNext(p, c.text); out.insertText(c.text + " "); }
       // After the word, like other keyboards: "pizza 🍕".
       else if (c.kind === "emoji") out.insertText(word ? " " + c.text : c.text);
       romaji.autoCap();
@@ -1109,6 +1187,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     }
     const composer = active.composer;
     if (c.kind === "conversion" && !(active === romaji && romaji.mode === "dictionary")) recordChoice(composer.finalized, c.text);
+    if (c.kind === "prediction") active.ja.started();
     active.select(c.text);
   }
 
@@ -1227,6 +1306,38 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     const w = box.offsetWidth;
     Object.assign(box.style, { left: Math.min(Math.max(r.left - kb.left + r.width / 2 - w / 2, 4), kb.width - w - 4) + "px", top: Math.max(r.top - kb.top - 56, 0) + "px" });
   }
+  // ⚙︎ in the toolbar: the typing settings, in place of the keys (QuickSettingsPanel.swift).
+  const QUICK = [["autocorrect", "Autocorrect"], ["autoCapitalization", "Auto-capitalisation"], ["predictiveText", "Predictive text"],
+    ["wordSuggestions", "Word suggestions"], ["emojiSuggestions", "Emoji suggestions"], ["doubleSpacePeriod", "Double-space for full stop"],
+    ["holdForNumbers", "Hold top row for numbers"], ["keyPopups", "Key popups"], ["showMeanings", "Show English meanings"],
+    ["showRomaji", "Show romaji readings"], ["spaceBarCursor", "Space bar moves cursor"], ["leftHandedWheel", "Left-handed mode wheel"],
+    ["flickOnly", "Flick only (かな)"], ["keySounds", "Key sounds"], ["haptics", "Haptics"]];
+  function showQuickSettings() {
+    const panel = openPanel();
+    const list = document.createElement("div");
+    list.className = "qlist";
+    for (const [key, name] of QUICK) {
+      const row = document.createElement("label");
+      row.className = "qrow";
+      const text = document.createElement("span"); text.textContent = name;
+      const input = document.createElement("input");
+      input.type = "checkbox"; input.className = "qswitch"; input.setAttribute("role", "switch"); input.checked = !!settings[key];
+      input.addEventListener("change", () => { settings[key] = input.checked; changed(); });
+      row.append(text, input);
+      list.appendChild(row);
+    }
+    const note = document.createElement("p");
+    note.className = "qnote";
+    note.textContent = "Themes, photo, height and GIFs are in the RomaKey app (here: Customise, below the keyboard).";
+    list.appendChild(note);
+    const bar = document.createElement("div");
+    bar.className = "ebar";
+    const heading = document.createElement("span");
+    heading.className = "qhead"; heading.textContent = "設定 · Keyboard settings";
+    bar.append(barButton("ABC", "Back to the keys", () => { closePanel(); render(); }, "word"), heading);
+    panel.append(list, bar);
+  }
+
   function showGIFPanel() {
     const panel = openPanel();
     const msg = document.createElement("div");
@@ -1503,7 +1614,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     Object.assign(settings, DEFAULTS, { customColors: { ...PALETTES["藍 Ai light"] } });
     changed();
   });
-  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "holdForNumbers", "leftHandedWheel", "autocorrect", "wordSuggestions", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics"];
+  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "holdForNumbers", "leftHandedWheel", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics"];
   for (const key of TOGGLES) {
     $("set-" + key).addEventListener("change", (e) => { settings[key] = e.target.checked; changed(); });
   }
@@ -1630,6 +1741,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   }
 
   // ---- Page controls ------------------------------------------------------------------------------
+  $("jump-settings").addEventListener("click", () => {
+    $("custom-title").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  });
   $("jump").addEventListener("click", () => {
     document.querySelector(".device").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   });

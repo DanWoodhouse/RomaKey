@@ -98,8 +98,13 @@ class KeyboardHostController: UIInputViewController {
     private var boardViews: [KeyboardViewBase] { [romajiView, flickView] }
 
     /// Settings are shared with the app through an App Group, which needs Full Access.
-    /// Without it they fall back to the defaults.
     let sharedDefaults = UserDefaults(suiteName: KeyboardSettings.appGroup)
+
+    /// Where settings are read and saved: shared with the app with Full Access, otherwise this
+    /// keyboard's own storage, so the quick settings panel still works.
+    private var settingsStore: UserDefaults? {
+        hasFullAccess ? sharedDefaults : learningStore
+    }
 
     /// Learned words, kanji choices and recent emoji stay in this keyboard's own storage, on the phone.
     let learningStore = UserDefaults.standard
@@ -112,7 +117,7 @@ class KeyboardHostController: UIInputViewController {
         romajiEngine.history = history
         romajiEngine.suggester = WordSuggester(checker: SystemSpellChecker(), learned: LearnedWords(store: learningStore))
         romajiEngine.onModeChange = { [weak self] mode in
-            guard let defaults = self?.sharedDefaults else { return }
+            guard let defaults = self?.settingsStore else { return }
             KeyboardSettings.saveLastUsedMode(mode, to: defaults)
         }
         flickEngine.output = textOutput
@@ -132,16 +137,25 @@ class KeyboardHostController: UIInputViewController {
             ])
             boardView.recentEmoji = recentEmoji
             boardView.onSkinTone = { [weak self] tone in
-                guard let defaults = self?.sharedDefaults else { return }
+                guard let defaults = self?.settingsStore else { return }
                 KeyboardSettings.saveSkinTone(tone, to: defaults)
             }
             boardView.onModeWheel = { [weak self] slot in self?.select(slot) }
+            boardView.onSettingsChange = { [weak self] newSettings in self?.update(newSettings) }
         }
         show(openingBoard)
 
         DictionaryLoader.load { [weak self] dictionary in
             self?.romajiEngine.dictionary = dictionary
             self?.flickEngine.dictionary = dictionary
+        }
+        let store = learningStore
+        DispatchQueue.global(qos: .utility).async {
+            let predictor = NextWordPredictor.bundled(store: store)
+            DispatchQueue.main.async { [weak self] in
+                self?.romajiEngine.predictor = predictor
+                self?.flickEngine.predictor = predictor
+            }
         }
         EmojiLoader.load { [weak self] catalog in
             guard let self else { return }
@@ -168,12 +182,13 @@ class KeyboardHostController: UIInputViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         // Re-read every time the keyboard appears, so changes made in the app apply straight away.
-        settings = sharedDefaults.map(KeyboardSettings.init(defaults:)) ?? KeyboardSettings()
+        settings = settingsStore.map(KeyboardSettings.init(defaults:)) ?? KeyboardSettings()
         feedback.playsSounds = settings.keySounds
         feedback.playsHaptics = settings.haptics && hasFullAccess
         if let resetID = settings.learningResetID, resetID != learningStore.string(forKey: "appliedLearningResetID") {
             romajiEngine.suggester?.learned.reset()
             romajiEngine.history?.reset()
+            romajiEngine.predictor?.reset()
             learningStore.set(nil, forKey: "recentEmoji")
             recentEmoji = RecentEmoji(store: learningStore)
             learningStore.set(resetID, forKey: "appliedLearningResetID")
@@ -188,6 +203,17 @@ class KeyboardHostController: UIInputViewController {
         show(openingBoard)
         updateHeight()
         runAIProbeIfRequested()
+    }
+
+    /// A change from the quick settings panel: saved, then applied to both boards straight away.
+    private func update(_ newSettings: KeyboardSettings) {
+        settings = newSettings
+        if let settingsStore {
+            newSettings.save(to: settingsStore)
+        }
+        feedback.playsSounds = settings.keySounds
+        feedback.playsHaptics = settings.haptics && hasFullAccess
+        boardViews.forEach { $0.apply(settings) }
     }
 
     /// A slot picked on either board's mode wheel.

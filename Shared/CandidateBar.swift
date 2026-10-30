@@ -4,7 +4,8 @@ import UIKit
 /// The strip above the keys. It shows one of three things:
 /// - **suggestions** while typing: ひらがな/kanji/カタカナ, English completions and autocorrect,
 ///   辞書 results and emoji. Tap to insert; long-press a dictionary word for its full entry;
-/// - a **toolbar** when nothing is being typed: emoji, 顔文字, GIFs and paste;
+/// - **predictions** after a word is finished, with an emoji button in front so emoji stay one tap away;
+/// - a **toolbar** when nothing is being typed: emoji, 顔文字, GIFs, paste and settings;
 /// - a **search field** while searching emoji or GIFs (typing goes into it instead of the document).
 final class CandidateBar: UIView {
     enum ToolbarAction: CaseIterable {
@@ -12,6 +13,8 @@ final class CandidateBar: UIView {
         case kaomoji
         case gif
         case paste
+        /// Quick settings, in place of the keys.
+        case settings
     }
 
     struct Search: Equatable {
@@ -108,6 +111,9 @@ final class CandidateBar: UIView {
             return
         }
 
+        if candidates.first?.kind == .prediction {
+            addToolbarButton(.emoji)
+        }
         for candidate in candidates {
             let cell = CandidateCell(candidate: candidate, showsMeaning: showsMeanings, showsRomaji: showsRomaji, theme: theme)
             cell.addAction(UIAction { [weak self] _ in self?.onSelect?(candidate) }, for: .touchUpInside)
@@ -129,34 +135,41 @@ final class CandidateBar: UIView {
 
     private func addToolbar() {
         for action in toolbarItems {
-            var configuration = UIButton.Configuration.plain()
-            configuration.baseForegroundColor = theme.text
-            configuration.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
-            switch action {
-            case .emoji:
-                configuration.image = UIImage(systemName: "face.smiling")
-            case .kaomoji:
-                var title = AttributedString("(^_^)")
-                title.font = .systemFont(ofSize: 14, weight: .medium)
-                configuration.attributedTitle = title
-            case .gif:
-                var title = AttributedString("GIF")
-                title.font = .systemFont(ofSize: 13, weight: .bold)
-                configuration.attributedTitle = title
-            case .paste:
-                configuration.image = UIImage(systemName: "doc.on.clipboard")
-            }
-            let button = UIButton(configuration: configuration, primaryAction: UIAction { [weak self] _ in
-                self?.onToolbar?(action)
-            })
-            button.accessibilityLabel = switch action {
-            case .emoji: "Emoji"
-            case .kaomoji: "Kaomoji"
-            case .gif: "GIFs"
-            case .paste: "Paste"
-            }
-            stack.addArrangedSubview(button)
+            addToolbarButton(action)
         }
+    }
+
+    private func addToolbarButton(_ action: ToolbarAction) {
+        var configuration = UIButton.Configuration.plain()
+        configuration.baseForegroundColor = theme.text
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
+        switch action {
+        case .emoji:
+            configuration.image = UIImage(systemName: "face.smiling")
+        case .kaomoji:
+            var title = AttributedString("(^_^)")
+            title.font = .systemFont(ofSize: 14, weight: .medium)
+            configuration.attributedTitle = title
+        case .gif:
+            var title = AttributedString("GIF")
+            title.font = .systemFont(ofSize: 13, weight: .bold)
+            configuration.attributedTitle = title
+        case .paste:
+            configuration.image = UIImage(systemName: "doc.on.clipboard")
+        case .settings:
+            configuration.image = UIImage(systemName: "gearshape")
+        }
+        let button = UIButton(configuration: configuration, primaryAction: UIAction { [weak self] _ in
+            self?.onToolbar?(action)
+        })
+        button.accessibilityLabel = switch action {
+        case .emoji: "Emoji"
+        case .kaomoji: "Kaomoji"
+        case .gif: "GIFs"
+        case .paste: "Paste"
+        case .settings: "Keyboard settings"
+        }
+        stack.addArrangedSubview(button)
     }
 
     private func addSearchField(_ search: Search) {
@@ -222,7 +235,7 @@ private final class CandidateCell: UIControl {
         case .emoji:
             text = candidate.text
             font = .systemFont(ofSize: 24)
-        case .conversion, .word:
+        case .conversion, .word, .prediction:
             text = candidate.text
             font = .systemFont(ofSize: 18)
         }
