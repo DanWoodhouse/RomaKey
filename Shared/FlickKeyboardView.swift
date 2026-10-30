@@ -198,8 +198,8 @@ final class FlickKeyboardView: KeyboardViewBase {
         feedback.keyDown()
         hideEntry()
         deleteRepeater.start { [weak self] repeatCount in
-            // Every repeat clicks and taps, like the first press.
-            if repeatCount > 0 {
+            // Every repeat clicks and taps, like the first press, while there's text to delete.
+            if repeatCount > 0, self?.engine.hasTextToDelete == true {
                 self?.feedback.keyDown()
             }
             self?.engine.press(.delete)

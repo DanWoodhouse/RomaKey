@@ -45,7 +45,7 @@ struct ContentView: View {
                         .font(.footnote)
                     Link("JMdict project", destination: URL(string: "https://www.edrdg.org/jmdict/j_jmdict.html")!)
                     Link("Licence", destination: URL(string: "https://www.edrdg.org/edrdg/licence.html")!)
-                    Text("Emoji names and keywords come from Emojibase (MIT licence). GIFs: Powered by GIPHY.")
+                    Text("Emoji names and keywords come from Emojibase (MIT licence). GIFs: Powered by KLIPY.")
                         .font(.footnote)
                     Link("Emojibase", destination: URL(string: "https://emojibase.dev")!)
                 } header: {

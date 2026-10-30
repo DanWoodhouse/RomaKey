@@ -110,6 +110,7 @@ class KeyboardHostController: UIInputViewController {
     /// Learned words, kanji choices and recent emoji stay in this keyboard's own storage, on the phone.
     let learningStore = UserDefaults.standard
     private(set) lazy var recentEmoji = RecentEmoji(store: learningStore)
+    private(set) lazy var clipboardHistory = ClipboardHistory(store: learningStore)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -138,6 +139,7 @@ class KeyboardHostController: UIInputViewController {
                 boardView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             ])
             boardView.recentEmoji = recentEmoji
+            boardView.clipboard = clipboardHistory
             boardView.onSkinTone = { [weak self] tone in
                 guard let defaults = self?.settingsStore else { return }
                 KeyboardSettings.saveSkinTone(tone, to: defaults)
@@ -195,6 +197,7 @@ class KeyboardHostController: UIInputViewController {
             romajiEngine.predictor?.reset()
             learningStore.set(nil, forKey: "recentEmoji")
             recentEmoji = RecentEmoji(store: learningStore)
+            clipboardHistory.removeAll()
             learningStore.set(resetID, forKey: "appliedLearningResetID")
         }
         for boardView in boardViews {
@@ -335,12 +338,32 @@ private final class ProxyTextOutput: TextOutput {
         proxy?.deleteBackward()
     }
 
+    /// What's marked (underlined) in the text field, as far as the keyboard knows.
+    private var marked = ""
+
     func setMarkedText(_ text: String) {
+        marked = text
         proxy?.setMarkedText(text, selectedRange: NSRange(location: (text as NSString).length, length: 0))
     }
 
     func unmarkText() {
+        marked = ""
         proxy?.unmarkText()
+    }
+
+    /// 確定. Setting the marked text and unmarking it in the same instant can leave the
+    /// underline behind in some apps, so the marked text is only replaced when it differs, and
+    /// the unmark is sent again once the app has caught up.
+    func commit(_ text: String) {
+        if marked != text {
+            proxy?.setMarkedText(text, selectedRange: NSRange(location: (text as NSString).length, length: 0))
+        }
+        marked = ""
+        proxy?.unmarkText()
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.marked.isEmpty else { return }
+            self.proxy?.unmarkText()
+        }
     }
 
     func moveCursor(by offset: Int) {

@@ -146,3 +146,48 @@ public final class RecentEmoji {
         store.set(items, forKey: Self.key)
     }
 }
+
+/// The last few things copied, newest first, for the clipboard panel. Kept in the keyboard's
+/// own storage on the phone. A keyboard can't watch the clipboard in the background, so it
+/// notices new copies when its clipboard panel opens (`changeCount` tells it something changed).
+public final class ClipboardHistory {
+    public static let capacity = 5
+    private static let key = "clipboardHistory"
+    private static let changeKey = "clipboardChangeCount"
+    private let store: KeyValueStore
+    public private(set) var items: [String]
+
+    public init(store: KeyValueStore) {
+        self.store = store
+        items = store.stringArray(forKey: Self.key) ?? []
+    }
+
+    /// The clipboard's change count when it was last read, so it's only read again after a copy.
+    public var lastChangeCount: Int {
+        get { store.stringArray(forKey: Self.changeKey)?.first.flatMap(Int.init) ?? -1 }
+        set { store.set([String(newValue)], forKey: Self.changeKey) }
+    }
+
+    /// Puts `text` first (moving it up if it's already there), keeping the newest five.
+    public func add(_ text: String) {
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        items.removeAll { $0 == text }
+        items.insert(text, at: 0)
+        items = Array(items.prefix(Self.capacity))
+        save()
+    }
+
+    public func remove(_ text: String) {
+        items.removeAll { $0 == text }
+        save()
+    }
+
+    public func removeAll() {
+        items = []
+        save()
+    }
+
+    private func save() {
+        store.set(items, forKey: Self.key)
+    }
+}

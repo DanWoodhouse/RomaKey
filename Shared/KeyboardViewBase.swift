@@ -21,6 +21,8 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     /// Set by the controller once loaded.
     var emojiCatalog: EmojiCatalog?
     var recentEmoji: RecentEmoji?
+    /// The last few things copied, for the clipboard panel.
+    var clipboard: ClipboardHistory?
     var hasFullAccess = false
     /// Saves a newly picked skin tone.
     var onSkinTone: ((Int) -> Void)?
@@ -311,12 +313,7 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         case .gif:
             showGIFPanel(query: nil)
         case .paste:
-            // Keyboards can only read the clipboard with Full Access.
-            if hasFullAccess, let text = UIPasteboard.general.string, !text.isEmpty {
-                insertDirectly(text)
-            } else {
-                flash(hasFullAccess ? "Nothing to paste" : "Paste needs Allow Full Access")
-            }
+            showClipboardPanel()
         case .ai:
             commitTyping()
             let input = AIPrompts.trimmedInput(document?.textBeforeCursor ?? "")
@@ -344,6 +341,35 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         }
     }
 
+    /// The last few things copied: tap one to paste it.
+    func showClipboardPanel() {
+        noteNewClipboard()
+        let panel = ClipboardPanel(items: clipboard?.items ?? [], theme: theme, hasFullAccess: hasFullAccess)
+        panel.onPaste = { [weak self] text in
+            self?.feedback.keyDown()
+            self?.closePanel()
+            self?.insertDirectly(text)
+            self?.flash("Pasted")
+        }
+        panel.onDelete = { [weak self] text in self?.clipboard?.remove(text) }
+        panel.onClear = { [weak self] in self?.clipboard?.removeAll() }
+        panel.onClose = { [weak self] in self?.closePanel() }
+        install(panel)
+    }
+
+    /// Adds what's on the clipboard to the history, if it's changed since last time. A keyboard
+    /// can only read the clipboard with Full Access, and only while it's open, so this runs when
+    /// the panel opens (iOS may show its "pasted from" notice then).
+    private func noteNewClipboard() {
+        guard hasFullAccess, let clipboard else { return }
+        let pasteboard = UIPasteboard.general
+        guard pasteboard.changeCount != clipboard.lastChangeCount else { return }
+        clipboard.lastChangeCount = pasteboard.changeCount
+        if pasteboard.hasStrings, let text = pasteboard.string {
+            clipboard.add(text)
+        }
+    }
+
     func showEmojiPanel(tab: EmojiPanel.Tab) {
         endSearch()
         let emojiPanel = EmojiPanel(catalog: emojiCatalog, recents: recentEmoji, theme: theme,
@@ -368,15 +394,15 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     func showGIFPanel(query: String?) {
         endSearch()
         let unavailable: String?
-        if settings.giphyAPIKey.isEmpty {
-            unavailable = "GIFs need a GIPHY API key. Add one in the app: Settings → GIFs."
+        if settings.klipyAPIKey.isEmpty {
+            unavailable = "GIFs need a free KLIPY API key. Add one in the app: Settings → GIF."
         } else if !hasFullAccess {
-            unavailable = "GIFs need Allow Full Access, so the keyboard can reach GIPHY and copy the GIF."
+            unavailable = "GIFs need Allow Full Access, so the keyboard can reach KLIPY and copy the GIF."
         } else {
             unavailable = nil
         }
         let client = unavailable == nil
-            ? GiphyClient(apiKey: settings.giphyAPIKey, rating: settings.gifRating, language: searchLanguage)
+            ? KlipyClient(apiKey: settings.klipyAPIKey, rating: settings.gifRating, language: searchLanguage)
             : nil
         let gifPanel = GIFPanel(client: client, query: query, theme: theme, unavailableReason: unavailable)
         gifPanel.onClose = { [weak self] in self?.closePanel() }

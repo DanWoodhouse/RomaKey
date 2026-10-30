@@ -220,7 +220,7 @@ struct GIFSettingsView: View {
     var body: some View {
         Form {
             Section {
-                SecureField("GIPHY API key", text: $store.settings.giphyAPIKey)
+                SecureField("KLIPY API key", text: $store.settings.klipyAPIKey)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                 Picker("Content rating", selection: $store.settings.gifRating) {
@@ -229,9 +229,9 @@ struct GIFSettingsView: View {
                     Text("PG-13").tag("pg-13")
                     Text("R").tag("r")
                 }
-                Link("Get a free key at developers.giphy.com", destination: URL(string: "https://developers.giphy.com/dashboard/")!)
+                Link("Get a free key at partner.klipy.com", destination: URL(string: "https://partner.klipy.com")!)
             } footer: {
-                Text("GIFs are off until you add a key. When on, what you search for is sent to GIPHY (the keyboard needs Allow Full Access). Tap a GIF to copy it, then paste it into your message: iOS doesn't let keyboards insert images directly. Free keys allow about 100 searches an hour.")
+                Text("GIFs are off until you add a key. When on, what you search for is sent to KLIPY (the keyboard needs Allow Full Access). Tap a GIF to copy it, then paste it into your message: iOS doesn't let keyboards insert images directly.")
             }
         }
         .navigationTitle("GIF")

@@ -73,7 +73,7 @@ targets:
             IsASCIICapable: false
             PrefersRightToLeft: false
             # Full Access lets the keyboards read settings from the shared App Group, use
-            # haptics and paste. The only network requests are GIF searches (with a GIPHY key) and
+            # haptics and paste. The only network requests are GIF searches (with a KLIPY key) and
             # ✨ AI requests when Claude is chosen instead of Apple Intelligence.
             RequestsOpenAccess: true
     settings:

@@ -104,7 +104,7 @@ final class AIPanel: UIView {
         super.init(frame: .zero)
 
         content.axis = .vertical
-        content.spacing = 10
+        content.spacing = 8
         content.alignment = .fill
         content.translatesAutoresizingMaskIntoConstraints = false
         scrollView.removeEdgeEffects()
@@ -114,8 +114,8 @@ final class AIPanel: UIView {
         NSLayoutConstraint.activate([
             content.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 10),
             content.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -10),
-            content.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 8),
-            content.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -12),
+            content.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 6),
+            content.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -10),
             content.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -20),
         ])
         results.axis = .vertical
@@ -126,12 +126,14 @@ final class AIPanel: UIView {
         if input.isEmpty {
             content.addArrangedSubview(label("Type something first, then tap ✨. AI works on the text before the cursor.", size: 14, secondary: true))
         } else {
+            // Compact, so most of the panel is left for the answer: the text on one line, then
+            // both languages' actions in one scrolling row.
             let quote = label("✨ " + input, size: 13)
-            quote.numberOfLines = 2
-            content.addArrangedSubview(GlassCard(theme: theme, title: nil, content: quote, cornerRadius: 16,
-                                                 insets: UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)))
-            content.addArrangedSubview(actionsSection("日本語", actions: japaneseActions))
-            content.addArrangedSubview(actionsSection("English", actions: englishActions))
+            quote.numberOfLines = 1
+            quote.lineBreakMode = .byTruncatingTail
+            content.addArrangedSubview(GlassCard(theme: theme, title: nil, content: quote, cornerRadius: 14,
+                                                 insets: UIEdgeInsets(top: 7, left: 12, bottom: 7, right: 12)))
+            content.addArrangedSubview(actionsRow([("日本語", japaneseActions), ("EN", englishActions)]))
             content.addArrangedSubview(resultCard)
         }
         let bar = bottomBar()
@@ -168,29 +170,28 @@ final class AIPanel: UIView {
         isJapanese ? [.toEnglish] : [.grammar, .formal, .friendly, .shorter]
     }
 
-    private func actionsSection(_ heading: String, actions: [Action]) -> UIView {
-        let title = label(heading, size: 11)
-        title.font = .systemFont(ofSize: 11, weight: .semibold)
-        title.textColor = theme.text.withAlphaComponent(0.62)
-        let titleRow = UIStackView(arrangedSubviews: [title])
-        titleRow.isLayoutMarginsRelativeArrangement = true
-        titleRow.layoutMargins = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: 0)
-        let section = UIStackView(arrangedSubviews: [titleRow, actionsRow(actions)])
-        section.axis = .vertical
-        section.spacing = 6
-        return section
-    }
-
-    private func actionsRow(_ actions: [Action]) -> UIView {
+    /// Every group's chips in one scrolling row, each group led by a small tag.
+    private func actionsRow(_ groups: [(tag: String, actions: [Action])]) -> UIView {
         let row = UIStackView()
         row.axis = .horizontal
+        row.alignment = .center
         row.spacing = 6
-        for action in actions {
-            let button = UIButton(configuration: chipConfiguration(for: action, selected: false),
-                                  primaryAction: UIAction { [weak self] _ in self?.run(action) })
-            button.tintColor = theme.accent
-            actionButtons[action] = button
-            row.addArrangedSubview(button)
+        for (index, group) in groups.enumerated() {
+            if index > 0 {
+                let divider = UIView()
+                divider.backgroundColor = theme.text.withAlphaComponent(0.18)
+                divider.widthAnchor.constraint(equalToConstant: 1).isActive = true
+                divider.heightAnchor.constraint(equalToConstant: 22).isActive = true
+                row.addArrangedSubview(divider)
+                row.setCustomSpacing(10, after: row.arrangedSubviews[row.arrangedSubviews.count - 2])
+                row.setCustomSpacing(10, after: divider)
+            }
+            let tag = UILabel()
+            tag.text = group.tag
+            tag.font = .systemFont(ofSize: 10, weight: .semibold)
+            tag.textColor = theme.text.withAlphaComponent(0.55)
+            row.addArrangedSubview(tag)
+            addChips(group.actions, to: row)
         }
         let scroll = UIScrollView()
         scroll.removeEdgeEffects()
@@ -207,6 +208,16 @@ final class AIPanel: UIView {
             scroll.heightAnchor.constraint(equalToConstant: 36),
         ])
         return scroll
+    }
+
+    private func addChips(_ actions: [Action], to row: UIStackView) {
+        for action in actions {
+            let button = UIButton(configuration: chipConfiguration(for: action, selected: false),
+                                  primaryAction: UIAction { [weak self] _ in self?.run(action) })
+            button.tintColor = theme.accent
+            actionButtons[action] = button
+            row.addArrangedSubview(button)
+        }
     }
 
     /// A glass chip with a round glyph badge; the chosen one fills with the accent colour.
@@ -262,19 +273,48 @@ final class AIPanel: UIView {
         heading.textAlignment = .center
         heading.setContentHuggingPriority(.defaultLow, for: .horizontal)
         bar.addArrangedSubview(heading)
-        let providers = UISegmentedControl(items: ["Apple", "Claude"])
-        providers.selectedSegmentIndex = provider == .apple ? 0 : 1
-        providers.accessibilityLabel = "Answered by"
-        providers.addAction(UIAction { [weak self, weak providers] _ in
-            guard let self, let providers else { return }
+        // A small capsule rather than a segmented control, so the bar never crowds the panel.
+        let providerButton = UIButton(configuration: providerConfiguration())
+        providerButton.addAction(UIAction { [weak self, weak providerButton] _ in
+            guard let self, let providerButton else { return }
             self.task?.cancel()
-            self.provider = providers.selectedSegmentIndex == 0 ? .apple : .claude
+            self.provider = self.provider == .apple ? .claude : .apple
             self.onProviderChange?(self.provider)
+            providerButton.configuration = self.providerConfiguration()
+            self.updateProviderLabel(providerButton)
             self.select(nil)
             self.resultCard.isHidden = true
-        }, for: .valueChanged)
-        bar.addArrangedSubview(providers)
+        }, for: .touchUpInside)
+        providerButton.setContentHuggingPriority(.required, for: .horizontal)
+        updateProviderLabel(providerButton)
+        bar.addArrangedSubview(providerButton)
         return bar
+    }
+
+    private func providerConfiguration() -> UIButton.Configuration {
+        var configuration: UIButton.Configuration
+        if #available(iOS 26.0, *) {
+            configuration = .glass()
+        } else {
+            configuration = .gray()
+        }
+        configuration.cornerStyle = .capsule
+        configuration.baseForegroundColor = theme.text
+        configuration.image = UIImage(systemName: "arrow.left.arrow.right",
+                                      withConfiguration: UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold))
+        configuration.imagePlacement = .trailing
+        configuration.imagePadding = 4
+        var title = AttributedString(provider == .apple ? "Apple" : "Claude")
+        title.font = .systemFont(ofSize: 12, weight: .semibold)
+        configuration.attributedTitle = title
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10)
+        return configuration
+    }
+
+    private func updateProviderLabel(_ button: UIButton) {
+        let apple = provider == .apple
+        button.accessibilityLabel = "Answered by \(apple ? "Apple Intelligence" : "Claude")"
+        button.accessibilityHint = "Switches to \(apple ? "Claude" : "Apple Intelligence")"
     }
 
     private func label(_ text: String, size: CGFloat, secondary: Bool = false) -> UILabel {
@@ -548,6 +588,8 @@ final class AIPanel: UIView {
                 return Outcome(main: translation.japanese, extra: [reading(translation.reading)], replacement: translation.japanese)
             }
         } catch let failure as ClaudeAIEngine.Failure {
+            return .problem(failure.localizedDescription)
+        } catch let failure as LocalizedError where failure.errorDescription?.hasPrefix("Apple's on-device safety filter") == true {
             return .problem(failure.localizedDescription)
         } catch {
             if engine is ClaudeAIEngine {

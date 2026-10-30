@@ -95,8 +95,8 @@ Made to be your only keyboard, without moving any key. When you're not typing, t
 |---|---|
 | 😊 **Emoji** | Recents and every category in one continuous scroll (the tabs jump to a section and follow along as you scroll), and search in English or Japanese (ねこ, cat → 🐈). Long-press for skin tones; your choice is remembered. Only emoji your iOS version can draw are shown |
 | (^_^) **顔文字** | Kaomoji by mood: 嬉しい, ありがとう, 悲しい, 驚き… |
-| **GIF** | GIPHY search with your own free API key (Settings → GIF). Tap a GIF to copy it, then paste it; iOS doesn't let keyboards insert images. Off until you add a key, because searches go to GIPHY |
-| 📋 **Paste** | Paste the clipboard (needs Full Access) |
+| **GIF** | KLIPY search with your own free API key (Settings → GIF). Tap a GIF to copy it, then paste it; iOS doesn't let keyboards insert images. Off until you add a key, because searches go to KLIPY |
+| 📋 **Clipboard** | Your last 5 copies, newest first: tap one to paste it, ⊗ to forget it, Clear for all. Kept on the phone; reading the clipboard needs Full Access |
 
 While typing:
 
@@ -144,12 +144,12 @@ The app's **設定 · Settings** screen is laid out like the iPhone's Settings a
 | Key extras | On or off, swipe up for them or hold only, and each key on or off (q … m and ー) |
 | Suggestions | Autocorrect, word suggestions, predictive text, emoji suggestions; forget learned words and kanji choices |
 | AI | Apple Intelligence (default) or Claude with your API key |
-| GIF | Your GIPHY API key and content rating |
+| GIF | Your KLIPY API key and content rating |
 | Flick | Flick only (no tap cycling), sensitivity: gentle / normal / quick |
 | Readings | English meanings under suggestions, romaji readings (猫 ねこ neko) |
 | Sound & motion | Key sounds, haptics, animations |
 
-Settings are stored in an App Group shared by the app and both keyboards. The app scales the photo down to 1400 px and saves it there as a JPEG; the keyboards load an even smaller copy, to stay within a keyboard's tight memory limit. iOS only lets a keyboard use that shared storage, and haptics, with **Allow Full Access** turned on. Without it the keyboards still work, and the ⚙︎ quick settings are saved on the keyboard itself. The only network requests are GIF searches, once you add a GIPHY key, and ✨ requests if you choose Claude.
+Settings are stored in an App Group shared by the app and both keyboards. The app scales the photo down to 1400 px and saves it there as a JPEG; the keyboards load an even smaller copy, to stay within a keyboard's tight memory limit. iOS only lets a keyboard use that shared storage, and haptics, with **Allow Full Access** turned on. Without it the keyboards still work, and the ⚙︎ quick settings are saved on the keyboard itself. The only network requests are GIF searches, once you add a KLIPY key, and ✨ requests if you choose Claude.
 
 ## Project structure
 
@@ -223,7 +223,6 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 ## Next steps
 
 - Swipe (glide) typing
-- Clipboard history
 - Reset the composition when the user moves the cursor mid-composition
 - A bigger dictionary (all of JMdict) in SQLite, if the common words aren't enough
 - Grammar checking: see [docs/grammar-checker.md](docs/grammar-checker.md) for the options and a recommended order
@@ -233,4 +232,4 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 
 The dictionary is built from [JMdict](https://www.edrdg.org/jmdict/j_jmdict.html), the property of the [Electronic Dictionary Research and Development Group](https://www.edrdg.org/), and is used in conformance with the Group's [licence](https://www.edrdg.org/edrdg/licence.html) (Creative Commons Attribution-ShareAlike 3.0). `Packages/KeyboardCore/Sources/KeyboardCore/Resources/dictionary.tsv` is a derived file and is under the same licence; a copy of the licence is next to it. The data came from the `jamdict-data` package (JMdict 1.08, 2020 snapshot).
 
-Emoji names and keywords come from [Emojibase](https://emojibase.dev) (MIT licence, copy next to `emoji.tsv`). Dictionary entries are ranked by how often they're used, from [wordfreq](https://github.com/rspeer/wordfreq)'s Japanese data (CC BY-SA 4.0); rebuild with `tools/build_dictionary.py jamdict.db dictionary.tsv large_ja.msgpack.gz`. English word pairs for predictive text come from [SymSpell](https://github.com/wolfgarbe/SymSpell)'s bigram list (MIT), built from [Google Books Ngrams](https://books.google.com/ngrams) (CC BY 3.0); rebuild with `tools/build_bigrams.py`. GIF search is powered by GIPHY.
+Emoji names and keywords come from [Emojibase](https://emojibase.dev) (MIT licence, copy next to `emoji.tsv`). Dictionary entries are ranked by how often they're used, from [wordfreq](https://github.com/rspeer/wordfreq)'s Japanese data (CC BY-SA 4.0); rebuild with `tools/build_dictionary.py jamdict.db dictionary.tsv large_ja.msgpack.gz`. English word pairs for predictive text come from [SymSpell](https://github.com/wolfgarbe/SymSpell)'s bigram list (MIT), built from [Google Books Ngrams](https://books.google.com/ngrams) (CC BY 3.0); rebuild with `tools/build_bigrams.py`. GIF search is powered by KLIPY.

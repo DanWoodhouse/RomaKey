@@ -145,9 +145,9 @@ public struct KeyboardSettings: Equatable {
     // Emoji and GIFs
     /// 0 = default yellow, 1–5 = light to dark.
     public var skinTone = 0
-    /// Your own GIPHY API key. Empty turns GIF search off. Needs Full Access.
-    public var giphyAPIKey = ""
-    /// GIPHY content rating: g, pg, pg-13 or r.
+    /// Your own KLIPY API key. Empty turns GIF search off. Needs Full Access.
+    public var klipyAPIKey = ""
+    /// How strict GIF search is: g, pg, pg-13 or r (sent to KLIPY as its content filter).
     public var gifRating = "pg"
     // AI
     public var aiProvider: AIProvider = .apple
@@ -235,7 +235,8 @@ public struct KeyboardSettings: Equatable {
         static let predictiveText = "predictiveText"
         static let liveConversion = "liveConversion"
         static let skinTone = "skinTone"
-        static let giphyAPIKey = "giphyAPIKey"
+        // GIFs moved from GIPHY to KLIPY; a GIPHY key doesn't work there, so it isn't carried over.
+        static let klipyAPIKey = "klipyAPIKey"
         static let gifRating = "gifRating"
         static let aiProvider = "aiProvider"
         static let claudeAPIKey = "claudeAPIKey"
@@ -305,7 +306,7 @@ public struct KeyboardSettings: Equatable {
         predictiveText = bool(Key.predictiveText, predictiveText)
         liveConversion = bool(Key.liveConversion, liveConversion)
         skinTone = min(max(defaults.object(forKey: Key.skinTone) as? Int ?? skinTone, 0), 5)
-        giphyAPIKey = defaults.string(forKey: Key.giphyAPIKey) ?? giphyAPIKey
+        klipyAPIKey = defaults.string(forKey: Key.klipyAPIKey) ?? klipyAPIKey
         gifRating = ["g", "pg", "pg-13", "r"].contains(defaults.string(forKey: Key.gifRating) ?? "")
             ? defaults.string(forKey: Key.gifRating)! : gifRating
         aiProvider = value(Key.aiProvider, aiProvider)
@@ -364,7 +365,7 @@ public struct KeyboardSettings: Equatable {
         defaults.set(predictiveText, forKey: Key.predictiveText)
         defaults.set(liveConversion, forKey: Key.liveConversion)
         defaults.set(skinTone, forKey: Key.skinTone)
-        defaults.set(giphyAPIKey, forKey: Key.giphyAPIKey)
+        defaults.set(klipyAPIKey, forKey: Key.klipyAPIKey)
         defaults.set(gifRating, forKey: Key.gifRating)
         defaults.set(aiProvider.rawValue, forKey: Key.aiProvider)
         defaults.set(claudeAPIKey, forKey: Key.claudeAPIKey)

@@ -226,3 +226,38 @@ final class EverydayEngineTests: XCTestCase {
         XCTAssertEqual(output.committed, "か(^_^)")
     }
 }
+
+final class ClipboardHistoryTests: XCTestCase {
+    func testKeepsTheLastFiveNewestFirst() {
+        let store = MemoryStore()
+        let history = ClipboardHistory(store: store)
+        for text in ["one", "two", "three", "four", "five", "six"] {
+            history.add(text)
+        }
+        XCTAssertEqual(history.items, ["six", "five", "four", "three", "two"])
+        history.add("four")
+        XCTAssertEqual(history.items.first, "four", "copied again moves to the top")
+        XCTAssertEqual(history.items.count, 5)
+        history.add("   ")
+        XCTAssertEqual(history.items.count, 5, "blank copies are ignored")
+        XCTAssertEqual(ClipboardHistory(store: store).items, history.items, "saved")
+    }
+
+    func testDeleting() {
+        let history = ClipboardHistory(store: MemoryStore())
+        history.add("keep")
+        history.add("secret")
+        history.remove("secret")
+        XCTAssertEqual(history.items, ["keep"])
+        history.removeAll()
+        XCTAssertTrue(history.items.isEmpty)
+    }
+
+    func testRemembersTheChangeCount() {
+        let store = MemoryStore()
+        let history = ClipboardHistory(store: store)
+        XCTAssertEqual(history.lastChangeCount, -1)
+        history.lastChangeCount = 42
+        XCTAssertEqual(ClipboardHistory(store: store).lastChangeCount, 42)
+    }
+}

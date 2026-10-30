@@ -86,7 +86,7 @@ struct SettingsView: View {
         Form {
             Section {
                 Label {
-                    Text("Turn on **Allow Full Access** for the keyboards so they can read these settings. Nothing you type leaves your phone, except GIF searches once you add a GIPHY key and ✨ requests if you choose Claude.")
+                    Text("Turn on **Allow Full Access** for the keyboards so they can read these settings. Nothing you type leaves your phone, except GIF searches once you add a KLIPY key and ✨ requests if you choose Claude.")
                 } icon: {
                     Image(systemName: "lock.shield")
                 }
@@ -119,7 +119,7 @@ struct SettingsView: View {
                     AISettingsView(store: store)
                 }
                 page("GIF", icon: "photo.on.rectangle.angled", color: .orange,
-                     detail: store.settings.giphyAPIKey.isEmpty ? "Off" : store.settings.gifRating.uppercased()) {
+                     detail: store.settings.klipyAPIKey.isEmpty ? "Off" : store.settings.gifRating.uppercased()) {
                     GIFSettingsView(store: store)
                 }
                 page("感触 · Sound & motion", icon: "speaker.wave.2.fill", color: .red, detail: feelSummary) {

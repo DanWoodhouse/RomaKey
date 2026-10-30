@@ -211,6 +211,17 @@ input[type="checkbox"].qswitch:checked::before { transform: translateX(18px); }
 .aiapply { justify-self: start; margin-top: 4px; font: 600 13px var(--font-key); color: #fff; background: var(--kb-accent); border: 0; border-radius: 8px; padding: 7px 14px; cursor: pointer; }
 .ainote { font-size: 11px; color: var(--kb-muted); line-height: 1.4; }
 .qnote { margin: 8px 0 0; font: 12px var(--font-key); color: var(--kb-muted); }
+.clist { overflow-y: auto; overscroll-behavior: contain; padding: 8px 10px 10px; display: grid; gap: 8px; align-content: start; font-family: var(--font-key); scrollbar-width: none; }
+.clist::-webkit-scrollbar { display: none; }
+.glass.cliprow { display: flex; align-items: center; min-height: 46px; border-radius: 16px; overflow: hidden; transition: transform 300ms cubic-bezier(0.3, 1.6, 0.5, 1), opacity 250ms; }
+.cliprow:active { transform: scale(0.97); }
+.cliprow .ctext { flex: 1; min-width: 0; align-self: stretch; text-align: left; background: transparent; border: 0; padding: 6px 4px 6px 14px; cursor: pointer; color: var(--kb-text); font: 15px var(--font-key);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+.cliprow .cdel { flex: none; width: 40px; align-self: stretch; background: transparent; border: 0; cursor: pointer; color: var(--kb-muted); font-size: 18px; }
+.cliprow.gone { opacity: 0; transform: translateX(-24px); }
+.kb.anim .cliprow { animation: kbrise 400ms cubic-bezier(0.2, 0.9, 0.3, 1) backwards; }
+.cempty { align-self: center; justify-self: center; text-align: center; padding: 12px 28px; color: var(--kb-muted); font: 14px var(--font-key); line-height: 1.4; }
+.ebar button.cclear { color: #ff3b30; }
 .qhead { flex: 4; text-align: center; font: 600 12px var(--font-key); color: var(--kb-muted); }
 .cc { overflow-y: auto; overscroll-behavior: contain; padding: 8px 10px 12px; display: grid; gap: 10px; align-content: start; font-family: var(--font-key); color: var(--kb-text); }
 /* Liquid Glass, as in iOS 26's Control Centre: a translucent, blurred pane with a bright rim and a soft drop. */
@@ -269,9 +280,13 @@ input[type="range"].ccrange:active::-webkit-slider-thumb { transform: scale(1.12
 .ccopen svg { width: 13px; height: 13px; }
 .cc .qnote { margin: 0; padding: 0 12px; text-align: center; font-size: 11px; }
 /* ✨ panel: the same glass as ⚙︎. Chips carry a glyph badge; the result is its own card. */
-.aibody { padding: 8px 10px 12px; gap: 10px; grid-auto-rows: max-content; }
-.aiquote { border: 0; padding: 8px 12px; border-radius: 16px; max-height: none; font-size: 13px; line-height: 1.4; color: var(--kb-text);
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.aibody { padding: 6px 10px 10px; gap: 8px; grid-auto-rows: max-content; }
+.aiquote { border: 0; padding: 7px 12px; border-radius: 14px; max-height: none; font-size: 13px; line-height: 1.4; color: var(--kb-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aitag { flex: none; align-self: center; font: 600 10px var(--font-key); letter-spacing: 0.02em; color: color-mix(in srgb, var(--kb-text) 55%, transparent); padding: 0 2px; }
+.aidiv { flex: none; align-self: center; width: 1px; height: 22px; margin: 0 4px; background: color-mix(in srgb, var(--kb-text) 18%, transparent); }
+.ebar button.aiprov { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 10px 0 12px; border-radius: 999px; font: 600 12px var(--font-key); color: var(--kb-text); }
+.aiprov svg { width: 14px; height: 14px; opacity: 0.7; }
 .aiquote::before { content: "✨ "; }
 .aisection { gap: 6px; }
 .aihead { padding: 0 4px; color: color-mix(in srgb, var(--kb-text) 62%, transparent); }
@@ -436,7 +451,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     <span class="eyebrow">Interactive preview · web copy of the Swift logic</span>
     <h1>ローマ字・かな・辞書キーボード</h1>
     <div class="jumps"><button class="jump" id="jump" type="button">Try it full screen ↓</button><button class="jump" id="jump-settings" type="button">Settings ↓</button></div>
-    <p class="lede">Both keyboards from the iOS project, now with everything you need to use them all day. Type, and emoji are suggested (sushi → 🍣, ねこ → 🐈). Clear the text and the bar above the keys becomes a toolbar: emoji, 顔文字, GIF and paste. No key ever moves.</p>
+    <p class="lede">Both keyboards from the iOS project, now with everything you need to use them all day. Type, and emoji are suggested (sushi → 🍣, ねこ → 🐈). Clear the text and the bar above the keys becomes a toolbar: emoji, 顔文字, GIF and your recent clipboard. No key ever moves.</p>
   </header>
 
   <section class="device" aria-label="Keyboard preview">
@@ -550,9 +565,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       </div>
       <div class="group">
         <h3>GIF</h3>
-        <div class="row"><label for="giphy-key">GIPHY API key</label><input type="password" id="giphy-key" autocomplete="off" spellcheck="false" placeholder="Paste your key"></div>
+        <div class="row"><label for="klipy-key">KLIPY API key</label><input type="password" id="klipy-key" autocomplete="off" spellcheck="false" placeholder="Paste your key"></div>
         <div class="row"><span>Content rating</span><span class="seg" id="seg-gifRating"></span></div>
-        <p class="help">Used on iPhone only: this preview can't reach GIPHY.</p>
+        <p class="help">Used on iPhone only: this preview can't reach KLIPY.</p>
       </div>
       <div class="group">
         <h3>かな · Flick</h3>
@@ -616,7 +631,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="e5"><span>Type <em>pizza</em>: 🍕 is offered and goes in after the word.</span></label>
       </div>
       <div class="checks"><h3>Emoji, 顔文字 and toolbar</h3>
-        <label class="check"><input type="checkbox" data-check="m1"><span>Clear the text: the bar above the keys becomes a toolbar (😊, (^_^), GIF, paste).</span></label>
+        <label class="check"><input type="checkbox" data-check="m1"><span>Clear the text: the bar above the keys becomes a toolbar (😊, (^_^), GIF, clipboard).</span></label>
         <label class="check"><input type="checkbox" data-check="m2"><span>Open emoji and scroll the whole way: one list, headings pinned, tabs following. Tap 🍙 to jump.</span></label>
         <label class="check"><input type="checkbox" data-check="m6"><span>Use a 顔文字, then open emoji: Recent shows only emoji, never 顔文字.</span></label>
         <label class="check"><input type="checkbox" data-check="m3"><span>Long-press 👍 for skin tones; your pick sticks for every emoji.</span></label>
@@ -659,8 +674,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       <div class="checks"><h3>iPhone only (once built in Xcode)</h3>
         <label class="check"><input type="checkbox" data-check="p0"><span>Set it up on your iPhone with Xcode: follow <em>docs/setup-iphone.md</em> in the RomaKey repository.</span></label>
         <label class="check"><input type="checkbox" data-check="p1"><span>Both keyboards appear in Settings → Keyboards; かな opens on the flick board, ローマ字 on QWERTY.</span></label>
-        <label class="check"><input type="checkbox" data-check="p2"><span>GIFs: add your GIPHY key in the app, search, tap a GIF to copy, then paste it.</span></label>
-        <label class="check"><input type="checkbox" data-check="p3"><span>Paste from the toolbar (needs Allow Full Access). This preview tries your browser's clipboard.</span></label>
+        <label class="check"><input type="checkbox" data-check="p2"><span>GIFs: add your free KLIPY key in the app, search, tap a GIF to copy, then paste it.</span></label>
+        <label class="check"><input type="checkbox" data-check="p3"><span>Clipboard from the toolbar: your last 5 copies, tap one to paste, ⊗ to forget it, Clear for all (needs Allow Full Access). This preview reads your browser's clipboard when it opens.</span></label>
+        <label class="check"><input type="checkbox" data-check="p10"><span>Type in あ, tap 確定: the blue underline goes straight away. Hold delete with nothing left: the haptics stop.</span></label>
+        <label class="check"><input type="checkbox" data-check="p11"><span>✨ with Apple: Grammar and です/ます on Japanese text either answer or say Apple's safety filter stopped it (then tap the Apple/Claude pill to switch).</span></label>
         <label class="check"><input type="checkbox" data-check="p4"><span>Your iOS text replacements (omw) and contact names in suggestions; English uses Apple's spell checker.</span></label>
         <label class="check"><input type="checkbox" data-check="p6"><span>Dictation: iOS doesn't let keyboards use the microphone, so use the system 🎤 below the keyboard. It works while RomaKey is showing.</span></label>
         <label class="check"><input type="checkbox" data-check="p5"><span>Haptics, key sounds, and the Apple Intelligence test in the app.</span></label>
@@ -687,7 +704,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
     keySounds: true, haptics: false, predictiveText: true, aiProvider: "apple",
     backgroundOpacity: 1, backgroundGradient: false, gradientColor: "#8ec5fc", gradientDirection: "down",
-    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, giphyAPIKey: "", gifRating: "pg", keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, liveConversion: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
+    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, klipyAPIKey: "", gifRating: "pg", keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, liveConversion: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
@@ -1639,13 +1656,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
           tool(ICONS.emoji, "Emoji", () => showEmojiPanel(recents.length ? "recent" : 0)),
           tool("(^_^)", "Kaomoji", () => showEmojiPanel("kaomoji")),
           tool("GIF", "GIFs", showGIFPanel),
-          tool(ICONS.paste, "Paste", async () => {
-            // On iPhone this needs Allow Full Access; here it asks the browser for the clipboard.
-            try {
-              const text = await navigator.clipboard.readText();
-              if (text) { active.commit(); out.insertText(text); render(); } else flash("Nothing to paste");
-            } catch (_) { flash("The browser blocked the clipboard here. On iPhone, paste needs Allow Full Access"); }
-          }),
+          tool(ICONS.paste, "Clipboard", showClipboardPanel),
           tool(ICONS.sparkle, "AI", showAIPanel),
           tool(ICONS.gear, "Keyboard settings", showQuickSettings),
         );
@@ -2095,15 +2106,12 @@ Text: よろしくおねがいします
     heading.className = "qhead"; heading.textContent = "✨ AI";
     // Apple Intelligence by default, like the app; Claude can be picked here or in Customise.
     const apple = settings.aiProvider !== "claude";
-    const providers = document.createElement("span");
-    providers.className = "aiseg";
-    providers.setAttribute("role", "group"); providers.setAttribute("aria-label", "Answered by");
-    for (const [id, name] of [["apple", "Apple"], ["claude", "Claude"]]) {
-      const b = document.createElement("button");
-      b.type = "button"; b.textContent = name; b.setAttribute("aria-pressed", String(apple === (id === "apple")));
-      b.addEventListener("click", () => { aiAbort?.abort(); settings.aiProvider = id; saveSettings(); syncControls(); showAIPanel(); });
-      providers.appendChild(b);
-    }
+    // A small capsule, so the bar never crowds the panel: tap to switch.
+    const providers = document.createElement("button");
+    providers.type = "button"; providers.className = "glass aiprov"; providers.dataset.provider = apple ? "apple" : "claude";
+    providers.innerHTML = "<span>" + (apple ? "Apple" : "Claude") + "</span>" + CC_ICON('<path d="M4 8h13l-3-3M20 16H7l3 3"/>');
+    providers.setAttribute("aria-label", "Answered by " + (apple ? "Apple Intelligence" : "Claude") + ". Tap to switch to " + (apple ? "Claude" : "Apple Intelligence"));
+    providers.addEventListener("click", () => { aiAbort?.abort(); settings.aiProvider = apple ? "claude" : "apple"; saveSettings(); syncControls(); showAIPanel(); });
     bar.append(barButton("ABC", "Back to the keys", () => { aiAbort?.abort(); closePanel(); render(); }, "word"), heading, providers);
     panel.append(body, bar);
 
@@ -2123,12 +2131,12 @@ Text: よろしくおねがいします
       ? [["文法 Check", "grammar"], ["説明 Explain", "explain"], ["カジュアル", "casual"], ["です/ます", "polite"], ["敬語", "honorific"], ...(allKana ? [["漢字に", "kanji"]] : [])]
       : [["→ 日本語 casual", "toCasual"], ["→ 日本語 polite", "toPolite"], ["→ 敬語", "toHonorific"]];
     const english = ja ? [["→ English", "toEnglish"]] : [["Check grammar", "grammar"], ["Formal", "formal"], ["Casual", "friendly"], ["Shorter", "shorter"]];
+    // One scrolling row for both languages, each group led by a small tag.
+    const row = document.createElement("div");
+    row.className = "aiactions";
     const section = (title, list) => {
-      const box = document.createElement("div");
-      box.className = "aisection";
-      box.appendChild(say("aihead", title));
-      const row = document.createElement("div");
-      row.className = "aiactions";
+      if (row.childElementCount) { const d = document.createElement("span"); d.className = "aidiv"; row.appendChild(d); }
+      row.appendChild(say("aitag", title));
       for (const [label, mode] of list) {
         const b = document.createElement("button");
         b.type = "button"; b.className = "aiaction"; b.dataset.mode = mode;
@@ -2138,12 +2146,11 @@ Text: よろしくおねがいします
         b.addEventListener("click", () => run(mode));
         row.appendChild(b);
       }
-      box.appendChild(row);
-      return box;
     };
     const result = document.createElement("div");
     result.className = "glass airesult";
-    body.append(quote, section("日本語", japanese), section("English", english), result, note);
+    section("日本語", japanese); section("EN", english);
+    body.append(quote, row, result, note);
 
     // Puts `text` in place of the input in the document, keeping any trailing space.
     function replaceInput(text) {
@@ -2384,11 +2391,64 @@ Text: よろしくおねがいします
     panel.append(cc, bar);
   }
 
+  // The toolbar's clipboard (ClipboardPanel.swift): the last five things copied, newest first.
+  // Tap one to paste it, ✕ forgets it, Clear forgets them all. On iPhone this needs Allow Full Access.
+  const CLIP_CAPACITY = 5;
+  let clips = (() => { try { const v = JSON.parse(localStorage.getItem("kb-clipboard")); return Array.isArray(v) ? v.slice(0, CLIP_CAPACITY) : []; } catch (_) { return []; } })();
+  const saveClips = () => { try { localStorage.setItem("kb-clipboard", JSON.stringify(clips)); } catch (_) {} };
+  function addClip(text) {
+    if (!text || !text.trim()) return false;
+    const fresh = clips[0] !== text;
+    clips = [text, ...clips.filter((c) => c !== text)].slice(0, CLIP_CAPACITY);
+    saveClips();
+    return fresh;
+  }
+  async function showClipboardPanel() {
+    // Whatever's on the clipboard now joins the list (the browser may ask first).
+    try { addClip(await navigator.clipboard.readText()); } catch (_) {}
+    const panel = openPanel();
+    const list = document.createElement("div");
+    list.className = "clist";
+    const empty = document.createElement("div");
+    empty.className = "cempty";
+    empty.textContent = "Copy something, then open this to paste it here. Your last " + CLIP_CAPACITY + " copies stay on this device.";
+    const clear = barButton("Clear", "Clear the clipboard history", () => {
+      clips = []; saveClips();
+      list.querySelectorAll(".cliprow").forEach(forget);
+    }, "word cclear");
+    const refresh = () => { empty.hidden = clips.length > 0; clear.style.visibility = clips.length ? "" : "hidden"; };
+    function forget(row) {
+      row.classList.add("gone");
+      setTimeout(() => { row.remove(); refresh(); }, settings.animations ? 250 : 0);
+    }
+    clips.forEach((text, i) => {
+      const row = document.createElement("div");
+      row.className = "glass cliprow";
+      row.style.animationDelay = i * 40 + "ms";
+      const t = document.createElement("button");
+      t.type = "button"; t.className = "ctext"; t.textContent = text.trim(); t.title = "Paste";
+      t.addEventListener("click", () => { closePanel(); active.commit(); out.insertText(text); flash("Pasted"); });
+      const x = document.createElement("button");
+      x.type = "button"; x.className = "cdel"; x.textContent = "⊗"; x.setAttribute("aria-label", "Forget this");
+      x.addEventListener("click", () => { clips = clips.filter((c) => c !== text); saveClips(); forget(row); });
+      row.append(t, x);
+      list.appendChild(row);
+    });
+    list.appendChild(empty);
+    refresh();
+    const heading = document.createElement("span");
+    heading.className = "qhead"; heading.textContent = "クリップボード · Clipboard";
+    const bar = document.createElement("div");
+    bar.className = "ebar";
+    bar.append(barButton("ABC", "Back to the keys", () => { closePanel(); render(); }, "word"), heading, clear);
+    panel.append(list, bar);
+  }
+
   function showGIFPanel() {
     const panel = openPanel();
     const msg = document.createElement("div");
     msg.className = "pmsg";
-    msg.textContent = "On iPhone, GIFs come from GIPHY: add your free API key in the app (Settings → GIF), tap a GIF to copy it, then paste it. This preview can't reach GIPHY.";
+    msg.textContent = "On iPhone, GIFs come from KLIPY: add your free API key in the app (Settings → GIF), tap a GIF to copy it, then paste it. This preview can't reach KLIPY.";
     const bar = document.createElement("div");
     bar.className = "ebar";
     bar.append(barButton("ABC", "Back to the keys", () => { closePanel(); render(); }, "word"), barButton("🔍", "Search GIFs", () => beginSearch("gif")));
@@ -2701,7 +2761,7 @@ Text: よろしくおねがいします
   segmented("seg-skinTone", "skinTone", ["👍", "👍🏻", "👍🏼", "👍🏽", "👍🏾", "👍🏿"].map((t, i) => [i, t]));
   segmented("seg-gifRating", "gifRating", [["g", "G"], ["pg", "PG"], ["pg-13", "PG-13"], ["r", "R"]]);
   const SEGMENTS = [["seg-height", "height"], ["seg-sensitivity", "flickSensitivity"], ["seg-startingMode", "startingMode"], ["seg-skinTone", "skinTone"], ["seg-gifRating", "gifRating"], ["seg-keyFont", "keyFont"], ["seg-textSize", "textSize"], ["seg-aiProvider", "aiProvider"], ["seg-gradientDirection", "gradientDirection"], ["seg-keySpacing", "keySpacing"]];
-  $("giphy-key").addEventListener("input", (e) => { settings.giphyAPIKey = e.target.value.trim(); saveSettings(); });
+  $("klipy-key").addEventListener("input", (e) => { settings.klipyAPIKey = e.target.value.trim(); saveSettings(); });
   $("forget").addEventListener("click", () => {
     learned = {}; history = {}; recents = [];
     keep("kb-learned", learned); keep("kb-history", history); keep("kb-recent", recents);
@@ -2749,7 +2809,7 @@ Text: よろしくおねがいします
   function syncControls() {
     for (const b of $("themes").children) b.setAttribute("aria-pressed", String(b.dataset.id === settings.theme));
     for (const [id, key] of SEGMENTS) for (const b of $(id).children) b.setAttribute("aria-pressed", String(b.dataset.value === String(settings[key])));
-    if ($("giphy-key").value !== settings.giphyAPIKey) $("giphy-key").value = settings.giphyAPIKey;
+    if ($("klipy-key").value !== settings.klipyAPIKey) $("klipy-key").value = settings.klipyAPIKey;
     for (const key of TOGGLES) $("set-" + key).checked = !!settings[key];
     $("set-swipeUpSecondaries").disabled = !settings.keySecondaries;
     $("xkeys").classList.toggle("off", !settings.keySecondaries);

@@ -12,6 +12,7 @@ final class CandidateBar: UIView {
         case emoji
         case kaomoji
         case gif
+        /// The last few things copied (ClipboardPanel).
         case paste
         /// Apple Intelligence on the text before the cursor.
         case ai
@@ -229,7 +230,7 @@ final class CandidateBar: UIView {
         case .emoji: "Emoji"
         case .kaomoji: "Kaomoji"
         case .gif: "GIFs"
-        case .paste: "Paste"
+        case .paste: "Clipboard"
         case .ai: "AI"
         case .settings: "Keyboard settings"
         }

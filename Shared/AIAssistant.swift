@@ -211,29 +211,59 @@ enum AIAssistant {
         GenerationOptions(samplingMode: .greedy, maximumResponseTokens: maximumTokens)
     }
 
+    /// Apple's safety filter stopped the text at every attempt.
+    enum Failure: LocalizedError {
+        case blockedBySafetyFilter
+
+        var errorDescription: String? {
+            "Apple's on-device safety filter stopped this text, even with relaxed settings. Switch to Claude below for this one."
+        }
+    }
+
     /// Asks the model for a structured answer.
     ///
-    /// Apple's safety filter sometimes stops ordinary non-English text (私は昨日学校を行きました。
-    /// was refused on an iPhone). Every mode only transforms the person's own text, which is what
-    /// the permissive guardrails are for, so a refusal is retried once with them. They only
-    /// apply to plain-text answers, so the retry asks for JSON in the same shape and decodes it.
+    /// Apple's safety filter sometimes stops ordinary text (私は昨日学校を行きました。 was refused
+    /// on an iPhone). Every mode only transforms the person's own text, which is what the
+    /// permissive guardrails are for, so a refusal is retried with them: first asking for JSON in
+    /// the same shape (they only cover plain-text answers), then, if that's stopped too and the
+    /// mode allows it (`plain`), with short instructions and no examples, for the bare answer.
     private static func generate<Response: Generable>(
-        _ prompt: AIPrompt, input: String, as type: Response.Type, maximumTokens: Int
+        _ prompt: AIPrompt, input: String, as type: Response.Type, maximumTokens: Int,
+        plain: (instructions: String, make: (String) -> Response)? = nil
     ) async throws -> Response {
         do {
             return try await LanguageModelSession(instructions: instructions(for: prompt))
                 .respond(to: AIPrompts.prompt(for: input), generating: type, options: options(maximumTokens: maximumTokens))
                 .content
-        } catch LanguageModelSession.GenerationError.guardrailViolation {
+        } catch let error as LanguageModelSession.GenerationError where isSafetyStop(error) {
             let permissive = SystemLanguageModel(guardrails: .permissiveContentTransformations)
-            let session = LanguageModelSession(model: permissive, instructions: instructions(for: prompt) + """
+            do {
+                let session = LanguageModelSession(model: permissive, instructions: instructions(for: prompt) + """
 
-                Answer with JSON only, in the same shape as the examples, with every key in double quotes.
-                """)
-            let answer = try await session
-                .respond(to: AIPrompts.prompt(for: input), options: options(maximumTokens: maximumTokens))
-                .content
-            return try Response(GeneratedContent(json: jsonObject(in: answer)))
+                    Answer with JSON only, in the same shape as the examples, with every key in double quotes.
+                    """)
+                let answer = try await session
+                    .respond(to: AIPrompts.prompt(for: input), options: options(maximumTokens: maximumTokens))
+                    .content
+                return try Response(GeneratedContent(json: jsonObject(in: answer)))
+            } catch {
+                guard let plain else { throw Failure.blockedBySafetyFilter }
+                do {
+                    let answer = try await LanguageModelSession(model: permissive, instructions: plain.instructions)
+                        .respond(to: input, options: options(maximumTokens: maximumTokens))
+                        .content
+                    return plain.make(answer.trimmingCharacters(in: .whitespacesAndNewlines))
+                } catch {
+                    throw Failure.blockedBySafetyFilter
+                }
+            }
+        }
+    }
+
+    private static func isSafetyStop(_ error: LanguageModelSession.GenerationError) -> Bool {
+        switch error {
+        case .guardrailViolation, .refusal: return true
+        default: return false
         }
     }
 
@@ -244,7 +274,11 @@ enum AIAssistant {
     }
 
     private static func grammarResponse(_ input: String) async throws -> GrammarResponse {
-        try await generate(AIPrompts.grammar(for: input), input: input, as: GrammarResponse.self, maximumTokens: 500)
+        let japanese = AIText.containsJapanese(input)
+        return try await generate(AIPrompts.grammar(for: input), input: input, as: GrammarResponse.self, maximumTokens: 500,
+                                  plain: (instructions: "Correct any grammar or spelling mistakes in this \(japanese ? "Japanese" : "English") text. "
+                                            + "Change nothing else. Reply with only the corrected text.",
+                                          make: { GrammarResponse(mistakes: [], corrected: $0) }))
     }
 
     private static func translationResponse(_ input: String, style: Politeness) async throws -> TranslationResponse {
@@ -252,7 +286,10 @@ enum AIAssistant {
     }
 
     private static func rewriteResponse(_ input: String, target: Politeness) async throws -> RewriteResponse {
-        try await generate(AIPrompts.politeness(target), input: input, as: RewriteResponse.self, maximumTokens: 300)
+        let style = target == .casual ? "casual plain form" : target == .polite ? "polite です/ます form" : "respectful 敬語"
+        return try await generate(AIPrompts.politeness(target), input: input, as: RewriteResponse.self, maximumTokens: 300,
+                                  plain: (instructions: "Rewrite this Japanese text in \(style). Keep the meaning. Reply with only the rewritten text.",
+                                          make: { RewriteResponse(text: $0) }))
     }
 
     private static func explanationResponse(_ input: String) async throws -> ExplanationResponse {
@@ -260,11 +297,16 @@ enum AIAssistant {
     }
 
     private static func englishRewriteResponse(_ input: String, style: EnglishStyle) async throws -> RewriteResponse {
-        try await generate(AIPrompts.englishRewrite(style), input: input, as: RewriteResponse.self, maximumTokens: 300)
+        try await generate(AIPrompts.englishRewrite(style), input: input, as: RewriteResponse.self, maximumTokens: 300,
+                           plain: (instructions: "Rewrite this English text to be \(style == .shorter ? "shorter" : style.rawValue). "
+                                     + "Keep the meaning. Reply with only the rewritten text.",
+                                   make: { RewriteResponse(text: $0) }))
     }
 
     private static func englishTranslationResponse(_ input: String) async throws -> EnglishTranslationResponse {
-        try await generate(AIPrompts.toEnglish, input: input, as: EnglishTranslationResponse.self, maximumTokens: 300)
+        try await generate(AIPrompts.toEnglish, input: input, as: EnglishTranslationResponse.self, maximumTokens: 300,
+                           plain: (instructions: "Translate this Japanese text into natural English. Reply with only the translation.",
+                                   make: { EnglishTranslationResponse(english: $0) }))
     }
 
     private static func conversionResponse(_ input: String) async throws -> ConversionResponse {

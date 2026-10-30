@@ -289,8 +289,8 @@ final class RomajiKeyboardView: KeyboardViewBase {
         hideEntry()
         // After about a second of holding, delete whole words.
         deleteRepeater.start { [weak self] repeatCount in
-            // Every repeat clicks and taps, like the first press.
-            if repeatCount > 0 {
+            // Every repeat clicks and taps, like the first press, while there's text to delete.
+            if repeatCount > 0, self?.engine.hasTextToDelete == true {
                 self?.feedback.keyDown()
             }
             if repeatCount < 12 {

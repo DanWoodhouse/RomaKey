@@ -7,6 +7,8 @@ public protocol TextOutput: AnyObject {
     func moveCursor(by offset: Int)
     /// Text before the cursor, if the host app shares it. Used for auto-capitals and deleting words.
     var textBeforeCursor: String? { get }
+    /// Replaces the marked text with `text` and confirms it (確定).
+    func commit(_ text: String)
 }
 
 public enum KeyLabel: Equatable {
@@ -27,7 +29,7 @@ extension TextOutput {
     }
 
     /// Replaces the marked text with `text` and confirms it.
-    func commit(_ text: String) {
+    public func commit(_ text: String) {
         setMarkedText(text)
         unmarkText()
     }

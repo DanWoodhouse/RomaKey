@@ -91,7 +91,7 @@ final class KeyboardSettingsTests: XCTestCase {
         settings.autocorrect = false
         settings.emojiSuggestions = false
         settings.skinTone = 3
-        settings.giphyAPIKey = "abc123"
+        settings.klipyAPIKey = "abc123"
         settings.gifRating = "g"
         settings.learningResetID = "reset-1"
         settings.keySecondaries = false

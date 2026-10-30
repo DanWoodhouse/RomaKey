@@ -50,6 +50,11 @@ public final class FlickKeyboardEngine {
     }
     public var isComposing: Bool { !composer.isEmpty }
 
+    /// Whether delete has anything left to remove, as far as the text field shares.
+    public var hasTextToDelete: Bool {
+        isComposing || !(output?.textBeforeCursor ?? "").isEmpty
+    }
+
     /// Live conversion is off while typing goes into an emoji or GIF search.
     public var convertsAutomatically = true
 
