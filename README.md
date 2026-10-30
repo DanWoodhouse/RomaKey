@@ -129,7 +129,8 @@ The app's **設定 · Settings** screen is laid out like the iPhone's Settings a
 
 | Setting | Options |
 |---|---|
-| Theme | System, 藍 Ai (indigo), 桜 Sakura, 抹茶 Matcha, 墨 Sumi (ink), all adapting to light and dark mode; or Custom |
+| Theme | System, 藍 Ai (indigo), 桜 Sakura and 抹茶 Matcha (all adapting to light and dark mode), 墨 Sumi (ink, always dark), or Custom |
+| Light and dark | **Different look in dark mode** gives apps in dark mode their own theme, colours, opacity and gradient (shape, font and photo are shared), so the keyboard always matches the frame iOS draws around it. iOS has no setting to force keyboards dark: each app picks |
 | Custom colours | Background, keys, function keys, pressed key, text, readings, accent. Start from any preset's light or dark colours |
 | Background photo | Any photo from your library, with darken, blur and key opacity (so it shows through the keys) |
 | Height | Compact, Standard, Tall |

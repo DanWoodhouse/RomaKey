@@ -167,4 +167,36 @@ final class KeyboardSettingsTests: XCTestCase {
         KeyboardSettings.saveLastUsedMode(.dictionary, to: defaults)
         XCTAssertEqual(KeyboardSettings(defaults: defaults).initialMode, .dictionary)
     }
+
+    func testDarkLookRoundTripsAndOnlyAppliesInDarkModeWhenOn() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "KeyboardSettingsTests-\(UUID())"))
+        var settings = KeyboardSettings()
+        settings.theme = .sakura
+        settings.keyCornerRadius = 9
+        settings.darkLook.theme = .custom
+        settings.darkLook.customColors.background = 0x101820
+        settings.darkLook.backgroundGradient = true
+        settings.darkLook.keyOpacity = 0.6
+        settings.save(to: defaults)
+
+        var loaded = KeyboardSettings(defaults: defaults)
+        XCTAssertEqual(loaded.darkLook, settings.darkLook)
+        XCTAssertFalse(loaded.separateDarkLook)
+        // Off: dark mode uses the same look.
+        XCTAssertEqual(loaded.forAppearance(dark: true), loaded)
+
+        loaded.separateDarkLook = true
+        let dark = loaded.forAppearance(dark: true)
+        XCTAssertEqual(dark.theme, .custom)
+        XCTAssertEqual(dark.customColors.background, 0x101820)
+        XCTAssertTrue(dark.backgroundGradient)
+        XCTAssertEqual(dark.keyOpacity, 0.6)
+        // Shape is shared, and light mode keeps the light look.
+        XCTAssertEqual(dark.keyCornerRadius, 9)
+        XCTAssertEqual(loaded.forAppearance(dark: false).theme, .sakura)
+    }
+
+    func testDarkLookDefaultsToInk() {
+        XCTAssertEqual(KeyboardSettings().darkLook.theme, .sumi)
+    }
 }

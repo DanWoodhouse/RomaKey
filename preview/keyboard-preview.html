@@ -492,6 +492,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       <div class="group">
         <h3>Theme</h3>
         <div class="themes" id="themes"></div>
+        <div class="row"><label for="set-separateDarkLook">Different theme in dark mode</label><input type="checkbox" id="set-separateDarkLook"></div>
+        <div class="row" id="dark-theme-row"><label for="dark-theme">Theme in dark apps</label><select id="dark-theme"></select></div>
+        <p class="help">iOS has no setting to make keyboards dark everywhere: each app picks light or dark and draws its frame to match. 藍, 桜 and 抹茶 change with it; 墨 and Custom don't, so give dark apps their own. Here, the page's light/dark mode stands in for the app's. (On iPhone, dark mode can also have its own custom colours, opacity and gradient.)</p>
       </div>
       <div class="group">
         <h3>Custom colours</h3>
@@ -693,6 +696,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="p3"><span>Clipboard from the toolbar: your last 5 copies, tap one to paste, ⊗ to forget it, Clear for all (needs Allow Full Access). This preview reads your browser's clipboard when it opens.</span></label>
         <label class="check"><input type="checkbox" data-check="p10"><span>Type in あ, tap 確定: the blue underline goes straight away. Hold delete with nothing left: the haptics stop. The keyboard's top corners are rounded and the bar and rows are a little taller.</span></label>
         <label class="check"><input type="checkbox" data-check="p11"><span>✨ with Apple: Grammar and です/ます on Japanese text either answer or say Apple's safety filter stopped it (with the reason underneath, and an <em>Ask Claude instead</em> button).</span></label>
+        <label class="check"><input type="checkbox" data-check="p12"><span>RomaKey → Look: turn on <em>Different look in dark mode</em>, pick a light theme for light apps and 墨 (or your own colours) for dark ones. Open a light app and a dark app: the keyboard matches the frame iOS draws around it.</span></label>
         <label class="check"><input type="checkbox" data-check="p4"><span>Your iOS text replacements (omw) and contact names in suggestions; English uses Apple's spell checker.</span></label>
         <label class="check"><input type="checkbox" data-check="p6"><span>Dictation: iOS doesn't let keyboards use the microphone, so use the system 🎤 below the keyboard. It works while RomaKey is showing.</span></label>
         <label class="check"><input type="checkbox" data-check="p5"><span>Haptics, key sounds, and the Apple Intelligence test in the app.</span></label>
@@ -719,7 +723,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
     keySounds: true, haptics: false, predictiveText: true, aiProvider: "apple",
     backgroundOpacity: 1, backgroundGradient: false, gradientColor: "#8ec5fc", gradientDirection: "down",
-    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, klipyAPIKey: "", gifRating: "pg", gifInsertsLink: true, keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, liveConversion: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
+    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, klipyAPIKey: "", gifRating: "pg", gifInsertsLink: true, separateDarkLook: false, darkTheme: "sumi", keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, liveConversion: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
@@ -1575,8 +1579,16 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   KEY_ICONS["⌶"] = '<svg class="kicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 7 6l4 11M4.5 13.5h5"/><path d="M17 4.5v15M14.5 4h5M14.5 20h5"/></svg>';
   const KEY_NAMES = { "⇧": "Shift", "⬆︎": "Shift on", "⇪": "Caps lock", "⌫": "Delete", "⌕": "Look up words. Tap to type English instead", "⌶": "Typing English. Tap to look up words instead" };
 
+  // The app's light or dark mode picks the theme, when dark mode has its own (forAppearance in
+  // KeyboardSettings.swift). The page's mode stands in for the app's.
+  function appIsDark() {
+    const forced = document.documentElement.dataset.theme;
+    return forced === "dark" || (forced !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+  }
+  const currentTheme = () => settings.separateDarkLook && appIsDark() ? settings.darkTheme : settings.theme;
+
   function render() {
-    kbEl.dataset.kbTheme = settings.theme;
+    kbEl.dataset.kbTheme = currentTheme();
     kbEl.style.height = 46 + 4 * rowH() + "px";
     if (active.signature() + "/" + settings.keySpacing !== builtSig || keysEl.clientWidth !== builtWidth || rowH() !== builtRowH) build();
     const flash = flashNext; flashNext = false;
@@ -2839,7 +2851,7 @@ Text: よろしくおねがいします
     Object.assign(settings, DEFAULTS, { customColors: { ...PALETTES["藍 Ai light"] } });
     changed();
   });
-  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "keySecondaries", "swipeUpSecondaries", "animations", "leftHandedWheel", "dictionaryTypesDirectly", "liveConversion", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics", "boldKeys", "backgroundGradient", "keyShadows", "keyOutlines", "accentReturnKey"];
+  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "keySecondaries", "swipeUpSecondaries", "animations", "leftHandedWheel", "dictionaryTypesDirectly", "liveConversion", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics", "boldKeys", "backgroundGradient", "keyShadows", "keyOutlines", "accentReturnKey", "separateDarkLook"];
   for (const key of TOGGLES) {
     $("set-" + key).addEventListener("change", (e) => { settings[key] = e.target.checked; changed(); });
   }
@@ -2874,6 +2886,7 @@ Text: よろしくおねがいします
   }
   function syncControls() {
     for (const b of $("themes").children) b.setAttribute("aria-pressed", String(b.dataset.id === settings.theme));
+    darkSelect.value = settings.darkTheme; $("dark-theme-row").hidden = !settings.separateDarkLook;
     for (const [id, key] of SEGMENTS) for (const b of $(id).children) b.setAttribute("aria-pressed", String(b.dataset.value === String(settings[key])));
     if ($("klipy-key").value !== settings.klipyAPIKey) $("klipy-key").value = settings.klipyAPIKey;
     for (const key of TOGGLES) $("set-" + key).checked = !!settings[key];
@@ -2923,6 +2936,12 @@ Text: よろしくおねがいします
     label.appendChild(input);
     colorsEl.appendChild(label);
   }
+  const darkSelect = $("dark-theme");
+  for (const [id, name] of THEMES) darkSelect.appendChild(new Option(name, id));
+  darkSelect.addEventListener("change", () => { settings.darkTheme = darkSelect.value; changed(); });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { applyLook(); render(); });
+  new MutationObserver(() => { applyLook(); render(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
   const presetSelect = $("preset-from");
   presetSelect.appendChild(new Option("Choose…", ""));
   for (const name of Object.keys(PALETTES)) presetSelect.appendChild(new Option(name, name));
@@ -2983,7 +3002,7 @@ Text: よろしくおねがいします
 
   function applyLook() {
     for (const [field, , cssVar] of FIELDS) {
-      if (settings.theme === "custom") kbEl.style.setProperty(cssVar, settings.customColors[field]);
+      if (currentTheme() === "custom") kbEl.style.setProperty(cssVar, settings.customColors[field]);
       else kbEl.style.removeProperty(cssVar);
     }
     kbEl.style.setProperty("--key-op", Math.round(settings.keyOpacity * 100) + "%");

@@ -3,29 +3,71 @@ import PhotosUI
 import SwiftUI
 
 /// Theme, custom colours, background (opacity, gradient, photo), key shape and font, with a live
-/// preview of the keyboard.
+/// preview of the keyboard. Dark mode can have its own colours: the Light/Dark switch picks
+/// which look the colour sections edit.
 struct AppearanceView: View {
     @ObservedObject var store: SettingsStore
     @State private var photo: PhotosPickerItem?
     @State private var photoError: String?
+    @State private var editingDark = false
+    @Environment(\.colorScheme) private var colorScheme
 
     private var settings: KeyboardSettings { store.settings }
+
+    /// Whether the colour sections below edit the dark mode look.
+    private var showsDark: Bool { settings.separateDarkLook && editingDark }
+
+    /// The preview and swatches show the look being edited, or follow the phone when there's one look.
+    private var previewScheme: ColorScheme {
+        settings.separateDarkLook ? (editingDark ? .dark : .light) : colorScheme
+    }
+
+    /// The look the colour sections edit.
+    private var look: Binding<KeyboardSettings.ColorLook> {
+        Binding(
+            get: { showsDark ? store.settings.darkLook : store.settings.lightLook },
+            set: { newLook in
+                if showsDark {
+                    store.settings.darkLook = newLook
+                } else {
+                    store.settings.lightLook = newLook
+                }
+            }
+        )
+    }
 
     var body: some View {
         Form {
             Section {
-                KeyboardPreview(settings: settings, image: store.backgroundImage)
+                KeyboardPreview(settings: settings.forAppearance(dark: showsDark), image: store.backgroundImage)
+                    .environment(\.colorScheme, previewScheme)
                     .listRowInsets(EdgeInsets())
             }
 
-            Section("テーマ · Theme") {
+            Section {
+                Toggle("Different look in dark mode", isOn: $store.settings.separateDarkLook)
+                if settings.separateDarkLook {
+                    Picker("Editing", selection: $editingDark) {
+                        Label("Light apps", systemImage: "sun.max").tag(false)
+                        Label("Dark apps", systemImage: "moon").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                }
+            } header: {
+                Text("ライト・ダーク · Light and dark")
+            } footer: {
+                Text("iOS has no setting to make keyboards dark everywhere: each app chooses light or dark, and draws its frame around the keyboard to match. Turn this on to give apps in dark mode their own colours, so the keyboard always fits its frame. Shape, font and the photo stay the same. 藍, 桜 and 抹茶 already change with light and dark mode; 墨 and Custom don't.")
+            }
+
+            Section(showsDark ? "テーマ · Theme in dark apps" : "テーマ · Theme") {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
                     ForEach(KeyboardSettings.Theme.allCases, id: \.self) { theme in
-                        ThemeSwatch(theme: theme, custom: settings.customColors, isSelected: settings.theme == theme) {
-                            store.settings.theme = theme
+                        ThemeSwatch(theme: theme, custom: look.wrappedValue.customColors, isSelected: look.wrappedValue.theme == theme) {
+                            look.wrappedValue.theme = theme
                         }
                     }
                 }
+                .environment(\.colorScheme, previewScheme)
                 .padding(.vertical, 4)
             }
 
@@ -45,15 +87,15 @@ struct AppearanceView: View {
             } header: {
                 Text("カスタム · Custom colours")
             } footer: {
-                Text("Changing a colour switches to the Custom theme. Custom colours stay the same in light and dark mode.")
+                Text("Changing a colour switches to the Custom theme. Custom colours stay the same in light and dark mode, unless dark mode has its own look (above).")
             }
 
             Section {
-                LabeledSlider(title: "Opacity", value: $store.settings.backgroundOpacity, range: 0.2...1)
-                Toggle("Gradient", isOn: $store.settings.backgroundGradient)
-                if settings.backgroundGradient {
+                LabeledSlider(title: "Opacity", value: look.backgroundOpacity, range: 0.2...1)
+                Toggle("Gradient", isOn: look.backgroundGradient)
+                if look.wrappedValue.backgroundGradient {
                     ColorPicker("Fades into", selection: gradientBinding, supportsOpacity: false)
-                    Picker("Direction", selection: $store.settings.gradientDirection) {
+                    Picker("Direction", selection: look.gradientDirection) {
                         Image(systemName: "arrow.down").tag(KeyboardSettings.GradientDirection.down)
                         Image(systemName: "arrow.down.right").tag(KeyboardSettings.GradientDirection.diagonal)
                         Image(systemName: "arrow.right").tag(KeyboardSettings.GradientDirection.across)
@@ -100,7 +142,7 @@ struct AppearanceView: View {
                     LabeledSlider(title: "Darken", value: $store.settings.backgroundDim, range: 0...0.8)
                     Toggle("Blur", isOn: $store.settings.backgroundBlur)
                 }
-                LabeledSlider(title: "Key opacity", value: $store.settings.keyOpacity, range: 0.3...1)
+                LabeledSlider(title: showsDark ? "Key opacity in dark apps" : "Key opacity", value: look.keyOpacity, range: 0.3...1)
                 if let photoError {
                     Text(photoError).foregroundStyle(.red)
                 }
@@ -157,24 +199,28 @@ struct AppearanceView: View {
 
     private var gradientBinding: Binding<Color> {
         Binding(
-            get: { Color(uiColor: UIColor(hex: store.settings.gradientColor)) },
-            set: { store.settings.gradientColor = UIColor($0).hexValue }
+            get: { Color(uiColor: UIColor(hex: look.wrappedValue.gradientColor)) },
+            set: { look.wrappedValue.gradientColor = UIColor($0).hexValue }
         )
     }
 
     private func colorBinding(_ keyPath: WritableKeyPath<ThemeColors, UInt32>) -> Binding<Color> {
         Binding(
-            get: { Color(uiColor: UIColor(hex: store.settings.customColors[keyPath: keyPath])) },
+            get: { Color(uiColor: UIColor(hex: look.wrappedValue.customColors[keyPath: keyPath])) },
             set: { color in
-                store.settings.customColors[keyPath: keyPath] = UIColor(color).hexValue
-                store.settings.theme = .custom
+                var changed = look.wrappedValue
+                changed.customColors[keyPath: keyPath] = UIColor(color).hexValue
+                changed.theme = .custom
+                look.wrappedValue = changed
             }
         )
     }
 
     private func copyPreset(_ theme: KeyboardSettings.Theme, dark: Bool) {
-        store.settings.customColors = ThemePalette.colors(for: theme, dark: dark)
-        store.settings.theme = .custom
+        var changed = look.wrappedValue
+        changed.customColors = ThemePalette.colors(for: theme, dark: dark)
+        changed.theme = .custom
+        look.wrappedValue = changed
     }
 
     private static func label(for field: String) -> String {

@@ -172,7 +172,13 @@ struct SettingsView: View {
 
 private extension SettingsView {
     var lookSummary: String {
-        var parts = [store.settings.theme == .custom ? "Custom" : store.settings.theme.rawValue.capitalized]
+        func name(_ theme: KeyboardSettings.Theme) -> String {
+            theme == .custom ? "Custom" : theme.rawValue.capitalized
+        }
+        var parts = [name(store.settings.theme)]
+        if store.settings.separateDarkLook {
+            parts[0] += " / \(name(store.settings.darkLook.theme)) in dark mode"
+        }
         if store.settings.backgroundImageID != nil {
             parts.append("photo")
         }

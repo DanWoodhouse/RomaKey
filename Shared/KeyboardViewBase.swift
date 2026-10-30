@@ -228,7 +228,8 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
 
     func apply(_ settings: KeyboardSettings) {
         self.settings = settings
-        theme = KeyboardTheme(settings)
+        // The app's light or dark mode picks the look, when dark mode has its own.
+        theme = KeyboardTheme(settings.forAppearance(dark: traitCollection.userInterfaceStyle == .dark))
         backgroundColor = .clear
         updateBackground()
 
@@ -274,7 +275,11 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
-        updateBackground()
+        if settings.separateDarkLook, traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+            apply(settings)
+        } else {
+            updateBackground()
+        }
     }
 
     var rowHeight: CGFloat {

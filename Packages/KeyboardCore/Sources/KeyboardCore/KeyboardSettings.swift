@@ -70,6 +70,32 @@ public struct KeyboardSettings: Equatable {
         case across
     }
 
+    /// The colour side of the look, which can differ between apps in light and dark mode.
+    /// Shape, font and the photo are shared.
+    public struct ColorLook: Equatable {
+        public var theme: Theme
+        public var customColors: ThemeColors
+        public var keyOpacity: Double
+        public var backgroundOpacity: Double
+        public var backgroundGradient: Bool
+        public var gradientColor: UInt32
+        public var gradientDirection: GradientDirection
+
+        public init(theme: Theme, customColors: ThemeColors, keyOpacity: Double = 1, backgroundOpacity: Double = 1,
+                    backgroundGradient: Bool = false, gradientColor: UInt32 = 0x2B3A67, gradientDirection: GradientDirection = .down) {
+            self.theme = theme
+            self.customColors = customColors
+            self.keyOpacity = keyOpacity
+            self.backgroundOpacity = backgroundOpacity
+            self.backgroundGradient = backgroundGradient
+            self.gradientColor = gradientColor
+            self.gradientDirection = gradientDirection
+        }
+
+        /// 墨 Ink, until something else is picked.
+        public static let darkDefault = ColorLook(theme: .sumi, customColors: ThemePalette.colors(for: .sumi, dark: true))
+    }
+
     /// The gap between keys.
     public enum KeySpacing: String, CaseIterable {
         case tight
@@ -161,7 +187,8 @@ public struct KeyboardSettings: Equatable {
     public var learningResetID: String?
 
     // Custom look
-    /// Used when `theme` is `.custom`. The same colours in light and dark mode.
+    /// Used when `theme` is `.custom`. The same colours in light and dark mode, unless
+    /// `separateDarkLook` gives dark mode its own.
     public var customColors = ThemePalette.colors(for: .ai, dark: false)
     /// 0.3–1. Below 1, a background image shows through the keys.
     public var keyOpacity = 1.0
@@ -176,6 +203,10 @@ public struct KeyboardSettings: Equatable {
     public var backgroundGradient = false
     public var gradientColor: UInt32 = 0x8EC5FC
     public var gradientDirection: GradientDirection = .down
+    /// Apps in dark mode get `darkLook`'s colours instead. iOS has no setting to make keyboards
+    /// dark everywhere: each app picks, and draws its frame around the keyboard to match.
+    public var separateDarkLook = false
+    public var darkLook = ColorLook.darkDefault
     /// 0–16 points. The system keyboard uses 5.
     public var keyCornerRadius = 5.0
     public var keyShadows = true
@@ -188,6 +219,31 @@ public struct KeyboardSettings: Equatable {
     public var lastUsedMode: InputMode = .japanese
 
     public init() {}
+
+    /// The colours above, used in light mode (and in dark mode too, unless `separateDarkLook`).
+    public var lightLook: ColorLook {
+        get {
+            ColorLook(theme: theme, customColors: customColors, keyOpacity: keyOpacity, backgroundOpacity: backgroundOpacity,
+                      backgroundGradient: backgroundGradient, gradientColor: gradientColor, gradientDirection: gradientDirection)
+        }
+        set {
+            theme = newValue.theme
+            customColors = newValue.customColors
+            keyOpacity = newValue.keyOpacity
+            backgroundOpacity = newValue.backgroundOpacity
+            backgroundGradient = newValue.backgroundGradient
+            gradientColor = newValue.gradientColor
+            gradientDirection = newValue.gradientDirection
+        }
+    }
+
+    /// These settings with the colours for an app in dark mode (or light mode).
+    public func forAppearance(dark: Bool) -> KeyboardSettings {
+        guard dark, separateDarkLook else { return self }
+        var settings = self
+        settings.lightLook = darkLook
+        return settings
+    }
 
     /// Whether a key ("q" … "m", or "ー") has its secondary character turned on.
     public func secondaryIsOn(for key: String) -> Bool {
@@ -254,6 +310,9 @@ public struct KeyboardSettings: Equatable {
         static let backgroundGradient = "backgroundGradient"
         static let gradientColor = "gradientColor"
         static let gradientDirection = "gradientDirection"
+        static let separateDarkLook = "separateDarkLook"
+        /// Before a colour setting's key, for the dark mode look ("dark.theme").
+        static let dark = "dark."
         static let keyCornerRadius = "keyCornerRadius"
         static let keyShadows = "keyShadows"
         static let keyOutlines = "keyOutlines"
@@ -330,6 +389,18 @@ public struct KeyboardSettings: Equatable {
             gradientColor = UInt32(truncatingIfNeeded: color) & 0xFFFFFF
         }
         gradientDirection = value(Key.gradientDirection, gradientDirection)
+        separateDarkLook = bool(Key.separateDarkLook, separateDarkLook)
+        darkLook.theme = value(Key.dark + Key.theme, darkLook.theme)
+        if let saved = defaults.dictionary(forKey: Key.dark + Key.customColors) as? [String: Int] {
+            darkLook.customColors = ThemeColors(dictionary: saved, fallback: darkLook.customColors)
+        }
+        darkLook.keyOpacity = number(Key.dark + Key.keyOpacity, darkLook.keyOpacity, in: 0.3...1)
+        darkLook.backgroundOpacity = number(Key.dark + Key.backgroundOpacity, darkLook.backgroundOpacity, in: 0.2...1)
+        darkLook.backgroundGradient = bool(Key.dark + Key.backgroundGradient, darkLook.backgroundGradient)
+        if let color = defaults.object(forKey: Key.dark + Key.gradientColor) as? Int {
+            darkLook.gradientColor = UInt32(truncatingIfNeeded: color) & 0xFFFFFF
+        }
+        darkLook.gradientDirection = value(Key.dark + Key.gradientDirection, darkLook.gradientDirection)
         keyCornerRadius = number(Key.keyCornerRadius, keyCornerRadius, in: 0...16)
         keyShadows = bool(Key.keyShadows, keyShadows)
         keyOutlines = bool(Key.keyOutlines, keyOutlines)
@@ -385,6 +456,14 @@ public struct KeyboardSettings: Equatable {
         defaults.set(backgroundGradient, forKey: Key.backgroundGradient)
         defaults.set(Int(gradientColor), forKey: Key.gradientColor)
         defaults.set(gradientDirection.rawValue, forKey: Key.gradientDirection)
+        defaults.set(separateDarkLook, forKey: Key.separateDarkLook)
+        defaults.set(darkLook.theme.rawValue, forKey: Key.dark + Key.theme)
+        defaults.set(darkLook.customColors.dictionary, forKey: Key.dark + Key.customColors)
+        defaults.set(darkLook.keyOpacity, forKey: Key.dark + Key.keyOpacity)
+        defaults.set(darkLook.backgroundOpacity, forKey: Key.dark + Key.backgroundOpacity)
+        defaults.set(darkLook.backgroundGradient, forKey: Key.dark + Key.backgroundGradient)
+        defaults.set(Int(darkLook.gradientColor), forKey: Key.dark + Key.gradientColor)
+        defaults.set(darkLook.gradientDirection.rawValue, forKey: Key.dark + Key.gradientDirection)
         defaults.set(keyCornerRadius, forKey: Key.keyCornerRadius)
         defaults.set(keyShadows, forKey: Key.keyShadows)
         defaults.set(keyOutlines, forKey: Key.keyOutlines)
