@@ -59,9 +59,23 @@ public final class KeyboardEngine {
 
     public var isComposing: Bool { !composer.isEmpty || !englishQuery.isEmpty }
 
+    /// 辞 has two styles, switched with the key next to return: look words up (the English is a
+    /// search, confirmed with 確定), or type English straight into the text, seeing the Japanese.
+    public var typesDirectly: Bool { mode == .dictionary && settings.dictionaryTypesDirectly }
+
+    /// English typed as text: EN, or 辞 typing directly. Gets auto-capitals and double-space.
+    private var typesEnglish: Bool { mode == .english || typesDirectly }
+
+    /// The 辞 style changed from the keyboard; the controller saves it.
+    public var onSettingsChange: ((KeyboardSettings) -> Void)?
+
     public var candidates: [Candidate] {
         switch mode {
         case .dictionary:
+            if typesDirectly {
+                guard let word = dictionaryWord else { return [] }
+                return dictionary?.search(english: word.word).map { Candidate($0.word, entry: $0) } ?? []
+            }
             return dictionary?.search(english: englishQuery).map { Candidate($0.word, entry: $0) } ?? []
         case .japanese:
             if composer.isEmpty {
@@ -146,7 +160,10 @@ public final class KeyboardEngine {
             case .english:
                 output?.insertText("-")
             case .dictionary:
-                appendToQuery("-")
+                // In 辞, a toggle between looking words up and typing English.
+                commitComposition()
+                settings.dictionaryTypesDirectly.toggle()
+                onSettingsChange?(settings)
             }
         case .returnKey:
             if isComposing {
@@ -173,6 +190,25 @@ public final class KeyboardEngine {
 
     public func selectCandidate(_ candidate: Candidate) {
         lastAutocorrection = nil
+        if typesDirectly && !isComposing, let word = dictionaryWord {
+            // Swap the English word for the Japanese one.
+            for _ in 0..<(word.word.count + word.after.count) {
+                output?.deleteBackward()
+            }
+            output?.insertText(candidate.text + word.after)
+            updateAutoCapitalization()
+            onChange?()
+            return
+        }
+        if let part = candidate.part, isComposing {
+            // The first word of a phrase: the rest stays, to convert next.
+            history?.record(reading: part, word: candidate.text)
+            output?.commit(candidate.text)
+            composer.removeFirst(part)
+            output?.show(composer)
+            onChange?()
+            return
+        }
         if mode == .english && !isComposing {
             let word = WordSuggester.currentWord(in: output?.textBeforeCursor ?? "")
             switch candidate.kind {
@@ -289,6 +325,9 @@ public final class KeyboardEngine {
         case .space:
             return .text(mode == .japanese ? "空白" : "space")
         case .longVowel:
+            if mode == .dictionary {
+                return .systemImage(settings.dictionaryTypesDirectly ? "character.cursor.ibeam" : "magnifyingglass")
+            }
             return .text(mode == .japanese ? "ー" : "-")
         case .returnKey:
             if isComposing { return .text("確定") }
@@ -323,6 +362,8 @@ public final class KeyboardEngine {
             if ".,!?;:".contains(text) {
                 finishEnglishWord()
             }
+            output?.insertText(text)
+        case .dictionary where settings.dictionaryTypesDirectly:
             output?.insertText(text)
         case .japanese:
             if composer.isEmpty {
@@ -361,7 +402,7 @@ public final class KeyboardEngine {
         if mode == .english {
             finishEnglishWord()
         }
-        if mode == .english && settings.doubleSpacePeriod && afterSpace,
+        if typesEnglish && settings.doubleSpacePeriod && afterSpace,
            let before = output?.textBeforeCursor, before.hasSuffix(" "),
            let previous = before.dropLast().last, previous.isLetter || previous.isNumber {
             output?.deleteBackward()
@@ -412,6 +453,18 @@ public final class KeyboardEngine {
         output?.insertText(replacement)
     }
 
+    /// In 辞 while typing English: the word being typed, or the one just finished and its space.
+    private var dictionaryWord: (word: String, after: String)? {
+        let before = output?.textBeforeCursor ?? ""
+        let word = WordSuggester.currentWord(in: before)
+        if !word.isEmpty {
+            return (word, "")
+        }
+        guard before.hasSuffix(" ") else { return nil }
+        let previous = WordSuggester.currentWord(in: String(before.dropLast()))
+        return previous.isEmpty ? nil : (previous, " ")
+    }
+
     private func appendToQuery(_ text: String) {
         englishQuery += text
         output?.setMarkedText(englishQuery)
@@ -457,7 +510,7 @@ public final class KeyboardEngine {
     /// Turns shift on at the start of a sentence in English, and back off once it's no longer needed.
     private func updateAutoCapitalization() {
         guard shift != .locked else { return }
-        let wanted = settings.autoCapitalization && mode == .english && page == .letters
+        let wanted = settings.autoCapitalization && typesEnglish && page == .letters
             && !isComposing && Self.isSentenceStart(output?.textBeforeCursor)
         if wanted {
             if shift == .off {

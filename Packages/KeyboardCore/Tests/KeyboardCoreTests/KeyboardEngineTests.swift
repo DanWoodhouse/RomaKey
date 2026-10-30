@@ -207,6 +207,37 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertEqual(output.committed, "thank you")
     }
 
+    func testDictionaryKeyNextToReturnSwitchesToTypingEnglish() {
+        let engine = makeEngine(mode: .dictionary)
+        engine.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        var saved: KeyboardSettings?
+        engine.onSettingsChange = { saved = $0 }
+        XCTAssertEqual(engine.label(for: .longVowel), .systemImage("magnifyingglass"))
+        engine.press(.longVowel)
+        XCTAssertEqual(saved?.dictionaryTypesDirectly, true)
+        XCTAssertEqual(engine.label(for: .longVowel), .systemImage("character.cursor.ibeam"))
+
+        // English goes straight in (with auto-capitals), no 確定, and the bar shows the Japanese.
+        type("my dog", into: engine)
+        XCTAssertEqual(output.committed, "My dog")
+        XCTAssertEqual(output.marked, "")
+        XCTAssertEqual(engine.label(for: .returnKey), .text("return"))
+        XCTAssertEqual(engine.candidates.map(\.text), ["犬", "戌"])
+        engine.selectCandidate(engine.candidates[0])
+        XCTAssertEqual(output.committed, "My 犬")
+
+        // A finished word still shows its Japanese, and keeps its space when swapped.
+        type(" cat ", into: engine)
+        XCTAssertEqual(engine.candidates.first?.text, "猫")
+        engine.selectCandidate(engine.candidates[0])
+        XCTAssertEqual(output.committed, "My 犬 猫 ")
+
+        engine.press(.longVowel)
+        XCTAssertEqual(saved?.dictionaryTypesDirectly, false)
+        type("dog", into: engine)
+        XCTAssertEqual(output.marked, "dog")
+    }
+
     func testJapaneseModeOffersKanji() {
         let engine = makeEngine(mode: .japanese)
         engine.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)

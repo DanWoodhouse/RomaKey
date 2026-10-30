@@ -85,7 +85,7 @@ The slots never move and never change with the current mode (it's only outlined)
 
 In both keyboards, Japanese text is underlined while you type (marked text). **Space** or **確定** confirms it as hiragana; tap a suggestion for kanji or katakana instead.
 
-In 辞書 mode the English you type is underlined instead. Space adds a space (for lookups like "thank you"), and **確定** keeps the English as typed.
+In 辞書 mode the key next to return switches between two styles. **Look up** (🔍, the default): the English you type is underlined, space adds a space (for lookups like "thank you"), and **確定** keeps the English as typed. **Type English** (A|): your English goes straight into the text with auto-capitals, as in EN, and the bar shows the Japanese for the word you're typing (or just typed); tap one to swap it in. Good for practice. Swipe up or hold that key for punctuation.
 
 ## Everyday features
 
@@ -106,6 +106,7 @@ While typing:
 - **✨ AI (Apple Intelligence):** finish a sentence and tap ✨ in the toolbar. Japanese actions come first, English ones underneath. For Japanese text: check grammar, explain (reading, meaning and notes), rewrite as casual, です/ます or 敬語, convert hiragana to kanji, or translate into English. For English text: translate into casual, polite or 敬語 Japanese, check grammar, or rewrite it formal, casual or shorter. "Use this" swaps the result in. By default it runs on Apple's on-device model, so nothing leaves the phone and there's nothing to set up beyond building with Xcode 26: it needs iOS 26 on an iPhone 15 Pro or newer with Apple Intelligence on. Whether the model runs inside a keyboard isn't documented, so run the app's **Apple Intelligence test** first. You can switch to **Claude** in Settings → AI or in the ✨ panel: it uses your own API key and Claude Opus 5.5 with the same prompts, sends the text to Anthropic, and needs Full Access. ✨ sits in the toolbar and, between words, in front of the predictions next to 😊. Prompts and their test set: [docs/ai-prompts.md](docs/ai-prompts.md).
 - **Dictation:** iOS doesn't let third-party keyboards use the microphone, so there's no dictation key. The system 🎤 below the keyboard (on iPhones with Face ID) still works while RomaKey is showing, in Japanese or English.
 - **Quick settings:** clear the text and tap ⚙︎ in the toolbar. Laid out like iOS 26's Control Centre, in Liquid Glass (a blur material before iOS 26): round toggles for autocorrect, capitals, predictive text and the rest, grouped into Typing, Keys, Show and Feel; sliders for text size and height; and a tile to switch ✨ AI between Apple Intelligence and Claude. **RomaKey ↗** in its bottom bar jumps to the app's full settings (iOS gives keyboards no official way to open an app, so this uses a workaround that's fine on your own phone but App Review might not accept). Without Full Access the changes are saved on the keyboard only.
+- **Kanji conversion of whole phrases and conjugated words:** きょうはいいてんきですね → 今日はいい天気ですね, たべました → 食べました, いった → 行った, きた → 来た, たかかった → 高かった, べんきょうしています → 勉強しています. Conjugation covers ichidan and every godan ending, 来る, する verbs and い-adjectives (polite, past, negative, て-forms, ている, たい, potential, passive, causative…). If the phrase isn't split the way you want, the first word's alternatives are further along the bar with a "…" (箸… for はしをたべます): tap one and the rest stays to convert next. Choices are learned, so 箸を食べます comes first next time.
 - **Learned kanji:** the word you picked last time for a reading comes first (きかい → 機会, if that's what you use).
 - **Key extras:** every letter has a second character in its corner, as on Gboard (q–p → 1–0, a → @, s → #, … m → ?). **Swipe up** on the key for it straight away, or hold. ー/- holds 、。！？〜 (, . ! ? ~ in EN), and a swipe up gives the first. Each key can be turned off in Settings → Key extras.
 - **Accents:** hold a letter (EN and 辞 modes) for é, ü, ñ…
@@ -168,6 +169,7 @@ Packages/KeyboardCore/           UI-free logic, unit-tested with `swift test`
   FlickLayout.swift              12-key grid and what each flick produces
   FlickKeyboardEngine.swift      Flick, tap cycle, ゛゜小, pages
   JapaneseDictionary.swift       English → Japanese search, reading → kanji lookup
+  KanaKanjiConverter.swift       Whole-phrase conversion and conjugation (食べました, 今日は…)
   KeyboardSettings.swift         Every customisable option, saved in the App Group
   ThemeColors.swift              Preset palettes and custom colours
   RomajiComposer.swift           romaji → ひらがな, ひらがな ↔ カタカナ
@@ -220,7 +222,6 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 
 - Swipe (glide) typing
 - Clipboard history
-- Full kanji conversion: whole phrases and verb forms (食べた, 食べます), not just dictionary words
 - Reset the composition when the user moves the cursor mid-composition
 - A bigger dictionary (all of JMdict) in SQLite, if the common words aren't enough
 - Grammar checking: see [docs/grammar-checker.md](docs/grammar-checker.md) for the options and a recommended order
@@ -230,4 +231,4 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 
 The dictionary is built from [JMdict](https://www.edrdg.org/jmdict/j_jmdict.html), the property of the [Electronic Dictionary Research and Development Group](https://www.edrdg.org/), and is used in conformance with the Group's [licence](https://www.edrdg.org/edrdg/licence.html) (Creative Commons Attribution-ShareAlike 3.0). `Packages/KeyboardCore/Sources/KeyboardCore/Resources/dictionary.tsv` is a derived file and is under the same licence; a copy of the licence is next to it. The data came from the `jamdict-data` package (JMdict 1.08, 2020 snapshot).
 
-Emoji names and keywords come from [Emojibase](https://emojibase.dev) (MIT licence, copy next to `emoji.tsv`). English word pairs for predictive text come from [SymSpell](https://github.com/wolfgarbe/SymSpell)'s bigram list (MIT), built from [Google Books Ngrams](https://books.google.com/ngrams) (CC BY 3.0); rebuild with `tools/build_bigrams.py`. GIF search is powered by GIPHY.
+Emoji names and keywords come from [Emojibase](https://emojibase.dev) (MIT licence, copy next to `emoji.tsv`). Dictionary entries are ranked by how often they're used, from [wordfreq](https://github.com/rspeer/wordfreq)'s Japanese data (CC BY-SA 4.0); rebuild with `tools/build_dictionary.py jamdict.db dictionary.tsv large_ja.msgpack.gz`. English word pairs for predictive text come from [SymSpell](https://github.com/wolfgarbe/SymSpell)'s bigram list (MIT), built from [Google Books Ngrams](https://books.google.com/ngrams) (CC BY 3.0); rebuild with `tools/build_bigrams.py`. GIF search is powered by GIPHY.

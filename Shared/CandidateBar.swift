@@ -279,6 +279,10 @@ private final class CandidateCell: UIControl {
             font = theme.font(18)
         }
         let word = NSMutableAttributedString(string: text, attributes: [.font: font, .foregroundColor: theme.text])
+        if candidate.part != nil {
+            // Only the start of the phrase: the rest stays to convert next.
+            word.append(NSAttributedString(string: "…", attributes: [.font: theme.font(14), .foregroundColor: theme.secondaryText]))
+        }
         if showsMeaning, let reading = candidate.entry?.reading {
             var parts: [String] = []
             if reading != candidate.text {

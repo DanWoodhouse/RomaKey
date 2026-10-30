@@ -46,6 +46,13 @@ public struct RomajiComposer: Equatable {
         pending = ""
     }
 
+    /// Removes the start of the composition once it's converted (`reading`, in hiragana),
+    /// leaving the rest to convert next.
+    public mutating func removeFirst(_ reading: String) {
+        flushPending()
+        kana = String(kana.dropFirst(reading.count))
+    }
+
     private mutating func flushPending() {
         kana += (pending == "n" || pending == "nn") ? "ん" : pending
         pending = ""

@@ -116,6 +116,7 @@ class KeyboardHostController: UIInputViewController {
         romajiEngine.output = textOutput
         romajiEngine.history = history
         romajiEngine.suggester = WordSuggester(checker: SystemSpellChecker(), learned: LearnedWords(store: learningStore))
+        romajiEngine.onSettingsChange = { [weak self] newSettings in self?.update(newSettings) }
         romajiEngine.onModeChange = { [weak self] mode in
             guard let defaults = self?.settingsStore else { return }
             KeyboardSettings.saveLastUsedMode(mode, to: defaults)

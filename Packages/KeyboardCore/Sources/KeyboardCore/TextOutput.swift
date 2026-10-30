@@ -52,18 +52,23 @@ public struct Candidate: Hashable {
     public let text: String
     public let entry: DictionaryEntry?
     public let kind: Kind
+    /// For a conversion of only the start of the composition (箸 for はし in はしをたべる): the
+    /// reading it covers. The rest stays in the composition, to convert next.
+    public let part: String?
 
-    public init(_ text: String, entry: DictionaryEntry? = nil, kind: Kind = .conversion) {
+    public init(_ text: String, entry: DictionaryEntry? = nil, kind: Kind = .conversion, part: String? = nil) {
         self.text = text
         self.entry = entry
         self.kind = kind
+        self.part = part
     }
 }
 
 extension RomajiComposer {
     /// Conversion choices for the current composition: words the user picked for this reading
-    /// before, the hiragana as typed, dictionary words with that reading (kanji), the katakana,
-    /// matching emoji, then longer words it could be the start of.
+    /// before, the hiragana as typed, whole-phrase conversions (今日はいい天気, 食べました),
+    /// dictionary words with that reading, the katakana, matching emoji, the first word of a
+    /// phrase on its own, then longer words it could be the start of.
     public func candidates(
         using dictionary: JapaneseDictionary?,
         history: ConversionHistory? = nil,
@@ -87,12 +92,28 @@ extension RomajiComposer {
             add(word, entry(word))
         }
         add(hiragana, entry(hiragana))
+        // Phrases and conjugated words come first when the reading isn't a single dictionary
+        // word, and after the dictionary's own words when it is.
+        let converter = dictionary.map { KanaKanjiConverter(dictionary: $0, history: history) }
+        let phrases = converter?.convert(hiragana) ?? []
+        func addPhrases() {
+            for phrase in phrases {
+                add(phrase.text, phrase.segments.count == 1 ? phrase.segments[0].entry : nil)
+            }
+        }
+        if exact.isEmpty {
+            addPhrases()
+        }
         for item in exact {
             add(item.word, item)
         }
+        addPhrases()
         add(katakana, entry(katakana))
         for item in emoji?.suggestions(for: hiragana, limit: 2) ?? [] {
             add(item.character, nil, kind: .emoji)
+        }
+        for word in converter?.firstWords(of: hiragana, best: phrases.first) ?? [] where seen.insert(word.text).inserted {
+            result.append(Candidate(word.text, entry: word.entry, part: word.reading))
         }
         for item in dictionary?.predictions(readingPrefix: hiragana) ?? [] {
             add(item.word, item)

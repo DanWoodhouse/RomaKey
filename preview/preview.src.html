@@ -167,6 +167,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 @keyframes kbslidel { from { transform: translateX(-14px); opacity: 0; } }
 .key.hinted .cap { padding-top: 6px; box-sizing: border-box; }
 .khint { position: absolute; font: 500 9px var(--font-key); line-height: 12px; color: var(--kb-muted); text-align: right; pointer-events: none; }
+.cand .part { color: var(--kb-muted); font-size: 0.8em; margin-left: 1px; }
 .cand.auto { background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); }
 .cand.auto .w { font-weight: 600; }
 input[type="password"], input[type="text"] { font: 13px var(--font-mono); color: var(--ink); background: var(--field); border: 1px solid var(--rule); border-radius: 8px; padding: 5px 8px; min-width: 0; width: 13em; }
@@ -454,7 +455,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <div class="row"><label for="mode-english">EN English</label><input type="checkbox" id="mode-english"></div>
         <div class="row"><label for="mode-dictionary">辞 Dictionary</label><input type="checkbox" id="mode-dictionary"></div>
         <div class="row"><label for="set-leftHandedWheel">Left-handed mode wheel</label><input type="checkbox" id="set-leftHandedWheel"></div>
-        <p class="help">At least two stay on. Dragging from the key opens the mode wheel, which always has every mode. Left-handed mirrors it: → あ, ← next keyboard.</p>
+        <div class="row"><label for="set-dictionaryTypesDirectly">辞: type English straight in</label><input type="checkbox" id="set-dictionaryTypesDirectly"></div>
+        <p class="help">At least two stay on. Dragging from the key opens the mode wheel, which always has every mode. Left-handed mirrors it: → あ, ← next keyboard. In 辞, the key next to return switches between looking words up and typing English straight in (with the Japanese shown as you type).</p>
       </div>
       <div class="group">
         <h3>ローマ字 · Typing</h3>
@@ -534,9 +536,13 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="j3"><span>Type <em>ra</em> <span class="k">ー</span> <em>men</em>: らーめん. Type <em>ko-hi-</em>: コーヒー is offered.</span></label>
         <label class="check"><input type="checkbox" data-check="j5"><span>Type <em>neko</em> and pick 猫: particles (は, が, を…) are predicted. Pick a word you type after it a couple of times, and it comes first.</span></label>
         <label class="check"><input type="checkbox" data-check="j4"><span>Turn on <em>Show romaji readings</em>: suggestions read 猫 ねこ neko.</span></label>
+        <label class="check"><input type="checkbox" data-check="j6"><span>Conjugated words: type <em>tabemashita</em> (食べました), <em>itta</em> (行った), <em>kita</em> (来た), <em>takakatta</em> (高かった), <em>benkyoushiteimasu</em> (勉強しています).</span></label>
+        <label class="check"><input type="checkbox" data-check="j7"><span>Whole phrases: type <em>kyouhaiitenkidesune</em> → 今日はいい天気ですね, <em>ashitagakkouniikimasu</em> → 明日学校に行きます.</span></label>
+        <label class="check"><input type="checkbox" data-check="j8"><span>One part at a time: type <em>hashiwotabemasu</em> and tap <em>箸…</em> further along the bar. 箸 goes in and をたべます stays to convert: tap を食べます. Type it again: 箸を食べます now comes first.</span></label>
       </div>
       <div class="checks"><h3>辞書 dictionary</h3>
         <label class="check"><input type="checkbox" data-check="d1"><span>Swipe ↑ to 辞, type <em>water</em> or <em>thank you</em>, and tap a card: the Japanese word goes in.</span></label>
+        <label class="check"><input type="checkbox" data-check="d2"><span>In 辞, tap the 🔍 key next to return: it becomes <span class="k">A|</span>. Type <em>I want to eat sushi</em>: the English goes straight in with no 確定, and the bar shows 寿司. Tap it to swap the word. Tap the key again to go back to looking up phrases.</span></label>
       </div>
       <div class="checks"><h3>English (EN)</h3>
         <label class="check"><input type="checkbox" data-check="e1"><span>Type <em>teh</em> and space: it becomes <em>the</em>. Press delete straight away: <em>teh</em> comes back and is learned.</span></label>
@@ -597,6 +603,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="p7"><span>⚙︎ → <em>Open RomaKey</em> opens the app at Settings, with one page per area (Look, Typing, Key extras, Suggestions, ✨ AI …).</span></label>
       </div>
       <p class="credit">English suggestions in this preview: the most common words from <a href="https://github.com/rspeer/wordfreq">wordfreq</a> by Robyn Speer (data under CC BY-SA 4.0).</p>
+      <p class="credit">Kanji conversion ranks words by how often they're used, from <a href="https://github.com/rspeer/wordfreq">wordfreq</a>'s Japanese data (CC BY-SA 4.0).</p>
       <p class="credit">Dictionary: common words from <a href="https://www.edrdg.org/jmdict/j_jmdict.html">JMdict</a> by the Electronic Dictionary Research and Development Group, used under <a href="https://www.edrdg.org/edrdg/licence.html">CC BY-SA 3.0</a>.</p>
     </section>
   </div>
@@ -616,7 +623,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
     keySounds: true, haptics: false, predictiveText: true, aiProvider: "apple",
     backgroundOpacity: 1, backgroundGradient: false, gradientColor: "#8ec5fc", gradientDirection: "down",
-    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, giphyAPIKey: "", gifRating: "pg", keySecondaries: true, swipeUpSecondaries: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
+    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, giphyAPIKey: "", gifRating: "pg", keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
@@ -640,9 +647,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   const entries = [], glossIdx = [], wordIdx = [], readIdx = [];
   for (const line of TSV.split("\n")) {
     const f = line.split("\t");
-    if (f.length !== 5) continue;
+    if (f.length !== 5 && f.length !== 6) continue;
     const senses = f[4].split(" | ").map((s) => s.split("; "));
-    const e = { kanji: f[0], reading: f[1], uk: f[2] === "1", pos: f[3], senses };
+    const e = { kanji: f[0], reading: f[1], uk: f[2] === "1", pos: f[3], senses, conj: f[5] || "" };
     e.word = e.uk || !e.kanji ? e.reading : e.kanji;
     e.short = senses[0].slice(0, 2).join("; ");
     const i = entries.push(e) - 1;
@@ -673,6 +680,140 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     return [...best].sort((a, b) => a[1][0] - b[1][0] || a[1][1] - b[1][1] || a[0] - b[0]).slice(0, limit).map(([i]) => entries[i]);
   }
   const byReading = (r) => equal(readIdx, hiragana(r)).map((x) => x[1]).sort((a, b) => a - b).map((i) => entries[i]);
+  // ---- Kana–kanji conversion (Conjugation.swift, KanaKanjiConverter.swift) --------------------
+  // Conjugated forms: each verb or adjective is indexed by its stem (食べ, 書, 高), and the
+  // endings its class can take are matched against what follows (た, きます, かった…).
+  const GODAN = {  // a, i, u, e, o, the stem before て/た, and whether て/た become で/だ
+    "v5u": ["わ", "い", "う", "え", "お", "っ", 0], "v5k": ["か", "き", "く", "け", "こ", "い", 0], "v5k-s": ["か", "き", "く", "け", "こ", "っ", 0],
+    "v5g": ["が", "ぎ", "ぐ", "げ", "ご", "い", 1], "v5s": ["さ", "し", "す", "せ", "そ", "し", 0], "v5t": ["た", "ち", "つ", "て", "と", "っ", 0],
+    "v5n": ["な", "に", "ぬ", "ね", "の", "ん", 1], "v5b": ["ば", "び", "ぶ", "べ", "ぼ", "ん", 1], "v5m": ["ま", "み", "む", "め", "も", "ん", 1],
+    "v5r": ["ら", "り", "る", "れ", "ろ", "っ", 0], "v5r-i": ["ら", "り", "る", "れ", "ろ", "っ", 0], "v5aru": ["ら", "い", "る", "れ", "ろ", "っ", 0],
+  };
+  const POLITE = ["ます", "ました", "ません", "ませんでした", "ましょう", "たい", "たかった", "たくない", "たくなかった", "たくて", "ながら", "そう", "すぎる", "すぎた", "なさい"];
+  const NEGATIVE = ["ない", "なかった", "なくて", "なければ", "なきゃ", "ないで", "ず", "ずに"];
+  // Passive, causative and potential forms conjugate like ichidan verbs.
+  const DERIVED = ["る", "た", "ます", "ました", "ません", "ない", "なかった", "て"];
+  const TE = ["て", "ても", "てください", "ている", "ています", "ていました", "ていた", "ていない", "ていません", "ていなかった", "てる", "てた", "てない",
+    "てます", "てました", "てしまう", "てしまった", "てしまいました", "ておく", "ておいた", "てみる", "てみた", "てみます", "てあげる", "てくれる", "てもらう",
+    "ちゃう", "ちゃった", "た", "たら", "たり", "たです"];
+  const SURU = ["する", "します", "しました", "しません", "しませんでした", "しましょう", "した", "して", "しない", "しなかった", "しなくて", "しよう", "すれば",
+    "させる", "させた", "される", "された", "されます", "している", "しています", "していました", "していた", "していない", "してる", "してた", "してください",
+    "したい", "したかった", "しながら", "しちゃった", "しておく", "しても", "したら", "しそう"];
+  const KURU = ["くる", "きます", "きました", "きません", "きませんでした", "きましょう", "きた", "きて", "こない", "こなかった", "こよう", "くれば", "こられる",
+    "こさせる", "きたい", "きている", "きています", "きていました", "きてる", "きてた", "きてください", "きちゃった", "きたら", "きても"];
+  const ADJECTIVE = ["い", "いです", "かった", "かったです", "くない", "くないです", "くなかった", "くありません", "くて", "ければ", "く", "さ", "そう", "すぎる", "すぎた", "かったら"];
+  const voiced = (x) => ({ "て": "で", "た": "だ", "ち": "じ" })[x[0]] + x.slice(1);
+  const formsCache = {};
+  function endings(conj) {
+    if (formsCache[conj]) return formsCache[conj];
+    let f = [];
+    const g = GODAN[conj];
+    if (g) {
+      const [a, i, u, e, o, te, voice] = g;
+      f.push(u, e + "ば", o + "う");
+      for (const x of POLITE) f.push(i + x);
+      if (conj !== "v5r-i") for (const x of NEGATIVE) f.push(a + x);  // ある's negative is ない, its own word
+      for (const x of DERIVED) f.push(a + "れ" + x, a + "せ" + x, e + x);
+      for (const x of TE) f.push(te + (voice ? voiced(x) : x));
+    } else if (conj === "v1") {
+      f.push("る", "れば", "よう", "ろ", ...POLITE, ...NEGATIVE, ...TE);
+      for (const x of DERIVED) f.push("られ" + x, "させ" + x, "れ" + x);
+    } else if (conj === "adj-i") f = ADJECTIVE;
+    else if (conj === "adj-ix") f = ["い", "いです"];  // いい: its other forms come from 良い (よかった)
+    else if (conj === "vs" || conj === "vs-i") f = SURU;
+    else if (conj === "vk") f = KURU;
+    return (formsCache[conj] = [...new Set(f)]);
+  }
+  // How much of the dictionary form to drop to get the stem: 食べる → 食べ, 勉強 → 勉強, 来る → (来).
+  const stemDrop = (e) => e.conj === "vs" ? 0 : e.conj === "vs-i" || e.conj === "vk" ? 2 : 1;
+  const stemIdx = [], emptyStems = [];
+  entries.forEach((e, i) => {
+    if (!e.conj || (e.conj === "vs-i" && !e.reading.endsWith("する"))) return;
+    const stem = chars(hiragana(e.reading)).slice(0, chars(e.reading).length - stemDrop(e)).join("");
+    if (stem) stemIdx.push([stem, i]); else emptyStems.push(i);
+  });
+  stemIdx.sort(byKey);
+  // The written form of an inflected word: the kanji stem with the kana ending, or kana throughout.
+  function inflected(e, ending, reading) {
+    if (e.uk || !e.kanji) return reading;
+    const k = chars(e.kanji), r = chars(e.reading), drop = stemDrop(e);
+    if (e.conj === "vk") return e.kanji.endsWith("来る") ? k.slice(0, -2).join("") + "来" + chars(ending).slice(1).join("") : reading;
+    // The dropped kana must be written the same in both (食べる/たべる), or there's no clean stem.
+    if (drop && k.slice(-drop).join("") !== r.slice(-drop).join("")) return reading;
+    return k.slice(0, k.length - drop).join("") + ending;
+  }
+  // Particles and other little words that stay in kana between the converted words.
+  const FUNCTION_WORDS = new Set(["は", "が", "を", "に", "で", "と", "も", "の", "へ", "や", "か", "ね", "よ", "な", "わ", "ぞ", "さ", "だ", "です", "でした", "でしょう",
+    "だった", "だろう", "じゃない", "ではない", "じゃありません", "ではありません", "から", "まで", "より", "けど", "けれど", "けれども", "ので", "のに", "って", "など",
+    "しか", "だけ", "ばかり", "くらい", "ぐらい", "ほど", "こそ", "でも", "には", "では", "とは", "にも", "との", "への", "ください", "ましょう"]);
+  // Costs: lower is likelier. A word costs less the more common it is; anything not in the
+  // dictionary stays as kana at a high cost per character.
+  const COST = { unknown: 6000, function: 1200, inflected: 300, single: 2000, startParticle: 3000, particlePair: 500, learned: 2000, everyday: 600, margin: 2500 };
+  // Everyday words that written text (where the frequencies come from) undersells: 昨日 over 機能.
+  const EVERYDAY = new Set(["昨日", "何時", "今朝", "今晩", "今夜", "明後日", "一昨日"]);
+  const wordCost = (i) => 2500 + Math.round(500 * Math.log10(i + 10)) - (EVERYDAY.has(entries[i].kanji) ? COST.everyday : 0);
+  function edgesAt(a, p) {
+    const out = [], max = Math.min(16, a.length - p);
+    const add = (end, text, reading, cost, entry, fn) => out.push({ end, text, reading, cost: cost + (learnedFor(reading, text) ? -COST.learned : 0), entry, fn });
+    const tryForms = (i, q) => {
+      const e = entries[i], rest = a.slice(q, q + 12).join("");
+      for (const f of endings(e.conj)) if (rest.startsWith(f)) {
+        const reading = a.slice(p, q).join("") + f;
+        add(q + chars(f).length, inflected(e, f, reading), reading, wordCost(i) + COST.inflected, e);
+      }
+    };
+    for (let L = 1; L <= max; L++) {
+      const s = a.slice(p, p + L).join("");
+      for (const [, i] of equal(readIdx, s)) add(p + L, entries[i].word, s, wordCost(i) + (L === 1 ? COST.single : 0), entries[i]);
+      if (FUNCTION_WORDS.has(s)) add(p + L, s, s, COST.function, null, true);
+      for (const [, i] of equal(stemIdx, s)) tryForms(i, p + L);
+    }
+    for (const i of emptyStems) tryForms(i, p);
+    return out;
+  }
+  const learnedFor = (reading, text) => (history[reading] || []).includes(text);
+  // The cheapest ways through the reading (Viterbi, keeping the best few at each position).
+  function convert(reading, limit = 3) {
+    const a = chars(hiragana(reading)), n = a.length;
+    if (!n || n > 40) return [];
+    const KEEP = 6, nodes = Array.from({ length: n + 1 }, () => []);
+    nodes[0].push({ cost: 0, text: "", edge: null, prev: null });
+    for (let p = 0; p < n; p++) {
+      if (!nodes[p].length) continue;
+      const edges = edgesAt(a, p);
+      edges.push({ end: p + 1, text: a[p], reading: a[p], cost: COST.unknown, unknown: true });
+      for (const edge of edges) for (const from of nodes[p]) {
+        let cost = from.cost + edge.cost;
+        if (edge.fn && p === 0 && edge.end < n) cost += COST.startParticle;
+        if (edge.fn && from.edge && from.edge.fn) cost += COST.particlePair;
+        const text = from.text + edge.text, list = nodes[edge.end];
+        const same = list.findIndex((x) => x.text === text);
+        if (same >= 0) { if (list[same].cost <= cost) continue; list.splice(same, 1); }
+        list.push({ cost, text, edge, prev: from });
+        list.sort((x, y) => x.cost - y.cost);
+        if (list.length > KEEP) list.pop();
+      }
+    }
+    // Alternatives only if they're close to the best: the rest are odd splits (ね子 for ねこ).
+    const ends = nodes[n].filter((node, i) => i === 0 || node.cost <= nodes[n][0].cost + COST.margin);
+    return ends.slice(0, limit).map((node) => {
+      const segments = [];
+      for (let x = node; x.edge; x = x.prev) segments.unshift(x.edge);
+      return { text: node.text, segments, cost: node.cost };
+    });
+  }
+  // Words for the start of the reading, for converting a phrase one part at a time: the
+  // best path's first word and its homophones, then other lengths.
+  function firstWords(reading, best, limit = 5) {
+    // Only for phrases: a single word is already covered by the whole-reading candidates.
+    if (!best || best.segments.length < 2) return [];
+    const a = chars(hiragana(reading)), seen = new Set(), out = [], first = best.segments[0];
+    const edges = edgesAt(a, 0).filter((e) => e.end < a.length && e.text !== e.reading && (e.end === first.end || e.end - 0 >= 2))
+      .sort((x, y) => (y.end === first.end) - (x.end === first.end) || y.end - x.end || x.cost - y.cost);
+    for (const e of edges) if (!seen.has(e.text) && out.length < limit) { seen.add(e.text); out.push(e); }
+    return out;
+  }
+
   const predictions = (p, limit = 8) => { const k = hiragana(p); if (!k) return []; return prefixed(readIdx, k).filter((x) => x[0] !== k).map((x) => x[1]).sort((a, b) => a - b).slice(0, limit).map((i) => entries[i]); };
 
   // ---- Emoji (Emoji.swift) and kaomoji (Kaomoji.swift) ------------------------------------
@@ -771,9 +912,16 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       const add = (text, entry, kind = "conversion") => { if (!seen.has(text)) { seen.add(text); out.push({ text, entry, kind }); } };
       for (const w of history[h] || []) add(w, exact.find((e) => e.word === w || e.kanji === w));
       add(h, exact.find((e) => e.word === h));
+      // Whole phrases and conjugated words (今日はいい天気, 食べました): first when the reading
+      // isn't a single dictionary word, after the dictionary's own words when it is.
+      const phrases = convert(h, 3), single = (c) => c.segments.length === 1 ? c.segments[0].entry : null;
+      if (!exact.length) for (const c of phrases) add(c.text, single(c));
       for (const e of exact) add(e.word, e);
+      for (const c of phrases) add(c.text, single(c));
       add(k, exact.find((e) => e.word === k));
       if (settings.emojiSuggestions) for (const e of emojiSuggestions(h, 2)) add(toned(e), null, "emoji");
+      // The first word only, leaving the rest to convert next (箸 | をたべる).
+      for (const e of firstWords(h, phrases[0])) if (!seen.has(e.text)) { seen.add(e.text); out.push({ text: e.text, entry: e.entry, kind: "conversion", part: e.reading }); }
       for (const e of predictions(h)) add(e.word, e);
       return out;
     }
@@ -781,6 +929,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     inputLiteral(t) { this.kana = this.finalized + t; this.pending = ""; }
     deleteBackward() { if (this.pending) this.pending = chars(this.pending).slice(0, -1).join(""); else if (this.kana) this.kana = chars(this.kana).slice(0, -1).join(""); }
     reset() { this.kana = ""; this.pending = ""; }
+    // After converting the first part of a phrase, the rest stays to be converted.
+    dropFirst(reading) { this.kana = chars(this.finalized).slice(chars(reading).length).join(""); this.pending = ""; }
     resolve() {
       while (this.pending) {
         const p = this.pending, isPrefix = PREFIXES.has(p);
@@ -834,6 +984,13 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   const RANK = new Map(WORDS.map((w, i) => [w, i]));
   let learned = load("kb-learned", {}), suggestCache = { word: null, value: null };
   const currentWord = () => (out.textBeforeCursor.match(/[\p{L}']+$/u) || [""])[0];
+  // In 辞 while typing English: the word being typed, or the one just finished (and its space).
+  function dictionaryWord() {
+    const word = currentWord();
+    if (word) return { word, after: "" };
+    const m = out.textBeforeCursor.match(/([A-Za-z']+) $/);
+    return m ? { word: m[1], after: " " } : null;
+  }
   function learn(word) {
     const w = word.toLowerCase();
     if (chars(w).length < 2 || !/^[\p{L}']+$/u.test(w)) return;
@@ -1011,10 +1168,18 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   const romaji = {
     mode: "dictionary", page: "letters", shift: "off", auto: false, lastShift: 0, lastSpace: false, query: "", composer: new Composer(), ja: jaContext(),
     get composing() { return !this.composer.isEmpty || !!this.query; },
+    // 辞 has two styles, switched with the key next to return: look words up (the English is a
+    // search, confirmed with 確定), or type English straight into the text, seeing the Japanese.
+    get typesDirectly() { return this.mode === "dictionary" && settings.dictionaryTypesDirectly; },
+    get typesEnglish() { return this.mode === "english" || this.typesDirectly; },
     get shifted() { return this.page === "letters" && this.shift !== "off"; },
     signature() { return "q:" + this.page; },
     frames(w, h) { return qwertyFrames(LAYOUTS[this.page], w, h); },
     candidates() {
+      if (this.typesDirectly) {
+        const w = dictionaryWord();
+        return w ? searchEnglish(w.word).map((e) => ({ text: e.word, entry: e, kind: "conversion", replaces: w })) : [];
+      }
       if (this.mode === "dictionary") return searchEnglish(this.query).map((e) => ({ text: e.word, entry: e, kind: "conversion" }));
       if (this.mode === "english") {
         // The word being typed: keep-as-typed and the autocorrection (when space would change it), completions, then emoji.
@@ -1046,7 +1211,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       switch (k.kind) {
         case "char": {
           const t = this.shifted ? k.ch.toUpperCase() : k.ch;
-          if (this.mode === "english") out.insertText(t);
+          if (this.typesEnglish) out.insertText(t);
           else if (this.mode === "dictionary") this.appendQuery(t);
           else { if (c.isEmpty) this.ja.started(); if (this.shifted) c.inputLiteral(t); else for (const ch of t) c.input(ch); out.show(c); }
           if (this.shift === "once") { this.shift = "off"; this.auto = false; }
@@ -1069,7 +1234,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         case "languageToggle": this.setMode(this.nextMode); return;
         case "space": this.space(afterSpace); break;
         case "longVowel":
-          if (this.mode === "japanese") { c.input("-"); out.show(c); } else if (this.mode === "english") out.insertText("-"); else this.appendQuery("-");
+          if (this.mode === "japanese") { c.input("-"); out.show(c); } else if (this.mode === "english") out.insertText("-");
+          else {
+            // In 辞, a toggle between looking words up and typing English.
+            this.commit();
+            settings.dictionaryTypesDirectly = !settings.dictionaryTypesDirectly;
+            saveSettings(); syncControls(); flashNext = true;
+            flash(settings.dictionaryTypesDirectly ? "辞 · Type English: the Japanese shows here as you go" : "辞 · Look up: type a word or phrase, tap the Japanese");
+          }
           break;
         case "return": if (this.composing) this.commit(); else out.insertText("\n"); break;
       }
@@ -1081,7 +1253,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       this.page = "letters";
       if (this.mode === "english") this.finishWord();
       const before = out.textBeforeCursor;
-      if (this.mode === "english" && settings.doubleSpacePeriod && afterSpace && before.endsWith(" ")) {
+      if (this.typesEnglish && settings.doubleSpacePeriod && afterSpace && before.endsWith(" ")) {
         const prev = chars(before).slice(-2, -1)[0];
         if (prev && /[\p{L}\p{N}]/u.test(prev)) { out.deleteBackward(); out.insertText(". "); this.lastSpace = false; return; }
       }
@@ -1111,6 +1283,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       this.query = ""; this.composer.reset();
     },
     select(t) { if (this.mode === "japanese") this.ja.committed(t); out.commit(t); this.query = ""; this.composer.reset(); this.autoCap(); },
+    selectPart(t, reading) { out.commit(t); this.composer.dropFirst(reading); out.show(this.composer); },
     moveCursor(n) { this.commit(); out.moveCursor(n); },
     deleteWord() {
       if (this.composing) { this.press(K("delete")); return; }
@@ -1125,7 +1298,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       if (this.shift === "locked") return;
       const b = out.textBeforeCursor;
       const start = !b || b.endsWith("\n") || (b.endsWith(" ") && (() => { const v = b.replace(/ +$/, ""); return !v || /[.!?。！？]$/.test(v); })());
-      const want = settings.autoCapitalization && this.mode === "english" && this.page === "letters" && !this.composing && start;
+      const want = settings.autoCapitalization && this.typesEnglish && this.page === "letters" && !this.composing && start;
       if (want) { if (this.shift === "off") { this.shift = "once"; this.auto = true; } }
       else if (this.shift === "once" && this.auto) { this.shift = "off"; this.auto = false; }
     },
@@ -1139,7 +1312,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         case "symbolsToggle": return this.page === "numbers" ? "#+=" : "123";
         case "languageToggle": return SHORT[this.mode];
         case "space": return jp ? "空白" : "space";
-        case "longVowel": return jp ? "ー" : "-";
+        case "longVowel": return this.mode === "dictionary" ? (settings.dictionaryTypesDirectly ? "⌶" : "⌕") : jp ? "ー" : "-";
         case "return": return this.composing ? "確定" : (jp ? "改行" : "return");
       }
     },
@@ -1201,6 +1374,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     replaceLast(t) { if (this.page === "kana") { this.composer.deleteBackward(); this.composer.inputLiteral(t); out.show(this.composer); } else { out.deleteBackward(); out.insertText(t); this.lastDirect = t; } },
     commit() { if (this.composing) { this.ja.committed(this.composer.finalized); out.commit(this.composer.finalized); this.composer.reset(); } },
     select(t) { this.ja.committed(t); out.commit(t); this.composer.reset(); this.toggle = null; },
+    selectPart(t, reading) { out.commit(t); this.composer.dropFirst(reading); this.toggle = null; out.show(this.composer); },
     moveCursor(n) { this.commit(); this.toggle = null; out.moveCursor(n); },
     deleteWord() { this.press(F("delete")); },
     label(k) {
@@ -1264,7 +1438,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     "⇪": '<svg class="kicon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.5 3.5 11.5H8v5h8v-5h4.5z"/><path d="M8 20h8" fill="none" stroke-linecap="round"/></svg>',
     "⌫": '<svg class="kicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M8.5 5H20a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 20 19H8.5L2.5 12z"/><path d="m11.5 9 6 6m0-6-6 6"/></svg>',
   };
-  const KEY_NAMES = { "⇧": "Shift", "⬆︎": "Shift on", "⇪": "Caps lock", "⌫": "Delete" };
+  KEY_ICONS["⌕"] = '<svg class="kicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></svg>';
+  KEY_ICONS["⌶"] = '<svg class="kicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 7 6l4 11M4.5 13.5h5"/><path d="M17 4.5v15M14.5 4h5M14.5 20h5"/></svg>';
+  const KEY_NAMES = { "⇧": "Shift", "⬆︎": "Shift on", "⇪": "Caps lock", "⌫": "Delete", "⌕": "Look up words. Tap to type English instead", "⌶": "Typing English. Tap to look up words instead" };
 
   function render() {
     kbEl.dataset.kbTheme = settings.theme;
@@ -1288,7 +1464,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     renderCandidates();
     renderDoc();
     $("note").textContent = active === romaji
-      ? { japanese: "あ: type romaji. Tap the mode key for EN or 辞, or drag from it for the mode wheel.", english: "EN: auto-capitals and double-space full stops are on.", dictionary: "辞: type English, tap a card to insert the Japanese word, long-press for the full entry." }[romaji.mode]
+      ? { japanese: "あ: type romaji. Tap the mode key for EN or 辞, or drag from it for the mode wheel.", english: "EN: auto-capitals and double-space full stops are on.", dictionary: settings.dictionaryTypesDirectly ? "辞 (typing): English goes straight in, with the Japanese above. Tap a word to swap it in. The key next to return switches to look-up." : "辞 (look-up): type English, tap a card to insert the Japanese word, long-press for the full entry. The key next to return switches to typing English." }[romaji.mode]
       : "Press and slide on a key. Tap the same key again to cycle. かな, bottom left, is the mode key: tap for ローマ字, drag for the wheel.";
   }
 
@@ -1331,7 +1507,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       : searching ? [] : active.candidates();
     const meanings = settings.showMeanings || (active === romaji && romaji.mode === "dictionary");
     if (!list.length && !searching) {
-      const hint = statusText || (active === romaji && romaji.mode === "dictionary" ? (romaji.query ? "No matches" : "辞書 · Type an English word") : "");
+      const typed = active === romaji && (romaji.typesDirectly ? (dictionaryWord() || {}).word : romaji.query);
+      const hint = statusText || (active === romaji && romaji.mode === "dictionary" ? (typed ? "No matches" : romaji.typesDirectly ? "辞書 · Type English: the Japanese shows here" : "辞書 · Type an English word") : "");
       if (hint) {
         const h = document.createElement("span"); h.className = "hint"; h.textContent = hint;
         candsEl.appendChild(h);
@@ -1365,6 +1542,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       const b = document.createElement("button");
       b.type = "button"; b.className = "cand" + (c.kind === "emoji" ? " emoji" : c.kind === "autocorrection" ? " auto" : "");
       const w = document.createElement("span"); w.className = "w"; w.textContent = c.kind === "typed" ? "“" + c.text + "”" : c.text;
+      // Part of the phrase: the rest stays to convert next.
+      if (c.part) { const more = document.createElement("span"); more.className = "part"; more.textContent = "…"; w.appendChild(more); b.classList.add("partial"); }
       if (meanings && c.entry) {
         const parts = [];
         if (c.entry.reading !== c.text) parts.push(c.entry.reading);
@@ -1413,6 +1592,13 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
 
   function selectCandidate(c) {
     if (searching === "emoji") { endSearch(); useRecent(c.text); active.commit(); out.insertText(c.text); return; }
+    if (active === romaji && romaji.typesDirectly && !romaji.composing && c.replaces) {
+      // Swap the English word for the Japanese one.
+      for (let i = 0; i < chars(c.replaces.word + c.replaces.after).length; i++) out.deleteBackward();
+      out.insertText(c.text + c.replaces.after);
+      romaji.autoCap();
+      return;
+    }
     if (active === romaji && romaji.mode === "english" && !romaji.composing) {
       const word = currentWord();
       romaji.lastFix = null;
@@ -1426,6 +1612,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       return;
     }
     const composer = active.composer;
+    if (c.part) { recordChoice(c.part, c.text); active.selectPart(c.text, c.part); return; }
     if (c.kind === "conversion" && !(active === romaji && romaji.mode === "dictionary")) recordChoice(composer.finalized, c.text);
     if (c.kind === "prediction") active.ja.started();
     active.select(c.text);
@@ -2345,7 +2532,7 @@ Text: よろしくおねがいします
     Object.assign(settings, DEFAULTS, { customColors: { ...PALETTES["藍 Ai light"] } });
     changed();
   });
-  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "keySecondaries", "swipeUpSecondaries", "animations", "leftHandedWheel", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics", "boldKeys", "backgroundGradient", "keyShadows", "keyOutlines", "accentReturnKey"];
+  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "keySecondaries", "swipeUpSecondaries", "animations", "leftHandedWheel", "dictionaryTypesDirectly", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics", "boldKeys", "backgroundGradient", "keyShadows", "keyOutlines", "accentReturnKey"];
   for (const key of TOGGLES) {
     $("set-" + key).addEventListener("change", (e) => { settings[key] = e.target.checked; changed(); });
   }

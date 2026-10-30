@@ -10,6 +10,9 @@ public struct DictionaryEntry: Hashable {
     public let partOfSpeech: String
     /// Meanings separated by " | ", glosses within a meaning by "; ".
     let sensesText: String
+    /// How the word conjugates, for converting forms like 食べた: "v1", "v5k", "vs", "adj-i" …
+    /// (see `Conjugation`), or empty.
+    public let conjugation: String
 
     /// How the word is normally written.
     public var word: String {
@@ -47,28 +50,42 @@ public final class JapaneseDictionary {
     private let words: [IndexItem]
     /// Readings in hiragana. Sorted by key.
     private let readings: [IndexItem]
+    /// The stems of words that conjugate (食べ, 書, 勉強), in hiragana. Sorted by key.
+    private let stems: [IndexItem]
+    /// Conjugating words whose stem is empty (する, 来る), tried at every position.
+    let emptyStemEntries: [Int]
 
     /// Parses the tab-separated format written by `tools/build_dictionary.py`:
-    /// kanji, reading, usually-kana (0/1), part of speech, senses.
+    /// kanji, reading, usually-kana (0/1), part of speech, senses, and (optionally) conjugation.
     public init(tsv: String) {
         var entries: [DictionaryEntry] = []
         var glosses: [IndexItem] = []
         var words: [IndexItem] = []
         var readings: [IndexItem] = []
+        var stems: [IndexItem] = []
+        var emptyStemEntries: [Int] = []
 
         for line in tsv.split(separator: "\n", omittingEmptySubsequences: true) {
             let fields = line.split(separator: "\t", omittingEmptySubsequences: false)
-            guard fields.count == 5 else { continue }
+            guard fields.count == 5 || fields.count == 6 else { continue }
             let entry = DictionaryEntry(
                 kanji: String(fields[0]),
                 reading: String(fields[1]),
                 usuallyKana: fields[2] == "1",
                 partOfSpeech: String(fields[3]),
-                sensesText: String(fields[4])
+                sensesText: String(fields[4]),
+                conjugation: fields.count == 6 ? String(fields[5]) : ""
             )
             let index = Int32(entries.count)
             entries.append(entry)
             readings.append(IndexItem(key: KanaConverter.hiragana(from: entry.reading), entry: index, weight: 0))
+            if let stem = Conjugation.stemReading(of: entry) {
+                if stem.isEmpty {
+                    emptyStemEntries.append(Int(index))
+                } else {
+                    stems.append(IndexItem(key: stem, entry: index, weight: 0))
+                }
+            }
 
             for (senseIndex, sense) in entry.senses.enumerated() {
                 for (glossIndex, gloss) in sense.enumerated() {
@@ -91,6 +108,18 @@ public final class JapaneseDictionary {
         self.glosses = glosses.sorted { $0.key < $1.key }
         self.words = words.sorted { $0.key < $1.key }
         self.readings = readings.sorted { $0.key < $1.key }
+        self.stems = stems.sorted { $0.key < $1.key }
+        self.emptyStemEntries = emptyStemEntries
+    }
+
+    /// Indexes of the words read exactly `key` (hiragana), most common first.
+    func entryIndexes(reading key: String) -> [Int] {
+        Self.items(in: readings, equalTo: key).map { Int($0.entry) }
+    }
+
+    /// Indexes of the conjugating words whose stem is exactly `key` (hiragana).
+    func entryIndexes(stem key: String) -> [Int] {
+        Self.items(in: stems, equalTo: key).map { Int($0.entry) }
     }
 
     /// The dictionary bundled with the keyboard. Takes a moment to build, so call it off the main thread.

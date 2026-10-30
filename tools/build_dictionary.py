@@ -3,10 +3,14 @@
 Keeps the entries JMdict marks as common (news1, ichi1, spec1, spec2, gai1), ordered by
 frequency, and writes one tab-separated line per entry:
 
-    kanji  reading  usually-kana(0/1)  part-of-speech  senses
+    kanji  reading  usually-kana(0/1)  part-of-speech  senses  conjugation
 
-Senses are separated by " | ", glosses within a sense by "; ".
+Senses are separated by " | ", glosses within a sense by "; ". The conjugation class is how
+the word inflects, for kanji conversion of forms like 食べた (see Conjugation.swift): v1
+(ichidan), v5u … v5r (godan, by ending), v5k-s (行く), v5r-i (ある), v5aru (いらっしゃる), vk
+(来る), vs (a noun that takes する), vs-i (ends in する), adj-i, adj-ix (いい/良い), or empty.
 """
+import gzip
 import sqlite3
 import sys
 from collections import defaultdict
@@ -26,6 +30,29 @@ POS = [
     ("numeric", "number"), ("expressions", "expression"), ("prefix", "prefix"),
     ("suffix", "suffix"), ("noun", "noun"),
 ]
+
+
+# JMdict part-of-speech names → conjugation class, most specific first.
+CONJUGATION = [
+    ("Ichidan verb - zuru", ""), ("Ichidan verb", "v1"),
+    ("Godan verb - Iku/Yuku", "v5k-s"), ("Godan verb - -aru", "v5aru"),
+    ("Godan verb with 'ru' ending (irregular", "v5r-i"),
+    ("Godan verb with 'u' ending", "v5u"), ("Godan verb with 'ku' ending", "v5k"),
+    ("Godan verb with 'gu' ending", "v5g"), ("Godan verb with 'su' ending", "v5s"),
+    ("Godan verb with 'tsu' ending", "v5t"), ("Godan verb with 'nu' ending", "v5n"),
+    ("Godan verb with 'bu' ending", "v5b"), ("Godan verb with 'mu' ending", "v5m"),
+    ("Godan verb with 'ru' ending", "v5r"), ("Kuru verb", "vk"),
+    ("suru verb - included", "vs-i"), ("suru verb - special", "vs-i"),
+    ("adjective (keiyoushi) - yoi/ii", "adj-ix"), ("adjective (keiyoushi)", "adj-i"),
+    ("noun or participle which takes the aux. verb suru", "vs"),
+]
+
+
+def conjugation(names):
+    for prefix, code in CONJUGATION:
+        if any(name.startswith(prefix) for name in names):
+            return code
+    return ""
 
 
 def short_pos(names):
@@ -49,7 +76,39 @@ def rank(tags):
     return best
 
 
-def main(db_path, out_path):
+# For verbs, how often the stems appear too: Japanese text is split into tokens like 行き|ます
+# and 行っ|た, so the dictionary form alone undercounts them.
+STEMS = {"v5u": "いっ", "v5k": "きい", "v5k-s": "きっ", "v5g": "ぎい", "v5s": "し", "v5t": "ちっ",
+         "v5n": "にん", "v5b": "びん", "v5m": "みん", "v5r": "りっ", "v5r-i": "りっ", "v5aru": "いっ"}
+
+
+def load_wordfreq(path):
+    """wordfreq's cBpack: a header, then lists of words, each a centibel lower in frequency."""
+    import msgpack
+    with gzip.open(path, "rb") as f:
+        data = msgpack.load(f, raw=False)
+    freq = {}
+    for index, words in enumerate(data[1:]):
+        for word in words:
+            freq.setdefault(word, 10 ** (-index / 100))
+    return freq
+
+
+def frequency(freq, kanji, reading, usually_kana, code):
+    """How often the word is written in everyday text (wordfreq), as it's usually written."""
+    forms = [reading] if usually_kana or not kanji else [kanji]
+    base = forms[0]
+    if code == "v1":
+        forms.append(base[:-1])
+    elif code in STEMS:
+        forms += [base[:-1] + ending for ending in STEMS[code]]
+    elif code == "adj-i":
+        forms += [base[:-1] + "く", base[:-1] + "かっ"]
+    return max(freq.get(form, 0) for form in forms)
+
+
+def main(db_path, out_path, wordfreq_path=None):
+    freq = load_wordfreq(wordfreq_path) if wordfreq_path else {}
     c = sqlite3.connect(db_path)
     tags = defaultdict(set)
     for idseq, tag in c.execute("SELECT k.idseq, p.text FROM Kanji k JOIN KJP p ON p.kid = k.ID"):
@@ -93,17 +152,22 @@ def main(db_path, out_path):
             "1" if usually_kana or not kanji[idseq] else "0",
             short_pos(pos[first]),
             text,
+            conjugation([p for s in senses[idseq] for p in pos[s]]),
         ]
         if any("\t" in f or "\n" in f for f in fields):
             continue
-        rows.append((rank(tags[idseq]), idseq, "\t".join(fields)))
+        # Most frequent in everyday text first (wordfreq); JMdict's rank breaks ties and orders
+        # the words wordfreq doesn't know.
+        common_use = frequency(freq, fields[0], fields[1], fields[2] == "1", fields[5])
+        rows.append((-common_use, rank(tags[idseq]), idseq, "\t".join(fields)))
 
     rows.sort()
     with open(out_path, "w", encoding="utf-8") as f:
-        for _, _, line in rows:
+        for *_, line in rows:
             f.write(line + "\n")
     print(f"{len(rows)} entries", file=sys.stderr)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    # python3 tools/build_dictionary.py jamdict.db dictionary.tsv [wordfreq/data/large_ja.msgpack.gz]
+    main(*sys.argv[1:4])

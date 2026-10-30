@@ -26,6 +26,18 @@ struct TypingSettingsView: View {
             }
 
             Section {
+                Picker("In 辞", selection: $store.settings.dictionaryTypesDirectly) {
+                    Text("Look up").tag(false)
+                    Text("Type English").tag(true)
+                }
+                .pickerStyle(.segmented)
+            } header: {
+                Text("辞書 · Dictionary")
+            } footer: {
+                Text("Look up: what you type is a search (phrases too, like \"thank you\"), and you tap the Japanese to insert it. Type English: your English goes straight in, with the Japanese for each word shown above; tap one to swap it in. The key next to return switches between them.")
+            }
+
+            Section {
                 Toggle("Auto-capitalisation", isOn: $store.settings.autoCapitalization)
                 Toggle("Double-space for full stop", isOn: $store.settings.doubleSpacePeriod)
                 Toggle("Key popups", isOn: $store.settings.keyPopups)

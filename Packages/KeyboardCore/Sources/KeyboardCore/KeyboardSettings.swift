@@ -109,6 +109,9 @@ public struct KeyboardSettings: Equatable {
     public var animations = true
     /// Mirrors the mode wheel (→ あ … ← 🌐) for typing with the left thumb.
     public var leftHandedWheel = false
+    /// In 辞: English goes straight into the text, with the Japanese for each word shown above,
+    /// instead of being a search confirmed with 確定. The key next to return switches.
+    public var dictionaryTypesDirectly = false
 
     // かな keyboard
     /// Turns off tap-to-cycle, so tapping あ twice types ああ.
@@ -210,6 +213,7 @@ public struct KeyboardSettings: Equatable {
         static let disabledSecondaryKeys = "disabledSecondaryKeys"
         static let animations = "animations"
         static let leftHandedWheel = "leftHandedWheel"
+        static let dictionaryTypesDirectly = "dictionaryTypesDirectly"
         static let showRomaji = "showRomaji"
         static let flickOnly = "flickOnly"
         static let flickSensitivity = "flickSensitivity"
@@ -278,6 +282,7 @@ public struct KeyboardSettings: Equatable {
         disabledSecondaryKeys = defaults.stringArray(forKey: Key.disabledSecondaryKeys) ?? disabledSecondaryKeys
         animations = bool(Key.animations, animations)
         leftHandedWheel = bool(Key.leftHandedWheel, leftHandedWheel)
+        dictionaryTypesDirectly = bool(Key.dictionaryTypesDirectly, dictionaryTypesDirectly)
         showRomaji = bool(Key.showRomaji, showRomaji)
         flickOnly = bool(Key.flickOnly, flickOnly)
         flickSensitivity = value(Key.flickSensitivity, flickSensitivity)
@@ -335,6 +340,7 @@ public struct KeyboardSettings: Equatable {
         defaults.set(disabledSecondaryKeys, forKey: Key.disabledSecondaryKeys)
         defaults.set(animations, forKey: Key.animations)
         defaults.set(leftHandedWheel, forKey: Key.leftHandedWheel)
+        defaults.set(dictionaryTypesDirectly, forKey: Key.dictionaryTypesDirectly)
         defaults.set(showRomaji, forKey: Key.showRomaji)
         defaults.set(flickOnly, forKey: Key.flickOnly)
         defaults.set(flickSensitivity.rawValue, forKey: Key.flickSensitivity)

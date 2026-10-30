@@ -136,6 +136,16 @@ public final class FlickKeyboardEngine {
     }
 
     public func selectCandidate(_ candidate: Candidate) {
+        if let part = candidate.part, isComposing {
+            // The first word of a phrase: the rest stays, to convert next.
+            history?.record(reading: part, word: candidate.text)
+            output?.commit(candidate.text)
+            composer.removeFirst(part)
+            toggle = nil
+            output?.show(composer)
+            onChange?()
+            return
+        }
         if candidate.kind == .conversion {
             history?.record(reading: composer.finalizedText, word: candidate.text)
         }
