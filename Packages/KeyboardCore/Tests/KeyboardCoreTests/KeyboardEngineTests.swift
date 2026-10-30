@@ -238,6 +238,17 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertEqual(output.marked, "dog")
     }
 
+    func testDeleteAllBackwardClearsTextAndComposition() {
+        let engine = makeEngine(mode: .japanese)
+        output.insertText("今日は")
+        type("ten", into: engine)
+        XCTAssertEqual(output.marked, "てn")
+        XCTAssertEqual(engine.deleteAllBackward(), "今日は")
+        XCTAssertEqual(output.committed, "")
+        XCTAssertEqual(output.marked, "")
+        XCTAssertFalse(engine.isComposing)
+    }
+
     func testJapaneseModeOffersKanji() {
         let engine = makeEngine(mode: .japanese)
         engine.dictionary = .sample

@@ -75,6 +75,11 @@ class KeyButton: UIControl {
         fatalError("init(coder:) has not been implemented")
     }
 
+    /// Red while a swipe left on delete would clear everything.
+    var isWarning = false {
+        didSet { if isWarning != oldValue { applyColors() } }
+    }
+
     override var isHighlighted: Bool {
         didSet {
             applyColors()
@@ -174,14 +179,16 @@ class KeyButton: UIControl {
 
     private func applyColors() {
         let accented = isPrimaryAction && theme.accentReturnKey
-        if isHighlighted {
+        if isWarning {
+            keycap.backgroundColor = .systemRed
+        } else if isHighlighted {
             keycap.backgroundColor = theme.pressedKey
         } else if accented {
             keycap.backgroundColor = theme.accent
         } else {
             keycap.backgroundColor = isSpecial ? theme.specialKey : theme.key
         }
-        titleLabel.textColor = accented && !isHighlighted ? .white : theme.text
+        titleLabel.textColor = isWarning || (accented && !isHighlighted) ? .white : theme.text
         iconView.tintColor = titleLabel.textColor
         keycap.layer.cornerRadius = theme.keyCornerRadius
         keycap.layer.shadowOpacity = theme.keyShadows ? 0.3 : 0

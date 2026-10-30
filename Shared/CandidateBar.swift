@@ -57,6 +57,16 @@ final class CandidateBar: UIView {
         didSet { if notice != oldValue { rebuild() } }
     }
 
+    /// Shown on its own, in red, e.g. while a swipe on delete is about to clear everything.
+    var alert: String? {
+        didSet { if alert != oldValue { rebuild() } }
+    }
+
+    /// An Undo button in front of everything else, for a few seconds after clearing.
+    var onUndo: (() -> Void)? {
+        didSet { rebuild() }
+    }
+
     /// A temporary message that takes the placeholder's place, e.g. "GIF copied".
     var status: String? {
         didSet { if status != oldValue { rebuild() } }
@@ -122,6 +132,27 @@ final class CandidateBar: UIView {
             stack.layer.add(fade, forKey: "state")
         }
         shownState = state
+
+        if let alert {
+            let message = label(alert)
+            message.textColor = .systemRed
+            message.font = .systemFont(ofSize: 13, weight: .semibold)
+            stack.addArrangedSubview(message)
+            return
+        }
+        if let onUndo {
+            var configuration = UIButton.Configuration.filled()
+            configuration.cornerStyle = .capsule
+            configuration.baseBackgroundColor = theme.accent
+            configuration.baseForegroundColor = .white
+            var title = AttributedString("↩︎ 元に戻す · Undo")
+            title.font = .systemFont(ofSize: 13, weight: .semibold)
+            configuration.attributedTitle = title
+            configuration.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+            let undo = UIButton(configuration: configuration, primaryAction: UIAction { _ in onUndo() })
+            undo.setContentHuggingPriority(.required, for: .horizontal)
+            stack.addArrangedSubview(undo)
+        }
 
         if let search {
             addSearchField(search)

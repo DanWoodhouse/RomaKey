@@ -141,8 +141,10 @@ final class RomajiKeyboardView: KeyboardViewBase {
                 onTap: { [weak self] in self?.engine.press(.languageToggle) }
             )
         case .delete:
-            button.addTarget(self, action: #selector(deleteDown), for: .touchDown)
-            button.addTarget(self, action: #selector(deleteUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+            button.addTarget(self, action: #selector(deleteDown(_:forEvent:)), for: .touchDown)
+            button.addTarget(self, action: #selector(deleteTouchMoved(_:forEvent:)), for: [.touchDragInside, .touchDragOutside])
+            button.addTarget(self, action: #selector(deleteUp(_:)), for: [.touchUpInside, .touchUpOutside])
+            button.addTarget(self, action: #selector(deleteCancelled(_:)), for: .touchCancel)
         case .character, .longVowel:
             // Tap types the key; swipe up types its secondary (1, @, 、…).
             button.addTarget(self, action: #selector(letterDown(_:forEvent:)), for: .touchDown)
@@ -281,7 +283,8 @@ final class RomajiKeyboardView: KeyboardViewBase {
         engine.press(.character(text))
     }
 
-    @objc private func deleteDown() {
+    @objc private func deleteDown(_ sender: KeyButton, forEvent event: UIEvent) {
+        deleteTouchBegan(sender, event: event)
         feedback.keyDown()
         hideEntry()
         // After about a second of holding, delete whole words.
@@ -298,8 +301,23 @@ final class RomajiKeyboardView: KeyboardViewBase {
         }
     }
 
-    @objc private func deleteUp() {
+    @objc private func deleteUp(_ sender: KeyButton) {
         deleteRepeater.stop()
+        deleteTouchEnded(sender, cancelled: false)
+    }
+
+    @objc private func deleteCancelled(_ sender: KeyButton) {
+        deleteRepeater.stop()
+        deleteTouchEnded(sender, cancelled: true)
+    }
+
+    override func stopDeleteRepeat() {
+        deleteRepeater.stop()
+    }
+
+    override func deleteEverything() {
+        hideEntry()
+        engine.deleteAllBackward()
     }
 
     // MARK: - Held letters

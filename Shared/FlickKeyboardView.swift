@@ -108,8 +108,10 @@ final class FlickKeyboardView: KeyboardViewBase {
                 onTap: { [weak self] in self?.onModeKeyTap?() }
             )
         case .delete:
-            button.addTarget(self, action: #selector(deleteDown), for: .touchDown)
-            button.addTarget(self, action: #selector(deleteUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+            button.addTarget(self, action: #selector(deleteDown(_:forEvent:)), for: .touchDown)
+            button.addTarget(self, action: #selector(deleteTouchMoved(_:forEvent:)), for: [.touchDragInside, .touchDragOutside])
+            button.addTarget(self, action: #selector(deleteUp(_:)), for: [.touchUpInside, .touchUpOutside])
+            button.addTarget(self, action: #selector(deleteCancelled(_:)), for: .touchCancel)
         case .flick:
             button.addTarget(self, action: #selector(flickBegan(_:forEvent:)), for: .touchDown)
             button.addTarget(self, action: #selector(flickMoved(_:forEvent:)), for: [.touchDragInside, .touchDragOutside])
@@ -191,7 +193,8 @@ final class FlickKeyboardView: KeyboardViewBase {
         engine.press(sender.kind)
     }
 
-    @objc private func deleteDown() {
+    @objc private func deleteDown(_ sender: KeyButton, forEvent event: UIEvent) {
+        deleteTouchBegan(sender, event: event)
         feedback.keyDown()
         hideEntry()
         deleteRepeater.start { [weak self] repeatCount in
@@ -203,8 +206,23 @@ final class FlickKeyboardView: KeyboardViewBase {
         }
     }
 
-    @objc private func deleteUp() {
+    @objc private func deleteUp(_ sender: KeyButton) {
         deleteRepeater.stop()
+        deleteTouchEnded(sender, cancelled: false)
+    }
+
+    @objc private func deleteCancelled(_ sender: KeyButton) {
+        deleteRepeater.stop()
+        deleteTouchEnded(sender, cancelled: true)
+    }
+
+    override func stopDeleteRepeat() {
+        deleteRepeater.stop()
+    }
+
+    override func deleteEverything() {
+        hideEntry()
+        engine.deleteAllBackward()
     }
 }
 

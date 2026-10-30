@@ -119,6 +119,70 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     /// Subclasses show their engine's candidates here.
     func updateCandidates() {}
 
+    // MARK: - Swipe left on delete
+
+    private var clearStart: CGPoint?
+    private var clearArmed = false
+    private var textBeforeClear = ""
+    private var undoTimer: Timer?
+    private static let clearDistance: CGFloat = 50
+
+    /// Subclasses delete everything before the cursor, composition included.
+    func deleteEverything() {}
+
+    /// Subclasses stop delete repeating once a swipe takes over.
+    func stopDeleteRepeat() {}
+
+    /// Call at the start of delete's touch, before anything is deleted.
+    func deleteTouchBegan(_ key: KeyButton, event: UIEvent) {
+        clearStart = event.touches(for: key)?.first?.location(in: self)
+        clearArmed = false
+        textBeforeClear = document?.textBeforeCursor ?? ""
+    }
+
+    /// Swiping left from delete, far enough, arms clearing everything; back right disarms it.
+    @objc func deleteTouchMoved(_ key: KeyButton, forEvent event: UIEvent) {
+        guard let start = clearStart, let point = event.touches(for: key)?.first?.location(in: self) else { return }
+        let armed = start.x - point.x > Self.clearDistance
+        guard armed != clearArmed else { return }
+        clearArmed = armed
+        key.isWarning = armed
+        candidateBar.alert = armed ? "← 離すと全部消す · Release to delete everything" : nil
+        if armed {
+            stopDeleteRepeat()
+            feedback.keyDown()
+        }
+    }
+
+    /// Call when delete's touch ends: an armed swipe clears everything, with a few seconds to undo.
+    func deleteTouchEnded(_ key: KeyButton, cancelled: Bool) {
+        let armed = clearArmed
+        clearStart = nil
+        clearArmed = false
+        key.isWarning = false
+        candidateBar.alert = nil
+        guard armed, !cancelled else { return }
+        deleteEverything()
+        feedback.keyDown()
+        offerUndo(restoring: textBeforeClear)
+    }
+
+    private func offerUndo(restoring text: String) {
+        undoTimer?.invalidate()
+        guard !text.isEmpty else {
+            candidateBar.onUndo = nil
+            return
+        }
+        candidateBar.onUndo = { [weak self] in
+            self?.undoTimer?.invalidate()
+            self?.candidateBar.onUndo = nil
+            self?.insertDirectly(text)
+        }
+        undoTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { [weak self] _ in
+            self?.candidateBar.onUndo = nil
+        }
+    }
+
     private var candidatesPending = false
 
     /// Suggestions are worked out just after a key press has been handled, so a slow one (the

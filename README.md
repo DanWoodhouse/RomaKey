@@ -118,6 +118,7 @@ Learned words and choices stay on your phone, in each keyboard's own storage. Se
 
 - **Space-bar trackpad**: hold the space bar, then slide to move the cursor.
 - **Faster delete**: hold delete and after about a second it deletes whole words.
+- **Clear everything**: swipe left from delete. The key turns red; let go and everything before the cursor is deleted, with an Undo in the bar for 5 seconds. (A keyboard can only see the text the app shares before the cursor, which is usually the whole field.)
 - **Key popups** on the QWERTY keyboard.
 - **Auto-capitals** at the start of English sentences, and **double-space** for a full stop.
 - The 123 page goes back to letters after a space.

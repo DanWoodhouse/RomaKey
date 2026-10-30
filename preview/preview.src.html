@@ -167,6 +167,12 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 @keyframes kbslidel { from { transform: translateX(-14px); opacity: 0; } }
 .key.hinted .cap { padding-top: 6px; box-sizing: border-box; }
 .khint { position: absolute; font: 500 9px var(--font-key); line-height: 12px; color: var(--kb-muted); text-align: right; pointer-events: none; }
+.key.clearall .cap { background: #e5484d; color: #fff; }
+.kb.anim .key.clearall .cap { transition: background-color 160ms, transform 140ms; }
+.hint.clearhint { color: #e5484d; font-weight: 600; }
+.undo { flex: none; align-self: center; display: inline-flex; align-items: center; gap: 4px; margin: 0 6px 0 4px; padding: 6px 12px; border: 0; border-radius: 999px; cursor: pointer;
+  font: 600 13px var(--font-key); color: #fff; background: radial-gradient(130% 100% at 50% 0%, color-mix(in srgb, var(--kb-accent) 62%, #fff), var(--kb-accent) 60%); }
+.kb.anim .undo { animation: kbpop 300ms cubic-bezier(0.3, 1.5, 0.5, 1); }
 .cand .part { color: var(--kb-muted); font-size: 0.8em; margin-left: 1px; }
 .cand.auto { background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); }
 .cand.auto .w { font-weight: 600; }
@@ -619,6 +625,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       </div>
       <div class="checks"><h3>Cursor and delete</h3>
         <label class="check"><input type="checkbox" data-check="c1"><span>Hold the space bar and slide to move the cursor. Hold delete: it speeds up to whole words.</span></label>
+        <label class="check"><input type="checkbox" data-check="c2"><span>Swipe left from <span class="k">⌫</span>: it turns red and the bar says to let go. Let go: everything before the cursor is deleted. Tap <em>↩︎ 元に戻す · Undo</em> within 5 seconds to bring it back. Slide back right before letting go to cancel.</span></label>
       </div>
       <div class="checks"><h3>Key extras</h3>
         <label class="check"><input type="checkbox" data-check="x1"><span>Every letter has a small character in its corner. Swipe up on <span class="k">q</span> for 1, <span class="k">a</span> for @, <span class="k">m</span> for ?, with no wait. Swipe up then back down before letting go: the letter is typed instead.</span></label>
@@ -1562,7 +1569,19 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       : "Press and slide on a key. Tap the same key again to cycle. かな, bottom left, is the mode key: tap for ローマ字, drag for the wheel.";
   }
 
-  let statusText = null, statusTimer = null;
+  let statusText = null, statusTimer = null, undoOffer = null, clearHint = null;
+  // Swipe left on delete: everything before the cursor goes (and any composition), with a few
+  // seconds to undo. `restore` is the text before the cursor when the key was touched.
+  function deleteEverything(restore) {
+    if (active.composing) { if (active === romaji) romaji.query = ""; active.composer.reset(); out.setMarkedText(""); out.unmarkText(); }
+    const before = out.textBeforeCursor;
+    for (let i = 0; i < chars(before).length; i++) out.deleteBackward();
+    clearTimeout(undoOffer && undoOffer.timer);
+    undoOffer = restore ? { text: restore, timer: setTimeout(() => { undoOffer = null; render(); }, 5000) } : null;
+    keyFeedback();
+    if (active === romaji) romaji.autoCap();
+    render();
+  }
   function flash(text) { statusText = text; clearTimeout(statusTimer); statusTimer = setTimeout(() => { statusText = null; render(); }, 3000); render(); }
 
   const ICONS = {
@@ -1588,6 +1607,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   }
   function fillCandidates() {
     candsEl.textContent = "";
+    if (clearHint) { const h = document.createElement("span"); h.className = "hint clearhint"; h.textContent = clearHint; candsEl.appendChild(h); return; }
+    // After clearing everything with a swipe on delete, a few seconds to undo it.
+    if (undoOffer && !searching) {
+      const u = document.createElement("button");
+      u.type = "button"; u.className = "undo"; u.textContent = "↩︎ 元に戻す · Undo";
+      u.addEventListener("click", () => { const t = undoOffer.text; clearTimeout(undoOffer.timer); undoOffer = null; active.commit(); out.insertText(t); render(); });
+      candsEl.appendChild(u);
+    }
     if (searching) {
       const x = document.createElement("button"); x.type = "button"; x.className = "sclose"; x.textContent = "✕"; x.setAttribute("aria-label", "Cancel search");
       x.addEventListener("click", endSearch);
@@ -2410,7 +2437,7 @@ Text: よろしくおねがいします
   const inside = (el, e) => { const r = el.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
 
   function wire(el, capEl, key) {
-    let longTimer = null, mode = null, startX = 0, start = null, swipe = null;
+    let longTimer = null, mode = null, startX = 0, start = null, swipe = null, clearing = null;
     el.addEventListener("contextmenu", (e) => e.preventDefault());
     el.addEventListener("pointerdown", (e) => {
       e.preventDefault();
@@ -2420,6 +2447,7 @@ Text: よろしくおねがいします
       if (entryOpen) closeOverlays();
       mode = null; startX = e.clientX;
       if (key.kind === "delete") {
+        clearing = { x: e.clientX, armed: false, restore: out.textBeforeCursor };
         let count = 0;
         // After about a second of holding, delete whole words.
         const step = () => { if (count++ < 12) active.press(key); else active.deleteWord(); render(); };
@@ -2450,6 +2478,17 @@ Text: よろしくおねがいします
         if (slot !== wheel.slot) { wheel.slot = slot; highlightWheel(); }
       }
       if (mode === "accent") highlightAccent(e);
+      // Swipe left on delete to clear everything; back to the right to cancel.
+      if (key.kind === "delete" && clearing) {
+        const armed = clearing.x - e.clientX > 50;
+        if (armed !== clearing.armed) {
+          clearing.armed = armed;
+          el.classList.toggle("clearall", armed);
+          if (armed) { stopRepeat(); keyFeedback(); }
+          clearHint = armed ? "← 離すと全部消す · Release to delete everything" : null;
+          render();
+        }
+      }
       // Swipe up for the key's extra, straight away; back down for the letter again.
       if (swipe && !mode && settings.swipeUpSecondaries) {
         const extra = secondaryFor(key), armed = !!extra && swipe.y - e.clientY > 22;
@@ -2463,7 +2502,12 @@ Text: よろしくおねがいします
     });
     const end = (e, cancelled) => {
       el.classList.remove("down"); clearTimeout(longTimer); hidePopup();
-      if (key.kind === "delete") { stopRepeat(); return; }
+      if (key.kind === "delete") {
+        stopRepeat(); el.classList.remove("clearall");
+        const c = clearing; clearing = null;
+        if (c && c.armed) { clearHint = null; if (!cancelled) deleteEverything(c.restore); else render(); }
+        return;
+      }
       const swiped = swipe && swipe.armed; swipe = null;
       if (swiped && !mode) {
         const extra = secondaryFor(key);

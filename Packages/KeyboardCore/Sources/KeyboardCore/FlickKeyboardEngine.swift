@@ -202,6 +202,24 @@ public final class FlickKeyboardEngine {
         onChange?()
     }
 
+    /// Swipe left on delete: the composition goes, then everything before the cursor that the
+    /// text field shares. Returns what was removed.
+    @discardableResult
+    public func deleteAllBackward() -> String {
+        if isComposing {
+            composer.reset()
+            toggle = nil
+            output?.setMarkedText("")
+            output?.unmarkText()
+        }
+        let before = output?.textBeforeCursor ?? ""
+        for _ in 0..<before.count {
+            output?.deleteBackward()
+        }
+        onChange?()
+        return before
+    }
+
     /// Space-bar trackpad: moves the cursor, confirming any composition first.
     public func moveCursor(by offset: Int) {
         commitComposition()
