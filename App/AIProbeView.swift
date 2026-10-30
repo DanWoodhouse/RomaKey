@@ -17,6 +17,14 @@ struct AIProbeView: View {
                     .font(.footnote)
             }
 
+            Section {
+                NavigationLink("Check the prompts") {
+                    AIPromptCheckView()
+                }
+            } footer: {
+                Text("Tests every AI mode (grammar, translate, politeness, explain, kanji) on 35 sentences and scores the answers.")
+            }
+
             Section("このアプリ · In the app") {
                 Button {
                     Task {

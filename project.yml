@@ -23,6 +23,7 @@ targets:
       - App
       - Shared/KeyboardTheme.swift  # for the theme previews in Settings
       - Shared/AIProbe.swift
+      - Shared/AIAssistant.swift
     entitlements:
       path: App/JapaneseKeyboard.entitlements
       properties: &appGroups

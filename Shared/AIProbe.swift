@@ -1,4 +1,5 @@
 import Foundation
+import KeyboardCore
 #if canImport(FoundationModels)
 import FoundationModels
 #endif
@@ -33,12 +34,6 @@ enum AIProbe {
         "私は昨日学校を行きました。",
         "Yesterday I go to the park and buy a apple.",
     ]
-
-    static let instructions = """
-        You check the grammar and spelling of short texts for someone learning Japanese. \
-        Correct mistakes without changing the meaning or the language of the text. \
-        Explain each correction briefly in English. If there are no mistakes, return the text unchanged.
-        """
 
     static func run(process: String) async -> AIProbeResult {
         let before = memoryFootprintMB()
@@ -123,12 +118,19 @@ enum AIProbe {
         }
         guard model.isAvailable else { return result }
 
+        // The same grammar check the keyboard will use, prompts and validation included.
         for sample in samples {
-            let session = LanguageModelSession(instructions: instructions)
             let start = Date()
             do {
-                let check = try await session.respond(to: sample, generating: GrammarCheck.self).content
-                let output = ([check.corrected] + check.explanations.map { "• " + $0 }).joined(separator: "\n")
+                let output: String
+                switch try await AIAssistant.checkGrammar(sample) {
+                case .noMistakes:
+                    output = "No mistakes found"
+                case .corrected(let text, let corrections):
+                    output = ([text] + corrections.map { "• \($0.original) → \($0.fix): \($0.reason)" }).joined(separator: "\n")
+                case .unreliable:
+                    output = "Rejected: the model rewrote the text instead of fixing it"
+                }
                 result.tests.append(.init(input: sample, output: output, seconds: Date().timeIntervalSince(start)))
             } catch {
                 result.tests.append(.init(
@@ -142,16 +144,3 @@ enum AIProbe {
     }
     #endif
 }
-
-#if canImport(FoundationModels)
-/// What the grammar check returns. Guided generation guarantees the model fills in exactly this.
-@available(iOS 26.0, *)
-@Generable
-struct GrammarCheck {
-    @Guide(description: "The text with grammar and spelling mistakes corrected, in the same language as the input")
-    var corrected: String
-
-    @Guide(description: "One short English explanation per correction. Empty if there were no mistakes.")
-    var explanations: [String]
-}
-#endif

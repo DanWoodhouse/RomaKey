@@ -1,5 +1,7 @@
 # Apple's on-device AI for the keyboard
 
+> The prompts for each mode, and how they're tested, are in [ai-prompts.md](ai-prompts.md).
+
 Researched 30 Oct 2026. The app now includes a test (Settings → **Apple Intelligence test**) that answers the questions below that documentation can't.
 
 ## What it is

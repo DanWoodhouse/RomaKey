@@ -147,7 +147,7 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 - Reset the composition when the user moves the cursor mid-composition
 - A bigger dictionary (all of JMdict) in SQLite, if the common words aren't enough
 - Grammar checking: see [docs/grammar-checker.md](docs/grammar-checker.md) for the options and a recommended order
-- Apple Intelligence features (grammar check, sentence translation, politeness switch): see [docs/apple-intelligence.md](docs/apple-intelligence.md). Run Settings → **Apple Intelligence test** on your iPhone first; it checks whether the on-device model works inside the keyboard
+- Apple Intelligence features (grammar check, sentence translation, politeness switch): see [docs/apple-intelligence.md](docs/apple-intelligence.md). Run Settings → **Apple Intelligence test** on your iPhone first; it checks whether the on-device model works inside the keyboard. The prompts for each mode, and the test that scores them, are described in [docs/ai-prompts.md](docs/ai-prompts.md)
 
 ## Dictionary licence
 
