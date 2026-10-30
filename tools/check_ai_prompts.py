@@ -118,6 +118,7 @@ ideal = {
  "このケーキはおいしいだ。": "このケーキはおいしい。", "日本語を話すことができるです。": "日本語を話すことができます。",
  "Yesterday I go to the park.": "Yesterday I went to the park.", "She don't like coffee.": "She doesn't like coffee.",
  "I have lived here since three years.": "I have lived here for three years.", "There is many people here.": "There are many people here.",
+ "I ate a apple for lunch.": "I ate an apple for lunch.",
  "Where is the station?": ("駅はどこですか。", "えきはどこですか。"), "I'm hungry.": ("お腹が空きました。", "おなかがすきました。"),
  "Please speak more slowly.": ("もっとゆっくり話してください。", "もっとゆっくりはなしてください。"),
  "What is the capital of France?": ("フランスの首都はどこですか。", "ふらんすのしゅとはどこですか。"),

@@ -17,17 +17,20 @@ The prompts for Apple's on-device model, one per mode, live in `Packages/Keyboar
 | For non-US locales, start with "The person's locale is …" | Added in code from `Locale.current` |
 | Version prompts and re-test with each model | Each prompt has an id and version (e.g. `grammar-ja-v1`), and the report lists them |
 
+**Apple's safety filter** misfires on ordinary Japanese: on an iPhone, the grammar check of 私は昨日学校を行きました。 was refused with "The model's safety guardrails were triggered". Every mode only transforms the person's own text, which is what Apple's `permissiveContentTransformations` guardrails are for, so a refusal is retried once with them. Those guardrails only cover plain-text answers, so the retry asks for JSON in the examples' shape and decodes it into the same structure.
+
 Requests also use **greedy decoding** (the same text always gets the same answer), a **fresh session** each time (earlier requests can't leak in), and a **token limit** per mode.
 
 ## Each mode
 
-### Grammar: `grammar-ja-v1`, `grammar-en-v1`
+### Grammar: `grammar-ja-v1`, `grammar-en-v2`
 
 **Risks:** over-correcting text that's already right, rewriting for style, inventing explanations.
 
 - Two of the four Japanese examples (one of three in English) are correct sentences returned unchanged.
 - "Fix only real mistakes. Keep their words, meaning and politeness level. Do not rewrite for style."
 - The English prompt says British and American spellings are both correct.
+- v2 of the English prompt names what to check (tenses, agreement, articles, prepositions, plurals, spelling): on an iPhone, v1 fixed "go" and "buy" in *Yesterday I go to the park and buy a apple.* but left "a apple".
 - **Code checks:**
   - an output identical to the input means no mistakes;
   - an output less than 40% similar to the input is treated as a rewrite, and nothing is shown;
@@ -79,7 +82,7 @@ Honorific isn't a translation style: translate politely, then use the politeness
 
 ## Test set
 
-`AIEvaluation.swift` has 43 learner-style cases, none copied from the prompts' examples:
+`AIEvaluation.swift` has 44 learner-style cases, none copied from the prompts' examples:
 
 | Mode | Cases | Includes |
 |---|---|---|

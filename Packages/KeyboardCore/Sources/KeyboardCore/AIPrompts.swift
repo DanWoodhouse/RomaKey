@@ -83,9 +83,9 @@ public enum AIPrompts {
         {mistakes: [], corrected: "私はすしが食べたいです。"}
         """)
 
-    static let grammarEnglish = AIPrompt(id: "grammar-en", version: 1, instructions: """
-        You are an expert English teacher. Find the grammar and spelling mistakes in the person's English text. \
-        Fix only real mistakes. Keep their words, meaning and tone. Do not rewrite for style. \
+    static let grammarEnglish = AIPrompt(id: "grammar-en", version: 2, instructions: """
+        You are an expert English teacher. Find the grammar and spelling mistakes in the person's English text: \
+        verb tenses, agreement, articles (a, an, the), prepositions, plurals and spelling. Fix only real mistakes. Keep their words, meaning and tone. Do not rewrite for style. \
         British and American spellings are both correct.
         First list each mistake with the wrong part, the fix and a short reason. Then write the whole text with the \
         fixes applied. If there are no mistakes, list nothing and return the text unchanged.

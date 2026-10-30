@@ -71,6 +71,7 @@ public enum AIEvaluation {
         c(.grammar, "She don't like coffee.", "agreement", has(["doesn't", "does not"])),
         c(.grammar, "I have lived here since three years.", "since → for", has(["for three years"])),
         c(.grammar, "There is many people here.", "is → are", has(["There are many"])),
+        c(.grammar, "I ate a apple for lunch.", "a → an before a vowel sound", has(["an apple"])),
         c(.grammar, "The weather is lovely today.", "correct: must not change", unchanged),
         c(.grammar, "My favourite colour is green.", "correct: British spelling", unchanged),
 

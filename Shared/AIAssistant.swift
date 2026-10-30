@@ -198,59 +198,77 @@ enum AIAssistant {
 
     // MARK: - Model calls
 
-    private static func session(for prompt: AIPrompt) -> LanguageModelSession {
+    private static func instructions(for prompt: AIPrompt) -> String {
         // Apple's advice for non-US locales: start the instructions with this exact phrase.
         let locale = Locale.current
         let localePhrase = Locale.Language(identifier: "en_US").isEquivalent(to: locale.language)
             ? ""
             : "The person's locale is \(locale.identifier).\n"
-        return LanguageModelSession(instructions: localePhrase + prompt.instructions)
+        return localePhrase + prompt.instructions
     }
 
     private static func options(maximumTokens: Int) -> GenerationOptions {
         GenerationOptions(samplingMode: .greedy, maximumResponseTokens: maximumTokens)
     }
 
+    /// Asks the model for a structured answer.
+    ///
+    /// Apple's safety filter sometimes stops ordinary non-English text (私は昨日学校を行きました。
+    /// was refused on an iPhone). Every mode only transforms the person's own text, which is what
+    /// the permissive guardrails are for, so a refusal is retried once with them. They only
+    /// apply to plain-text answers, so the retry asks for JSON in the same shape and decodes it.
+    private static func generate<Response: Generable>(
+        _ prompt: AIPrompt, input: String, as type: Response.Type, maximumTokens: Int
+    ) async throws -> Response {
+        do {
+            return try await LanguageModelSession(instructions: instructions(for: prompt))
+                .respond(to: AIPrompts.prompt(for: input), generating: type, options: options(maximumTokens: maximumTokens))
+                .content
+        } catch LanguageModelSession.GenerationError.guardrailViolation {
+            let permissive = SystemLanguageModel(guardrails: .permissiveContentTransformations)
+            let session = LanguageModelSession(model: permissive, instructions: instructions(for: prompt) + """
+
+                Answer with JSON only, in the same shape as the examples, with every key in double quotes.
+                """)
+            let answer = try await session
+                .respond(to: AIPrompts.prompt(for: input), options: options(maximumTokens: maximumTokens))
+                .content
+            return try Response(GeneratedContent(json: jsonObject(in: answer)))
+        }
+    }
+
+    /// The outermost {…} in an answer, without any text or code fences around it.
+    private static func jsonObject(in text: String) -> String {
+        guard let start = text.firstIndex(of: "{"), let end = text.lastIndex(of: "}"), start < end else { return text }
+        return String(text[start...end])
+    }
+
     private static func grammarResponse(_ input: String) async throws -> GrammarResponse {
-        try await session(for: AIPrompts.grammar(for: input))
-            .respond(to: AIPrompts.prompt(for: input), generating: GrammarResponse.self, options: options(maximumTokens: 500))
-            .content
+        try await generate(AIPrompts.grammar(for: input), input: input, as: GrammarResponse.self, maximumTokens: 500)
     }
 
     private static func translationResponse(_ input: String, style: Politeness) async throws -> TranslationResponse {
-        try await session(for: AIPrompts.translate(style: style))
-            .respond(to: AIPrompts.prompt(for: input), generating: TranslationResponse.self, options: options(maximumTokens: 300))
-            .content
+        try await generate(AIPrompts.translate(style: style), input: input, as: TranslationResponse.self, maximumTokens: 300)
     }
 
     private static func rewriteResponse(_ input: String, target: Politeness) async throws -> RewriteResponse {
-        try await session(for: AIPrompts.politeness(target))
-            .respond(to: AIPrompts.prompt(for: input), generating: RewriteResponse.self, options: options(maximumTokens: 300))
-            .content
+        try await generate(AIPrompts.politeness(target), input: input, as: RewriteResponse.self, maximumTokens: 300)
     }
 
     private static func explanationResponse(_ input: String) async throws -> ExplanationResponse {
-        try await session(for: AIPrompts.explain)
-            .respond(to: AIPrompts.prompt(for: input), generating: ExplanationResponse.self, options: options(maximumTokens: 400))
-            .content
+        try await generate(AIPrompts.explain, input: input, as: ExplanationResponse.self, maximumTokens: 400)
     }
 
     private static func englishRewriteResponse(_ input: String, style: EnglishStyle) async throws -> RewriteResponse {
-        try await session(for: AIPrompts.englishRewrite(style))
-            .respond(to: AIPrompts.prompt(for: input), generating: RewriteResponse.self, options: options(maximumTokens: 300))
-            .content
+        try await generate(AIPrompts.englishRewrite(style), input: input, as: RewriteResponse.self, maximumTokens: 300)
     }
 
     private static func englishTranslationResponse(_ input: String) async throws -> EnglishTranslationResponse {
-        try await session(for: AIPrompts.toEnglish)
-            .respond(to: AIPrompts.prompt(for: input), generating: EnglishTranslationResponse.self, options: options(maximumTokens: 300))
-            .content
+        try await generate(AIPrompts.toEnglish, input: input, as: EnglishTranslationResponse.self, maximumTokens: 300)
     }
 
     private static func conversionResponse(_ input: String) async throws -> ConversionResponse {
-        try await session(for: AIPrompts.kanji)
-            .respond(to: AIPrompts.prompt(for: input), generating: ConversionResponse.self, options: options(maximumTokens: 200))
-            .content
+        try await generate(AIPrompts.kanji, input: input, as: ConversionResponse.self, maximumTokens: 200)
     }
 }
 
