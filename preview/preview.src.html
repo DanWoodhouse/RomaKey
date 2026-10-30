@@ -170,6 +170,9 @@ input[type="checkbox"].qswitch:checked::before { transform: translateX(18px); }
 .aiaction { font: 500 13px var(--font-key); color: var(--kb-text); background: var(--kb-key); border: 0; border-radius: 8px; padding: 7px 10px; cursor: pointer; box-shadow: 0 1px 0 var(--kb-shadow); }
 .aiaction.on { background: var(--kb-accent); color: #fff; }
 .aiaction:disabled { opacity: 0.45; cursor: default; }
+.ebar .aiseg { display: inline-flex; flex: none; gap: 2px; padding: 2px; border-radius: 8px; background: var(--kb-special); }
+.ebar .aiseg button { flex: none; height: 26px; font: 600 12px var(--font-key); color: var(--kb-text); background: transparent; border: 0; border-radius: 6px; padding: 0 10px; cursor: pointer; }
+.ebar .aiseg button[aria-pressed="true"] { background: var(--kb-key); box-shadow: 0 1px 0 var(--kb-shadow); }
 .airesult { display: grid; gap: 4px; }
 .aimain { font-size: 17px; line-height: 1.4; }
 .aiextra { font-size: 13px; color: var(--kb-muted); line-height: 1.4; }
@@ -344,6 +347,11 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <p class="help">Press delete straight after an autocorrection to undo it. On iPhone, suggestions use Apple's spell checker; this preview uses the 25,000 most common English words.</p>
       </div>
       <div class="group">
+        <h3>✨ AI</h3>
+        <div class="row"><span>Answered by</span><span class="seg" id="seg-aiProvider"></span></div>
+        <p class="help">Apple Intelligence (the default) runs on the iPhone, so it only answers there. Claude answers here too, with the same instructions; in the app it uses your own API key and needs Full Access.</p>
+      </div>
+      <div class="group">
         <h3>GIF</h3>
         <div class="row"><label for="giphy-key">GIPHY API key</label><input type="password" id="giphy-key" autocomplete="off" spellcheck="false" placeholder="Paste your key"></div>
         <div class="row"><span>Content rating</span><span class="seg" id="seg-gifRating"></span></div>
@@ -406,6 +414,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       <div class="checks"><h3>Emoji, 顔文字 and toolbar</h3>
         <label class="check"><input type="checkbox" data-check="m1"><span>Clear the text: the bar above the keys becomes a toolbar (😊, (^_^), GIF, paste).</span></label>
         <label class="check"><input type="checkbox" data-check="m2"><span>Open emoji and scroll the whole way: one list, headings pinned, tabs following. Tap 🍙 to jump.</span></label>
+        <label class="check"><input type="checkbox" data-check="m6"><span>Use a 顔文字, then open emoji: Recent shows only emoji, never 顔文字.</span></label>
         <label class="check"><input type="checkbox" data-check="m3"><span>Long-press 👍 for skin tones; your pick sticks for every emoji.</span></label>
         <label class="check"><input type="checkbox" data-check="m4"><span>🔍 search: <em>cat</em>, or <em>neko</em> in あ mode.</span></label>
         <label class="check"><input type="checkbox" data-check="m5"><span>顔 tab and the (^_^) button: kaomoji by mood.</span></label>
@@ -418,9 +427,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="s2"><span>On a phone, <em>Settings ↓</em> at the top jumps to every option: themes, photo, height, GIF and the rest.</span></label>
       </div>
       <div class="checks"><h3>✨ AI</h3>
-        <label class="check"><input type="checkbox" data-check="a1"><span>Type a sentence with a mistake and end it (<em>Last week we goes to the beach.</em>), then tap ✨ → <em>Check grammar</em>. Allow Claude when asked. Tap <em>Use this</em> to swap the fix in.</span></label>
+        <label class="check"><input type="checkbox" data-check="a1"><span>Type a sentence with a mistake and end it (<em>Last week we goes to the beach.</em>), then tap ✨ (in the toolbar, or between words next to 😊). Apple Intelligence is the default and only answers on iPhone, so switch to <em>Claude</em> in the panel, tap <em>Check grammar</em> and allow Claude when asked. Tap <em>Use this</em> to swap the fix in.</span></label>
         <label class="check"><input type="checkbox" data-check="a2"><span>English → ✨ → <em>→ 日本語 polite</em>: a translation with its reading. Japanese (<em>明日何時に来る？</em>) → ✨ → <em>敬語</em> or <em>説明 Explain</em>.</span></label>
-        <label class="check"><input type="checkbox" data-check="a3"><span>In the preview Claude answers, with the app's exact instructions and checks. On iPhone it's Apple's on-device model: run the app's Apple Intelligence test first.</span></label>
+        <label class="check"><input type="checkbox" data-check="a3"><span>On iPhone, Apple's on-device model answers by default (run the app's Apple Intelligence test first). Claude is the option there too, with your own API key in Settings → AI.</span></label>
       </div>
       <div class="checks"><h3>Look</h3>
         <label class="check"><input type="checkbox" data-check="l1"><span>Themes, custom colours, a background photo with darken, blur and key opacity, and the three heights.</span></label>
@@ -453,7 +462,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     spaceBarCursor: true, theme: "system", height: "standard",
     customColors: null, keyOpacity: 1, backgroundDim: 0.2, backgroundBlur: false,
     emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
-    keySounds: true, haptics: false, predictiveText: true, keyFont: "system", textSize: "standard", boldKeys: false, giphyAPIKey: "", gifRating: "pg", holdForNumbers: true, leftHandedWheel: false, showRomaji: false,
+    keySounds: true, haptics: false, predictiveText: true, aiProvider: "apple", keyFont: "system", textSize: "standard", boldKeys: false, giphyAPIKey: "", gifRating: "pg", holdForNumbers: true, leftHandedWheel: false, showRomaji: false,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
@@ -581,6 +590,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (_) { return d; } };
   const keep = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
   let recents = load("kb-recent", []), history = load("kb-history", {});
+  const isSingleEmoji = (t) => { try { return [...new Intl.Segmenter().segment(t)].length === 1; } catch (_) { return chars(t).length <= 2; } };
   const useRecent = (t) => { recents = [t, ...recents.filter((x) => x !== t)].slice(0, 32); keep("kb-recent", recents); };
   const recordChoice = (reading, word) => {
     if (!reading || reading === word) return;
@@ -1176,9 +1186,11 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     }
     // Predictions keep an emoji button in front, so emoji stay one tap away.
     if (list.length && list[0].kind === "prediction") {
-      const lead = tool(ICONS.emoji, "Emoji", () => showEmojiPanel(recents.length ? "recent" : 0));
-      lead.classList.add("lead");
-      candsEl.appendChild(lead);
+      // Between words: emoji and AI stay one tap away in front of the predictions.
+      for (const lead of [tool(ICONS.emoji, "Emoji", () => showEmojiPanel(recents.length ? "recent" : 0)), tool(ICONS.sparkle, "AI", showAIPanel)]) {
+        lead.classList.add("lead");
+        candsEl.appendChild(lead);
+      }
     }
     for (const c of list) {
       const b = document.createElement("button");
@@ -1270,7 +1282,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     const panel = openPanel();
     const grid = document.createElement("div");
     grid.className = "egrid" + (kao ? " kao" : "");
-    const insert = (t) => { useRecent(t); active.commit(); out.insertText(t); render(); };
+    // 顔文字 aren't added to the emoji recents.
+    const insert = (t) => { if (!kao) useRecent(t); active.commit(); out.insertText(t); render(); };
     const cell = (t, e) => {
       const b = document.createElement("button");
       b.type = "button"; b.className = "ecell" + (kao ? " kao" : ""); b.textContent = t;
@@ -1302,7 +1315,9 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       }
     } else {
       const recent = section("recent", "よく使う · Recent");
-      for (const t of (recents.length ? recents : ["😊", "👍", "🙏", "😂", "❤️", "🎉"])) recent.appendChild(cell(t, emojiList.find((e) => e.ch === t)));
+      // Only single emoji, so 顔文字 saved by earlier versions don't show up at emoji size.
+      const shown = recents.filter(isSingleEmoji);
+      for (const t of (shown.length ? shown : ["😊", "👍", "🙏", "😂", "❤️", "🎉"])) recent.appendChild(cell(t, emojiList.find((e) => e.ch === t)));
       for (const [g, , name] of GROUPS) {
         const box = section(String(g), name);
         for (const e of emojiList) if (e.group === g) box.appendChild(cell(toned(e), e));
@@ -1524,14 +1539,28 @@ Text: よろしくおねがいします
     bar.className = "ebar";
     const heading = document.createElement("span");
     heading.className = "qhead"; heading.textContent = "✨ AI";
-    bar.append(barButton("ABC", "Back to the keys", () => { aiAbort?.abort(); closePanel(); render(); }, "word"), heading);
+    // Apple Intelligence by default, like the app; Claude can be picked here or in Customise.
+    const apple = settings.aiProvider !== "claude";
+    const providers = document.createElement("span");
+    providers.className = "aiseg";
+    providers.setAttribute("role", "group"); providers.setAttribute("aria-label", "Answered by");
+    for (const [id, name] of [["apple", "Apple"], ["claude", "Claude"]]) {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = name; b.setAttribute("aria-pressed", String(apple === (id === "apple")));
+      b.addEventListener("click", () => { aiAbort?.abort(); settings.aiProvider = id; saveSettings(); syncControls(); showAIPanel(); });
+      providers.appendChild(b);
+    }
+    bar.append(barButton("ABC", "Back to the keys", () => { aiAbort?.abort(); closePanel(); render(); }, "word"), heading, providers);
     panel.append(body, bar);
 
     const say = (cls, text) => { const el = document.createElement("div"); el.className = cls; el.textContent = text; return el; };
     const quote = say("aiquote", input || "");
-    const note = say("ainote", sampleFn
-      ? "Preview: Claude answers here, using your Claude usage. On iPhone, Apple's on-device model answers with the same instructions."
-      : "AI needs this page open in Claude (the claude.ai page or app). On iPhone it runs on Apple Intelligence.");
+    const note = say("ainote", apple
+      ? "Apple Intelligence runs on your iPhone (iOS 26, iPhone 15 Pro or newer), so it can't answer in this browser. Switch to Claude to try these here."
+      : sampleFn
+        ? "Claude answers here, using your Claude usage, with the app's exact instructions and checks. In the app, Claude uses your own API key."
+        : "Claude needs this page open in Claude (claude.ai or the Claude app).");
+    const usable = !apple && !!sampleFn;
     if (!input) { body.append(say("aimsg", "Type something first, then tap ✨. AI works on the text before the cursor."), note); return; }
 
     const ja = hasJapanese(input), allKana = ja && !/[一-鿿㐀-䶿]/.test(input);
@@ -1543,7 +1572,7 @@ Text: よろしくおねがいします
     for (const [label, mode] of actions) {
       const b = document.createElement("button");
       b.type = "button"; b.className = "aiaction"; b.textContent = label;
-      b.disabled = !sampleFn;
+      b.disabled = !usable;
       b.addEventListener("click", () => run(mode));
       row.appendChild(b);
     }
@@ -1902,12 +1931,13 @@ Text: よろしくおねがいします
   }
   segmented("seg-height", "height", [["compact", "Compact"], ["standard", "Standard"], ["tall", "Tall"]]);
   segmented("seg-sensitivity", "flickSensitivity", [["gentle", "Gentle"], ["normal", "Normal"], ["quick", "Quick"]]);
+  segmented("seg-aiProvider", "aiProvider", [["apple", "Apple Intelligence"], ["claude", "Claude"]]);
   segmented("seg-keyFont", "keyFont", [["system", "System"], ["rounded", "Rounded 丸"], ["serif", "Serif 明朝"], ["mono", "Mono"]]);
   segmented("seg-textSize", "textSize", [["small", "S"], ["standard", "M"], ["large", "L"]]);
   segmented("seg-startingMode", "startingMode", [["japanese", "あ"], ["english", "EN"], ["dictionary", "辞"], ["lastUsed", "Last used"]]);
   segmented("seg-skinTone", "skinTone", ["👍", "👍🏻", "👍🏼", "👍🏽", "👍🏾", "👍🏿"].map((t, i) => [i, t]));
   segmented("seg-gifRating", "gifRating", [["g", "G"], ["pg", "PG"], ["pg-13", "PG-13"], ["r", "R"]]);
-  const SEGMENTS = [["seg-height", "height"], ["seg-sensitivity", "flickSensitivity"], ["seg-startingMode", "startingMode"], ["seg-skinTone", "skinTone"], ["seg-gifRating", "gifRating"], ["seg-keyFont", "keyFont"], ["seg-textSize", "textSize"]];
+  const SEGMENTS = [["seg-height", "height"], ["seg-sensitivity", "flickSensitivity"], ["seg-startingMode", "startingMode"], ["seg-skinTone", "skinTone"], ["seg-gifRating", "gifRating"], ["seg-keyFont", "keyFont"], ["seg-textSize", "textSize"], ["seg-aiProvider", "aiProvider"]];
   $("giphy-key").addEventListener("input", (e) => { settings.giphyAPIKey = e.target.value.trim(); saveSettings(); });
   $("forget").addEventListener("click", () => {
     learned = {}; history = {}; recents = [];

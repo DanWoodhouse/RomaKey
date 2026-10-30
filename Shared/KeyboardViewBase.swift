@@ -194,8 +194,15 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         case .ai:
             commitTyping()
             let input = AIPrompts.trimmedInput(document?.textBeforeCursor ?? "")
-            let panel = AIPanel(input: input, theme: theme, showsRomaji: settings.showRomaji)
+            let panel = AIPanel(input: input, theme: theme, showsRomaji: settings.showRomaji,
+                                provider: settings.aiProvider, claudeAPIKey: settings.claudeAPIKey)
             panel.onClose = { [weak self] in self?.closePanel() }
+            panel.onProviderChange = { [weak self] provider in
+                guard let self else { return }
+                var newSettings = self.settings
+                newSettings.aiProvider = provider
+                self.onSettingsChange?(newSettings)
+            }
             panel.onReplace = { [weak self] text in
                 self?.replaceTextBeforeCursor(input, with: text)
                 self?.closePanel()

@@ -118,8 +118,10 @@ final class CandidateBar: UIView {
             return
         }
 
+        // Between words: emoji and AI stay one tap away in front of the predictions.
         if candidates.first?.kind == .prediction {
             addToolbarButton(.emoji)
+            addToolbarButton(.ai)
         }
         for (index, candidate) in candidates.enumerated() {
             let cell = CandidateCell(candidate: candidate, showsMeaning: showsMeanings, showsRomaji: showsRomaji,

@@ -70,7 +70,7 @@ struct SettingsView: View {
         Form {
             Section {
                 Label {
-                    Text("Turn on **Allow Full Access** for the keyboards so they can read these settings. Nothing you type leaves your phone; the only network use is GIF search, once you add a GIPHY key.")
+                    Text("Turn on **Allow Full Access** for the keyboards so they can read these settings. Nothing you type leaves your phone, except GIF searches once you add a GIPHY key and ✨ requests if you choose Claude.")
                 } icon: {
                     Image(systemName: "lock.shield")
                 }
@@ -120,6 +120,25 @@ struct SettingsView: View {
                 Text("候補 · Suggestions")
             } footer: {
                 Text("English suggestions and autocorrect use Apple's built-in spell checker, your text replacements and words you type often. Press delete straight after an autocorrection to undo it. Predictive text offers the next word after each word you finish, learning the pairs you type (in Japanese too). The keyboard also remembers which kanji you pick for each reading. All of this stays on your phone. You can also switch these from the keyboard: clear the text and tap ⚙︎.")
+            }
+
+            Section {
+                Picker("Answered by", selection: $store.settings.aiProvider) {
+                    Text("Apple Intelligence").tag(KeyboardSettings.AIProvider.apple)
+                    Text("Claude").tag(KeyboardSettings.AIProvider.claude)
+                }
+                if store.settings.aiProvider == .claude {
+                    SecureField("Claude API key", text: $store.settings.claudeAPIKey)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Link("Get a key at platform.claude.com", destination: URL(string: "https://platform.claude.com/settings/keys")!)
+                }
+            } header: {
+                Text("✨ AI")
+            } footer: {
+                Text(store.settings.aiProvider == .apple
+                     ? "Apple Intelligence runs on your iPhone, so nothing you type leaves it. It needs iOS 26 on an iPhone 15 Pro or newer with Apple Intelligence on. Finish a sentence and tap ✨ in the keyboard."
+                     : "Claude answers with the same instructions, using your own API key and the Claude Opus 5.5 model. The text you ask about is sent to Anthropic, and the keyboard needs Allow Full Access. You can switch back to Apple in the ✨ panel at any time.")
             }
 
             Section {

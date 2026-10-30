@@ -92,6 +92,8 @@ final class KeyboardSettingsTests: XCTestCase {
         settings.keyFont = .rounded
         settings.textSize = .large
         settings.boldKeys = true
+        settings.aiProvider = .claude
+        settings.claudeAPIKey = "sk-test"
         settings.save(to: defaults)
         XCTAssertEqual(KeyboardSettings(defaults: defaults), settings)
 
@@ -128,6 +130,8 @@ final class KeyboardSettingsTests: XCTestCase {
         defaults.set(["english"], forKey: "languageKeyModes")  // fewer than two: ignored
         let settings = KeyboardSettings(defaults: defaults)
         XCTAssertEqual(settings, KeyboardSettings())
+        // AI defaults to Apple Intelligence, on the phone.
+        XCTAssertEqual(settings.aiProvider, .apple)
     }
 
     func testLastUsedMode() throws {

@@ -63,6 +63,14 @@ public struct KeyboardSettings: Equatable {
         }
     }
 
+    /// Which model answers the ✨ panel.
+    public enum AIProvider: String, CaseIterable {
+        /// Apple Intelligence, on the phone. Needs iOS 26 and a supported iPhone.
+        case apple
+        /// Claude, with the user's own API key. The text goes to Anthropic.
+        case claude
+    }
+
     public enum Height: String, CaseIterable {
         case compact
         case standard
@@ -115,6 +123,11 @@ public struct KeyboardSettings: Equatable {
     public var giphyAPIKey = ""
     /// GIPHY content rating: g, pg, pg-13 or r.
     public var gifRating = "pg"
+    // AI
+    public var aiProvider: AIProvider = .apple
+    /// Your own Claude API key, for `AIProvider.claude`. Needs Full Access.
+    public var claudeAPIKey = ""
+
     /// The app changes this to ask the keyboards to forget learned words and choices.
     public var learningResetID: String?
 
@@ -174,6 +187,8 @@ public struct KeyboardSettings: Equatable {
         static let skinTone = "skinTone"
         static let giphyAPIKey = "giphyAPIKey"
         static let gifRating = "gifRating"
+        static let aiProvider = "aiProvider"
+        static let claudeAPIKey = "claudeAPIKey"
         static let learningResetID = "learningResetID"
         static let customColors = "customColors"
         static let keyOpacity = "keyOpacity"
@@ -229,6 +244,8 @@ public struct KeyboardSettings: Equatable {
         giphyAPIKey = defaults.string(forKey: Key.giphyAPIKey) ?? giphyAPIKey
         gifRating = ["g", "pg", "pg-13", "r"].contains(defaults.string(forKey: Key.gifRating) ?? "")
             ? defaults.string(forKey: Key.gifRating)! : gifRating
+        aiProvider = value(Key.aiProvider, aiProvider)
+        claudeAPIKey = defaults.string(forKey: Key.claudeAPIKey) ?? claudeAPIKey
         learningResetID = defaults.string(forKey: Key.learningResetID)
         if let saved = defaults.dictionary(forKey: Key.customColors) as? [String: Int] {
             customColors = ThemeColors(dictionary: saved, fallback: customColors)
@@ -269,6 +286,8 @@ public struct KeyboardSettings: Equatable {
         defaults.set(skinTone, forKey: Key.skinTone)
         defaults.set(giphyAPIKey, forKey: Key.giphyAPIKey)
         defaults.set(gifRating, forKey: Key.gifRating)
+        defaults.set(aiProvider.rawValue, forKey: Key.aiProvider)
+        defaults.set(claudeAPIKey, forKey: Key.claudeAPIKey)
         defaults.set(learningResetID, forKey: Key.learningResetID)
         defaults.set(customColors.dictionary, forKey: Key.customColors)
         defaults.set(keyOpacity, forKey: Key.keyOpacity)

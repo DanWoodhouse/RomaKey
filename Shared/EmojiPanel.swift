@@ -157,7 +157,8 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
             sectionTabs = sections.map { _ in .kaomoji }
             return
         }
-        let recent = recents?.items ?? []
+        // Only emoji: one character each, so 顔文字 never show up here at emoji size.
+        let recent = (recents?.items ?? []).filter { $0.count == 1 }
         sections = [("よく使う · Recent", recent.isEmpty ? ["😊", "👍", "🙏", "😂", "❤️", "🎉"] : recent)]
         sectionTabs = [.recent]
         for group in EmojiGroup.allCases {
@@ -265,7 +266,9 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
         tonePicker?.removeFromSuperview()
         tonePicker = nil
         let item = display(sections[indexPath.section].items[indexPath.item])
-        recents?.use(item)
+        if !showingKaomoji {
+            recents?.use(item)
+        }
         onInsert?(item)
     }
 

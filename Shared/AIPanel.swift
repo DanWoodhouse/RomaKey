@@ -1,17 +1,21 @@
 import KeyboardCore
 import UIKit
 
-/// ✨ in the toolbar: Apple Intelligence on the text before the cursor, in place of the keys.
+/// ✨ in the toolbar: AI on the text before the cursor, in place of the keys. Apple Intelligence
+/// answers by default; Claude can be picked instead, here or in the app.
 /// Japanese gets grammar, an explanation, casual/です・ます/敬語 rewrites and kanji conversion;
 /// English gets grammar and translation into Japanese. Results go through `AIValidation`, and
 /// "Use this" swaps them in for the text.
 ///
-/// Needs iOS 26 and Apple Intelligence. Whether Apple's model runs inside a keyboard isn't
-/// documented: the app's Apple Intelligence test checks it on your phone.
+/// Apple Intelligence needs iOS 26 on a supported iPhone. Whether Apple's model runs inside a
+/// keyboard isn't documented: the app's Apple Intelligence test checks it on your phone. Claude
+/// needs the user's API key and Full Access.
 final class AIPanel: UIView {
     var onClose: (() -> Void)?
     /// Replaces the text the AI worked on.
     var onReplace: ((String) -> Void)?
+    /// Apple or Claude was picked in the panel; the keyboard saves it.
+    var onProviderChange: ((KeyboardSettings.AIProvider) -> Void)?
 
     enum Action: CaseIterable {
         case grammar, explain, casual, polite, honorific, kanji, toCasual, toPolite, toHonorific
@@ -41,6 +45,8 @@ final class AIPanel: UIView {
     private let input: String
     private let theme: KeyboardTheme
     private let showsRomaji: Bool
+    private var provider: KeyboardSettings.AIProvider
+    private let claudeAPIKey: String
     private let scrollView = UIScrollView()
     private let content = UIStackView()
     private let results = UIStackView()
@@ -49,10 +55,12 @@ final class AIPanel: UIView {
     private var task: Task<Void, Never>?
     private static let barHeight: CGFloat = 38
 
-    init(input: String, theme: KeyboardTheme, showsRomaji: Bool) {
+    init(input: String, theme: KeyboardTheme, showsRomaji: Bool, provider: KeyboardSettings.AIProvider, claudeAPIKey: String) {
         self.input = input
         self.theme = theme
         self.showsRomaji = showsRomaji
+        self.provider = provider
+        self.claudeAPIKey = claudeAPIKey
         super.init(frame: .zero)
 
         content.axis = .vertical
@@ -150,9 +158,18 @@ final class AIPanel: UIView {
         title.font = .systemFont(ofSize: 14, weight: .semibold)
         done.attributedTitle = title
         bar.addArrangedSubview(UIButton(configuration: done, primaryAction: UIAction { [weak self] _ in self?.onClose?() }))
-        let heading = label("✨ Apple Intelligence", size: 13, secondary: true)
-        heading.textAlignment = .center
-        bar.addArrangedSubview(heading)
+        let providers = UISegmentedControl(items: ["Apple", "Claude"])
+        providers.selectedSegmentIndex = provider == .apple ? 0 : 1
+        providers.accessibilityLabel = "Answered by"
+        providers.addAction(UIAction { [weak self, weak providers] _ in
+            guard let self, let providers else { return }
+            self.provider = providers.selectedSegmentIndex == 0 ? .apple : .claude
+            self.onProviderChange?(self.provider)
+            self.results.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        }, for: .valueChanged)
+        let spacer = UIView()
+        bar.addArrangedSubview(spacer)
+        bar.addArrangedSubview(providers)
         return bar
     }
 
@@ -176,12 +193,14 @@ final class AIPanel: UIView {
         show(Outcome(main: "Thinking…"))
         let input = input
         let showsRomaji = showsRomaji
+        let engine = self.engine
         task = Task { @MainActor [weak self] in
             let result: Outcome
-            if #available(iOS 26.0, *) {
-                result = await Self.perform(action, input: input, showsRomaji: showsRomaji)
-            } else {
-                result = Outcome(main: "AI needs iOS 26 with Apple Intelligence turned on.")
+            switch engine {
+            case .ready(let engine):
+                result = await Self.perform(action, input: input, engine: engine, showsRomaji: showsRomaji)
+            case .unavailable(let reason):
+                result = reason
             }
             guard !Task.isCancelled else { return }
             self?.show(result)
@@ -206,12 +225,30 @@ final class AIPanel: UIView {
         }
     }
 
-    @available(iOS 26.0, *)
-    private static func perform(_ action: Action, input: String, showsRomaji: Bool) async -> Outcome {
+    private enum EngineChoice {
+        case ready(AIEngine)
+        case unavailable(Outcome)
+    }
+
+    /// The engine for the chosen provider, or why it can't answer.
+    private var engine: EngineChoice {
+        switch provider {
+        case .claude:
+            return .ready(ClaudeAIEngine(apiKey: claudeAPIKey))
+        case .apple:
 #if canImport(FoundationModels)
-        guard AIAssistant.isAvailable else {
-            return Outcome(main: "Apple Intelligence isn't available. It needs an iPhone 15 Pro or newer with Apple Intelligence turned on in Settings.")
+            if #available(iOS 26.0, *) {
+                guard AIAssistant.isAvailable else {
+                    return .unavailable(Outcome(main: "Apple Intelligence isn't available. It needs an iPhone 15 Pro or newer with Apple Intelligence turned on, or switch to Claude below."))
+                }
+                return .ready(AppleAIEngine())
+            }
+#endif
+            return .unavailable(Outcome(main: "Apple Intelligence needs iOS 26 on a supported iPhone. Switch to Claude below to use your Claude API key instead."))
         }
+    }
+
+    private static func perform(_ action: Action, input: String, engine: AIEngine, showsRomaji: Bool) async -> Outcome {
         func reading(_ text: String?) -> String {
             guard let text else { return "" }
             return showsRomaji ? text + "  ·  " + KanaConverter.romaji(from: text) : text
@@ -219,7 +256,7 @@ final class AIPanel: UIView {
         do {
             switch action {
             case .grammar:
-                switch try await AIAssistant.checkGrammar(input) {
+                switch try await engine.checkGrammar(input) {
                 case .noMistakes:
                     return Outcome(main: "No mistakes found. ✓")
                 case .unreliable:
@@ -228,36 +265,38 @@ final class AIPanel: UIView {
                     return Outcome(main: text, extra: corrections.map { "\($0.original) → \($0.fix): \($0.reason)" }, replacement: text)
                 }
             case .explain:
-                guard let explanation = try await AIAssistant.explain(input) else {
+                guard let explanation = try await engine.explain(input) else {
                     return Outcome(main: "The answer didn't look like an explanation, so it isn't shown.")
                 }
                 return Outcome(main: explanation.meaning, extra: [reading(explanation.reading)] + explanation.notes)
             case .kanji:
-                guard let converted = try await AIAssistant.convertToKanji(input) else {
+                guard let converted = try await engine.convertToKanji(input) else {
                     return Outcome(main: "The conversion changed the words, so it isn't shown.")
                 }
                 return Outcome(main: converted, replacement: converted)
             case .casual, .polite, .honorific:
                 let target: Politeness = action == .casual ? .casual : action == .polite ? .polite : .honorific
-                guard let rewritten = try await AIAssistant.rewrite(input, as: target) else {
+                guard let rewritten = try await engine.rewrite(input, as: target) else {
                     return Outcome(main: "Already in that style, or the answer didn't look right.")
                 }
                 return Outcome(main: rewritten, replacement: rewritten)
             case .toCasual, .toPolite, .toHonorific:
                 // 敬語 is a polite translation, then a 敬語 rewrite.
-                guard let translation = try await AIAssistant.translate(input, style: action == .toCasual ? .casual : .polite) else {
+                guard let translation = try await engine.translate(input, style: action == .toCasual ? .casual : .polite) else {
                     return Outcome(main: "The answer didn't look like a translation, so it isn't shown.")
                 }
-                if action == .toHonorific, let honorific = try await AIAssistant.rewrite(translation.japanese, as: .honorific) {
+                if action == .toHonorific, let honorific = try await engine.rewrite(translation.japanese, as: .honorific) {
                     return Outcome(main: honorific, replacement: honorific)
                 }
                 return Outcome(main: translation.japanese, extra: [reading(translation.reading)], replacement: translation.japanese)
             }
+        } catch let failure as ClaudeAIEngine.Failure {
+            return Outcome(main: failure.localizedDescription)
         } catch {
-            return Outcome(main: "Apple Intelligence couldn't answer here (\(error.localizedDescription)). Try the Apple Intelligence test in the RomaKey app.")
+            if engine is ClaudeAIEngine {
+                return Outcome(main: "Couldn't reach Claude. Check your connection, and that Full Access is on.")
+            }
+            return Outcome(main: "Apple Intelligence couldn't answer here (\(error.localizedDescription)). Try the Apple Intelligence test in the RomaKey app, or switch to Claude below.")
         }
-#else
-        return Outcome(main: "This build doesn't include Apple Intelligence. Build with Xcode 26 or later.")
-#endif
     }
 }
