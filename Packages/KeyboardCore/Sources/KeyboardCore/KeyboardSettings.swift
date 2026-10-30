@@ -107,7 +107,7 @@ public struct KeyboardSettings: Equatable {
     public var disabledSecondaryKeys: [String] = []
     /// Key presses, panels and mode changes animate. Reduce Motion turns them off too.
     public var animations = true
-    /// Mirrors the mode wheel (→ あ … ← 🌐) for typing with the left thumb.
+    /// Swaps the mode wheel's left and right (→ あ, ← EN) for typing with the left thumb.
     public var leftHandedWheel = false
     /// In 辞: English goes straight into the text, with the Japanese for each word shown above,
     /// instead of being a search confirmed with 確定. The key next to return switches.
@@ -149,6 +149,9 @@ public struct KeyboardSettings: Equatable {
     public var klipyAPIKey = ""
     /// How strict GIF search is: g, pg, pg-13 or r (sent to KLIPY as its content filter).
     public var gifRating = "pg"
+    /// Tapping a GIF puts its link straight into the message (true), or copies the GIF itself to
+    /// paste (false). iOS doesn't let keyboards insert images, so those are the two choices.
+    public var gifInsertsLink = true
     // AI
     public var aiProvider: AIProvider = .apple
     /// Your own Claude API key, for `AIProvider.claude`. Needs Full Access.
@@ -238,6 +241,7 @@ public struct KeyboardSettings: Equatable {
         // GIFs moved from GIPHY to KLIPY; a GIPHY key doesn't work there, so it isn't carried over.
         static let klipyAPIKey = "klipyAPIKey"
         static let gifRating = "gifRating"
+        static let gifInsertsLink = "gifInsertsLink"
         static let aiProvider = "aiProvider"
         static let claudeAPIKey = "claudeAPIKey"
         static let learningResetID = "learningResetID"
@@ -309,6 +313,7 @@ public struct KeyboardSettings: Equatable {
         klipyAPIKey = defaults.string(forKey: Key.klipyAPIKey) ?? klipyAPIKey
         gifRating = ["g", "pg", "pg-13", "r"].contains(defaults.string(forKey: Key.gifRating) ?? "")
             ? defaults.string(forKey: Key.gifRating)! : gifRating
+        gifInsertsLink = bool(Key.gifInsertsLink, gifInsertsLink)
         aiProvider = value(Key.aiProvider, aiProvider)
         claudeAPIKey = defaults.string(forKey: Key.claudeAPIKey) ?? claudeAPIKey
         learningResetID = defaults.string(forKey: Key.learningResetID)
@@ -367,6 +372,7 @@ public struct KeyboardSettings: Equatable {
         defaults.set(skinTone, forKey: Key.skinTone)
         defaults.set(klipyAPIKey, forKey: Key.klipyAPIKey)
         defaults.set(gifRating, forKey: Key.gifRating)
+        defaults.set(gifInsertsLink, forKey: Key.gifInsertsLink)
         defaults.set(aiProvider.rawValue, forKey: Key.aiProvider)
         defaults.set(claudeAPIKey, forKey: Key.claudeAPIKey)
         defaults.set(learningResetID, forKey: Key.learningResetID)

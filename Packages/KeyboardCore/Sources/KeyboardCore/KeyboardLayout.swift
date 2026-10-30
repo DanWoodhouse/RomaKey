@@ -20,7 +20,7 @@ public enum KeyKind: Hashable {
     /// "#+=" / "123" on the numbers and symbols pages.
     case symbolsToggle
     /// The mode key: tap to step through the modes, or press and drag for the mode wheel
-    /// (あ, EN, 辞, かな and the next keyboard). It replaces 🌐, so the space bar is wider.
+    /// (あ, EN, 辞, かな). There's no 🌐 key (iOS shows one under the keyboard), so the space bar is wider.
     case languageToggle
     case space
     /// ー in Japanese, - in English. Always present, so nothing moves when switching language.
@@ -163,7 +163,7 @@ public struct KeyboardLayout: Hashable {
             + [Key(.delete, width: .units(1.5))]
     )
 
-    /// The same on every phone: the next keyboard is on the mode wheel, not a globe key.
+    /// The same on every phone: no globe key, as iOS shows 🌐 under the keyboard.
     private static let bottomRow = KeyRow([
         Key(.pageToggle, width: .units(1.25)),
         Key(.languageToggle, width: .units(1.25)),

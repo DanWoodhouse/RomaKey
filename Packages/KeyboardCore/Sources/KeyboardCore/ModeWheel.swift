@@ -1,14 +1,12 @@
 import Foundation
 
-/// One choice on the mode key's half wheel, listed left to right.
+/// One choice on the mode key's wheel: a cross of four around the finger.
 public enum ModeWheelSlot: CaseIterable, Hashable {
     case japanese
     case english
     case dictionary
     /// The 12-key flick board.
     case kana
-    /// The next keyboard installed on the phone (what 🌐 used to do).
-    case nextKeyboard
 
     public init(_ mode: InputMode) {
         switch mode {
@@ -24,7 +22,7 @@ public enum ModeWheelSlot: CaseIterable, Hashable {
         case .japanese: return .japanese
         case .english: return .english
         case .dictionary: return .dictionary
-        case .kana, .nextKeyboard: return nil
+        case .kana: return nil
         }
     }
 
@@ -34,8 +32,14 @@ public enum ModeWheelSlot: CaseIterable, Hashable {
         case .english: return "EN"
         case .dictionary: return "辞"
         case .kana: return "かな"
-        case .nextKeyboard: return "🌐"
         }
+    }
+
+    /// かな swaps the whole board, and sits below the key, where a sloppy tap slips to. So a
+    /// quick flick never picks it: the wheel must have been showing for
+    /// `ModeWheel.deliberateDelay` first.
+    public var needsDeliberatePick: Bool {
+        self == .kana
     }
 
     public var accessibilityName: String {
@@ -44,47 +48,46 @@ public enum ModeWheelSlot: CaseIterable, Hashable {
         case .english: return "English"
         case .dictionary: return "Dictionary"
         case .kana: return "Kana flick keyboard"
-        case .nextKeyboard: return "Next keyboard"
         }
     }
 }
 
-/// Press and drag from the mode key to pick a slot from a half wheel above it. The slots never
+/// Press and drag from the mode key to pick a slot: ← あ, → EN, ↑ 辞, ↓ かな. The slots never
 /// move, and never change with the current mode, so each one is always the same direction from
-/// the key: straight up is 辞, up-right is かな, and so on. A quick swipe works without waiting
-/// for the wheel to appear. The left-handed setting mirrors it.
+/// the key. A quick swipe works without waiting for the wheel to appear. The left-handed
+/// setting swaps left and right. (The next keyboard isn't here: iOS shows 🌐 under the keyboard.)
 public enum ModeWheel {
-    /// Left to right.
     public static let slots = ModeWheelSlot.allCases
 
-    /// Left to right, mirrored for the left hand (🌐 on the left, あ on the right).
-    public static func order(leftHanded: Bool) -> [ModeWheelSlot] {
-        leftHanded ? slots.reversed() : slots
-    }
-
     /// How far the finger must move before a slot is picked. Less than this is a tap.
-    public static let threshold = 22.0
+    public static let threshold = 30.0
 
-    /// The direction of a slot's centre, in radians: π is straight left, π/2 straight up and
-    /// 0 straight right. The half circle is split into equal sectors.
+    /// Downwards is shorter: the mode key is on the bottom row, near the keyboard's edge.
+    public static let downThreshold = 20.0
+
+    /// How long the wheel must have been showing before かな can be picked.
+    public static let deliberateDelay = 0.25
+
+    /// The direction of a slot, in radians: π is straight left, π/2 straight up, 0 straight
+    /// right and -π/2 straight down.
     public static func angle(of slot: ModeWheelSlot, leftHanded: Bool = false) -> Double {
-        let index = Double(order(leftHanded: leftHanded).firstIndex(of: slot)!)
-        return Double.pi - sector * (index + 0.5)
+        switch slot {
+        case .japanese: return leftHanded ? 0 : Double.pi
+        case .english: return leftHanded ? Double.pi : 0
+        case .dictionary: return Double.pi / 2
+        case .kana: return -Double.pi / 2
+        }
     }
 
     /// The slot a drag points at, from the finger's movement since it touched the key
-    /// (screen coordinates: `dy` grows downwards). Nil for a tap.
-    public static func slot(dx: Double, dy: Double, leftHanded: Bool = false, threshold: Double = threshold) -> ModeWheelSlot? {
-        guard dx * dx + dy * dy >= threshold * threshold else { return nil }
-        var angle = atan2(-dy, dx)
-        // Below the key: the nearest end of the wheel.
-        if angle < 0 {
-            angle = dx < 0 ? Double.pi : 0
+    /// (screen coordinates: `dy` grows downwards). Whichever axis moved more decides. Nil for a tap.
+    public static func slot(dx: Double, dy: Double, leftHanded: Bool = false) -> ModeWheelSlot? {
+        let downwards = dy > abs(dx)
+        let needed = downwards ? downThreshold : threshold
+        guard dx * dx + dy * dy >= needed * needed else { return nil }
+        if abs(dx) > abs(dy) {
+            return (dx < 0) != leftHanded ? .japanese : .english
         }
-        let slots = order(leftHanded: leftHanded)
-        let index = min(Int((Double.pi - angle) / sector), slots.count - 1)
-        return slots[index]
+        return dy < 0 ? .dictionary : .kana
     }
-
-    private static var sector: Double { Double.pi / Double(slots.count) }
 }

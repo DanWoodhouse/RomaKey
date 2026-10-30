@@ -3,15 +3,15 @@ import UIKit
 
 /// Sizes shared by both keyboards, so switching between them doesn't change the height.
 enum KeyboardMetrics {
-    static let candidateBarHeight: CGFloat = 40
+    static let candidateBarHeight: CGFloat = 46
     static let rowCount = 4
 
     static func rowHeight(compact: Bool, height: KeyboardSettings.Height) -> CGFloat {
         if compact { return 40 }
         switch height {
-        case .compact: return 48
-        case .standard: return 54
-        case .tall: return 60
+        case .compact: return 51
+        case .standard: return 57
+        case .tall: return 63
         }
     }
 
@@ -254,8 +254,6 @@ class KeyboardHostController: UIInputViewController {
         case .kana:
             flickEngine.setPage(.kana)
             show(.kana)
-        case .nextKeyboard:
-            advanceToNextInputMode()
         case .japanese, .english, .dictionary:
             break
         }

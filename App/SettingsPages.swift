@@ -22,7 +22,7 @@ struct TypingSettingsView: View {
             } header: {
                 Text("モードキー · Mode key")
             } footer: {
-                Text("The modes a tap on the mode key steps through. Drag from the key for the mode wheel: ← あ, ↖ EN, ↑ 辞, ↗ かな, → other keyboards. Left-handed mirrors it: → あ, ← other keyboards.")
+                Text("The modes a tap on the mode key steps through. Drag from the key for the mode wheel: ← あ, → EN, ↑ 辞, ↓ かな (hold a moment for かな, so a slipped tap never swaps the board). Left-handed swaps left and right. For other keyboards, use 🌐 below the keyboard.")
             }
 
             Section {
@@ -231,7 +231,19 @@ struct GIFSettingsView: View {
                 }
                 Link("Get a free key at partner.klipy.com", destination: URL(string: "https://partner.klipy.com")!)
             } footer: {
-                Text("GIFs are off until you add a key. When on, what you search for is sent to KLIPY (the keyboard needs Allow Full Access). Tap a GIF to copy it, then paste it into your message: iOS doesn't let keyboards insert images directly.")
+                Text("GIFs are off until you add a key. When on, what you search for is sent to KLIPY (the keyboard needs Allow Full Access).")
+            }
+
+            Section {
+                Picker("Tapping a GIF", selection: $store.settings.gifInsertsLink) {
+                    Text("Adds its link").tag(true)
+                    Text("Copies it").tag(false)
+                }
+                .pickerStyle(.segmented)
+            } header: {
+                Text("送り方 · Sending")
+            } footer: {
+                Text("iOS doesn't let keyboards put images into a message. Adds its link: the link goes straight in, and most messaging apps show it as the GIF once sent. Copies it: the GIF itself is copied, then you paste it. Hold a GIF to do the other one, or switch with the Link/Copy button in the GIF panel.")
             }
         }
         .navigationTitle("GIF")

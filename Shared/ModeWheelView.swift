@@ -12,6 +12,7 @@ final class ModeWheelTracker: NSObject {
     private var wheel: ModeWheelView?
     private var holdTimer: Timer?
     private var selected: ModeWheelSlot?
+    private var wheelShownAt: Date?
     private static let holdDelay: TimeInterval = 0.3
 
     init(button: KeyButton, host: KeyboardViewBase, current: @escaping () -> ModeWheelSlot, onTap: @escaping () -> Void) {
@@ -23,7 +24,7 @@ final class ModeWheelTracker: NSObject {
         button.addTarget(self, action: #selector(touchMoved(_:forEvent:)), for: [.touchDragInside, .touchDragOutside])
         button.addTarget(self, action: #selector(touchUp), for: [.touchUpInside, .touchUpOutside])
         button.addTarget(self, action: #selector(touchCancelled), for: .touchCancel)
-        button.accessibilityHint = "Tap to switch mode. Press and drag for あ, EN, 辞, かな or the next keyboard."
+        button.accessibilityHint = "Tap to switch mode. Press and drag left for あ, right for EN, up for 辞 or down for かな."
     }
 
     @objc private func touchDown(_ sender: KeyButton, forEvent event: UIEvent) {
@@ -57,8 +58,12 @@ final class ModeWheelTracker: NSObject {
     @objc private func touchUp() {
         let slot = selected
         let wasOpen = wheel != nil
+        // かな swaps the board, so it needs the wheel to have been seen: a quick slip off the
+        // key never changes the layout.
+        let shownFor = wheelShownAt.map { Date().timeIntervalSince($0) } ?? 0
         finish()
         if let slot {
+            guard !slot.needsDeliberatePick || shownFor >= ModeWheel.deliberateDelay else { return }
             host?.onModeWheel?(slot)
         } else if !wasOpen {
             onTap()
@@ -81,6 +86,7 @@ final class ModeWheelTracker: NSObject {
             view.popIn()
         }
         wheel = view
+        wheelShownAt = Date()
         // The keys fade so the chips stand out.
         host.keyArea.alpha = 0.35
     }
@@ -93,6 +99,7 @@ final class ModeWheelTracker: NSObject {
         host?.keyArea.alpha = 1
         start = nil
         selected = nil
+        wheelShownAt = nil
     }
 }
 
@@ -118,7 +125,7 @@ final class ModeWheelView: UIView {
             let chip = UILabel()
             chip.text = slot.label
             chip.textAlignment = .center
-            chip.font = .systemFont(ofSize: slot == .nextKeyboard ? 15 : 13, weight: .semibold)
+            chip.font = .systemFont(ofSize: 13, weight: .semibold)
             chip.adjustsFontSizeToFitWidth = true
             chip.minimumScaleFactor = 0.7
             chip.layer.cornerRadius = 8
@@ -145,31 +152,34 @@ final class ModeWheelView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    /// Places the chips around where the finger touched down. Near an edge, the whole wheel
-    /// slides over just enough to fit, keeping its shape.
+    /// Places the chips in a cross around where the finger touched down. Near an edge (the
+    /// mode key is on the bottom row, so always below), the whole cross slides over just
+    /// enough to fit, keeping its shape.
     func layout(around point: CGPoint) {
         let size = Self.chipSize
         let origins = ModeWheel.slots.map { slot -> (ModeWheelSlot, CGPoint) in
             let angle = CGFloat(ModeWheel.angle(of: slot, leftHanded: leftHanded))
             return (slot, CGPoint(
                 x: point.x + cos(angle) * Self.radius - size.width / 2,
-                y: max(point.y - sin(angle) * Self.radius - size.height / 2, 2)
+                y: point.y - sin(angle) * Self.radius - size.height / 2
             ))
         }
-        let minX = origins.map(\.1.x).min() ?? 0
-        let maxX = origins.map(\.1.x).max() ?? 0
-        let shift = minX < 2 ? 2 - minX : (maxX > bounds.width - size.width - 2 ? bounds.width - size.width - 2 - maxX : 0)
+        func shift(_ low: CGFloat, _ high: CGFloat, within limit: CGFloat) -> CGFloat {
+            low < 2 ? 2 - low : (high > limit - 2 ? limit - 2 - high : 0)
+        }
+        let dx = shift(origins.map(\.1.x).min() ?? 0, origins.map(\.1.x).max() ?? 0, within: bounds.width - size.width)
+        let dy = shift(origins.map(\.1.y).min() ?? 0, origins.map(\.1.y).max() ?? 0, within: bounds.height - size.height)
         for (slot, origin) in origins {
             let chip = chips[slot]!
             chip.bounds = CGRect(origin: .zero, size: size)
-            chip.center = CGPoint(x: origin.x + shift + size.width / 2, y: origin.y + size.height / 2)
+            chip.center = CGPoint(x: origin.x + dx + size.width / 2, y: origin.y + dy + size.height / 2)
             dots[slot]?.frame = CGRect(x: size.width / 2 - 2, y: size.height - 7, width: 4, height: 4)
         }
     }
 
-    /// The chips pop out from the finger one after another, left to right.
+    /// The chips pop out from the finger one after another.
     func popIn() {
-        for (index, slot) in ModeWheel.order(leftHanded: leftHanded).enumerated() {
+        for (index, slot) in ModeWheel.slots.enumerated() {
             guard let chip = chips[slot] else { continue }
             let pop = CASpringAnimation(keyPath: "transform.scale")
             pop.fromValue = 0.5

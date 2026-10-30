@@ -17,6 +17,10 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     private let gradientLayer = CAGradientLayer()
     private let dimView = UIView()
     private let blurView = UIVisualEffectView(effect: UIBlurEffect(style: .regular))
+    /// Holds the colour, photo, blur and dim. Its top corners are rounded like iOS 26's own
+    /// keyboard, so a coloured background follows the system's shape instead of a hard rectangle.
+    private let backdrop = UIView()
+    static let cornerRadius: CGFloat = 26
 
     /// Set by the controller once loaded.
     var emojiCatalog: EmojiCatalog?
@@ -56,11 +60,17 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         backgroundImageView.contentMode = .scaleAspectFill
         backgroundImageView.clipsToBounds = true
         dimView.backgroundColor = .black
-        layer.insertSublayer(gradientLayer, at: 0)
+        backdrop.isUserInteractionEnabled = false
+        backdrop.clipsToBounds = true
+        backdrop.layer.cornerRadius = Self.cornerRadius
+        backdrop.layer.cornerCurve = .continuous
+        backdrop.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        backdrop.layer.addSublayer(gradientLayer)
+        addSubview(backdrop)
         for view in [backgroundImageView, blurView, dimView] {
             view.isHidden = true
             view.isUserInteractionEnabled = false
-            addSubview(view)
+            backdrop.addSubview(view)
         }
         addSubview(candidateBar)
         addSubview(keyArea)
@@ -114,9 +124,6 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
 
     /// Confirms any composition, so the document holds everything typed.
     func commitTyping() {}
-
-    /// "ja" or "en", for GIF search.
-    var searchLanguage: String { "en" }
 
     /// Subclasses show their engine's candidates here.
     func updateCandidates() {}
@@ -278,6 +285,7 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         super.layoutSubviews()
         CATransaction.begin()
         CATransaction.setDisableActions(true)
+        backdrop.frame = bounds
         gradientLayer.frame = bounds
         CATransaction.commit()
         backgroundImageView.frame = bounds
@@ -401,13 +409,23 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         } else {
             unavailable = nil
         }
-        let client = unavailable == nil
-            ? KlipyClient(apiKey: settings.klipyAPIKey, rating: settings.gifRating, language: searchLanguage)
-            : nil
-        let gifPanel = GIFPanel(client: client, query: query, theme: theme, unavailableReason: unavailable)
+        let client = unavailable == nil ? KlipyClient(apiKey: settings.klipyAPIKey, rating: settings.gifRating) : nil
+        let gifPanel = GIFPanel(client: client, query: query, theme: theme, insertsLink: settings.gifInsertsLink,
+                                unavailableReason: unavailable)
         gifPanel.onClose = { [weak self] in self?.closePanel() }
         gifPanel.onSearch = { [weak self] in self?.beginSearch(.gif) }
         gifPanel.onMessage = { [weak self] message in self?.flash(message) }
+        gifPanel.onInsert = { [weak self] link in
+            self?.feedback.keyDown()
+            self?.insertDirectly(link)
+        }
+        gifPanel.onInsertsLinkChange = { [weak self] insertsLink in
+            guard let self else { return }
+            self.feedback.keyDown()
+            var changed = self.settings
+            changed.gifInsertsLink = insertsLink
+            self.onSettingsChange?(changed)
+        }
         install(gifPanel)
     }
 

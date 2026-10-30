@@ -67,8 +67,6 @@ final class FlickKeyboardView: KeyboardViewBase {
         engine.commitComposition()
     }
 
-    override var searchLanguage: String { "ja" }
-
     override func reload() {
         if engine.layout != builtLayout {
             rebuildKeys()

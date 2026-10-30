@@ -73,10 +73,10 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .clear { font: 500 12px var(--font-mono); color: var(--muted); background: transparent; border: 1px solid var(--rule); border-radius: 10px; padding: 0 10px; cursor: pointer; }
 
 .kb {
-  position: relative; width: 100%; background: var(--kb-bg); border-radius: 14px; overflow: hidden;
+  position: relative; width: 100%; background: var(--kb-bg); border-radius: 26px 26px 12px 12px; overflow: hidden;
   touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; font-family: var(--font-key);
 }
-.cands { position: absolute; left: 0; right: 0; top: 0; height: 40px; display: flex; gap: 2px; align-items: center; padding: 0 4px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; }
+.cands { position: absolute; left: 0; right: 0; top: 0; height: 46px; display: flex; gap: 2px; align-items: center; padding: 0 4px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; }
 .cands::-webkit-scrollbar { display: none; }
 .cand { display: grid; align-content: center; justify-items: center; text-align: center; height: 38px; flex: 1 0 auto; position: relative; font-family: var(--font-key); color: var(--kb-text); background: transparent; border: 0; padding: 0 10px; border-radius: 6px; cursor: pointer; }
 .cand.down { background: var(--kb-pressed); }
@@ -92,7 +92,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .kb-photo.blur { filter: blur(12px); }
 .kb-dim { position: absolute; inset: 0; background: #000; display: none; }
 .kb.has-photo .kb-photo, .kb.has-photo .kb-dim { display: block; }
-.keys { position: absolute; left: 0; right: 0; top: 40px; bottom: 0; transition: opacity 150ms; }
+.keys { position: absolute; left: 0; right: 0; top: 46px; bottom: 0; transition: opacity 150ms; }
 .keys.faint { opacity: 0.35; }
 .key { position: absolute; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .cap { position: absolute; display: grid; place-items: center; border-radius: 5px; background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); color: var(--kb-text); box-shadow: 0 1px 0 var(--kb-shadow); font-size: calc(22px * var(--key-scale, 1)); }
@@ -120,7 +120,6 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .wheel-slot { position: absolute; z-index: 2; width: 36px; height: 28px; border-radius: 8px; display: grid; place-items: center;
   font: 600 13px var(--font-key); color: var(--kb-text); background: var(--kb-key); box-shadow: 0 1px 4px var(--kb-shadow);
   transition: transform 80ms ease-out, background-color 80ms; }
-.wheel-slot.next { font-size: 15px; }
 .wheel-slot.cur::after { content: ""; position: absolute; bottom: 3px; width: 4px; height: 4px; border-radius: 50%; background: var(--kb-accent); }
 .wheel-slot.on { background: var(--kb-accent); color: #fff; transform: scale(1.15); }
 .wheel-slot.on::after { background: #fff; }
@@ -143,7 +142,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .sfield { flex: none; min-width: 140px; max-width: 55%; height: 30px; display: flex; align-items: center; padding: 0 10px; border-radius: 8px; background: var(--kb-key); color: var(--kb-text); font: 16px var(--font-key); white-space: nowrap; overflow: hidden; }
 .sfield.empty { color: var(--kb-muted); }
 .sclose { font: 18px var(--font-key); color: var(--kb-muted); background: transparent; border: 0; padding: 0 6px; cursor: pointer; flex: none; }
-.panel { position: absolute; left: 0; right: 0; top: 40px; bottom: 0; display: grid; grid-template-rows: minmax(0, 1fr) 38px; }
+.panel { position: absolute; left: 0; right: 0; top: 46px; bottom: 0; display: grid; grid-template-rows: minmax(0, 1fr) 38px; }
 .egrid { position: relative; overflow-y: auto; overscroll-behavior: contain; padding: 0 4px 4px; touch-action: pan-y; }
 .esec { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); align-content: start; }
 .egrid.kao { padding: 0 6px 6px; }
@@ -222,6 +221,22 @@ input[type="checkbox"].qswitch:checked::before { transform: translateX(18px); }
 .kb.anim .cliprow { animation: kbrise 400ms cubic-bezier(0.2, 0.9, 0.3, 1) backwards; }
 .cempty { align-self: center; justify-self: center; text-align: center; padding: 12px 28px; color: var(--kb-muted); font: 14px var(--font-key); line-height: 1.4; }
 .ebar button.cclear { color: #ff3b30; }
+.gchips { display: flex; gap: 6px; align-items: center; padding: 4px 8px; overflow-x: auto; scrollbar-width: none; touch-action: pan-x; }
+.gchips::-webkit-scrollbar { display: none; }
+.gchip { flex: none; height: 30px; padding: 0 12px 0 10px; border-radius: 15px; border: 0; cursor: pointer; font: 500 13px var(--font-key); color: var(--kb-text); white-space: nowrap; }
+.glass.gchip { border-radius: 15px; }
+.gchip[aria-pressed="true"] { color: #fff; background: var(--kb-accent); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 4px 10px -4px color-mix(in srgb, var(--kb-accent) 80%, transparent); }
+.gbody { position: relative; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.ggrid { overflow-y: auto; overscroll-behavior: contain; padding: 2px 8px 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: start; scrollbar-width: none; touch-action: pan-y; }
+.ggrid::-webkit-scrollbar { display: none; }
+.gcol { display: grid; gap: 6px; }
+.gtile { border-radius: 12px; background: color-mix(in srgb, var(--kb-key) 60%, transparent); }
+.kb.anim .gtile { animation: gpulse 1.6s ease-in-out infinite alternate; }
+@keyframes gpulse { from { opacity: 1; } to { opacity: 0.45; } }
+.glass.gnote { position: absolute; left: 12px; right: 12px; bottom: 8px; padding: 9px 12px; border-radius: 16px; font: 12px/1.4 var(--font-key); color: var(--kb-text); text-align: center; }
+.ebar .gmode { flex: none; height: 28px; padding: 0 11px; border-radius: 14px; font: 600 12px var(--font-key); }
+.glass.gmode { border-radius: 14px; }
+.ebar .gby { flex: 1; text-align: right; padding-right: 6px; font: 600 10px var(--font-key); color: var(--kb-muted); white-space: nowrap; }
 .qhead { flex: 4; text-align: center; font: 600 12px var(--font-key); color: var(--kb-muted); }
 .cc { overflow-y: auto; overscroll-behavior: contain; padding: 8px 10px 12px; display: grid; gap: 10px; align-content: start; font-family: var(--font-key); color: var(--kb-text); }
 /* Liquid Glass, as in iOS 26's Control Centre: a translucent, blurred pane with a bright rim and a soft drop. */
@@ -531,7 +546,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <div class="row"><label for="mode-dictionary">辞 Dictionary</label><input type="checkbox" id="mode-dictionary"></div>
         <div class="row"><label for="set-leftHandedWheel">Left-handed mode wheel</label><input type="checkbox" id="set-leftHandedWheel"></div>
         <div class="row"><label for="set-dictionaryTypesDirectly">辞: type English straight in</label><input type="checkbox" id="set-dictionaryTypesDirectly"></div>
-        <p class="help">At least two stay on. Dragging from the key opens the mode wheel, which always has every mode. Left-handed mirrors it: → あ, ← next keyboard. In 辞, the key next to return switches between looking words up and typing English straight in (with the Japanese shown as you type).</p>
+        <p class="help">At least two stay on. Dragging from the key opens the mode wheel, which always has every mode. Left-handed swaps left and right (→ あ, ← EN). Other keyboards: 🌐 under the keyboard on iPhone. In 辞, the key next to return switches between looking words up and typing English straight in (with the Japanese shown as you type).</p>
       </div>
       <div class="group">
         <h3>ローマ字 · Typing</h3>
@@ -596,10 +611,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="k2"><span><span class="k">ー</span> / <span class="k">-</span> stays in the bottom row in every mode, and the space bar is wide (no 🌐 key).</span></label>
       </div>
       <div class="checks"><h3>Mode wheel</h3>
-        <label class="check"><input type="checkbox" data-check="w1"><span>Hold the mode key: five small chips appear around your finger, and the current mode has a dot.</span></label>
-        <label class="check"><input type="checkbox" data-check="w2"><span>Swipe without waiting: ← あ, ↖ EN, ↑ 辞, ↗ かな, → 🌐 (a message here; your next keyboard on iPhone).</span></label>
+        <label class="check"><input type="checkbox" data-check="w1"><span>Hold the mode key: four chips appear in a cross around your finger, and the current mode has a dot.</span></label>
+        <label class="check"><input type="checkbox" data-check="w2"><span>Swipe without waiting: ← あ, → EN, ↑ 辞. ↓ かな only after holding a moment, so a tap that slips down never swaps the board.</span></label>
         <label class="check"><input type="checkbox" data-check="w3"><span>Hold, then let go without moving: nothing changes.</span></label>
-        <label class="check"><input type="checkbox" data-check="w4"><span>Turn on <em>Left-handed mode wheel</em> in Customise: the directions mirror (→ あ, ← 🌐).</span></label>
+        <label class="check"><input type="checkbox" data-check="w4"><span>Turn on <em>Left-handed mode wheel</em> in Customise: left and right swap (→ あ, ← EN).</span></label>
       </div>
       <div class="checks"><h3>かな flick board</h3>
         <label class="check"><input type="checkbox" data-check="f1"><span>Swipe ↗ to かな. Flick あ up for う. Tap あ twice for い (or ああ with <em>Flick only</em> on).</span></label>
@@ -674,10 +689,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       <div class="checks"><h3>iPhone only (once built in Xcode)</h3>
         <label class="check"><input type="checkbox" data-check="p0"><span>Set it up on your iPhone with Xcode: follow <em>docs/setup-iphone.md</em> in the RomaKey repository.</span></label>
         <label class="check"><input type="checkbox" data-check="p1"><span>Both keyboards appear in Settings → Keyboards; かな opens on the flick board, ローマ字 on QWERTY.</span></label>
-        <label class="check"><input type="checkbox" data-check="p2"><span>GIFs: add your free KLIPY key in the app, search, tap a GIF to copy, then paste it.</span></label>
+        <label class="check"><input type="checkbox" data-check="p2"><span>GIFs: add your free KLIPY key in the app. Mood chips along the top, a two-column grid of moving GIFs; tap one and its link goes straight in (or Copy mode / hold to copy the GIF).</span></label>
         <label class="check"><input type="checkbox" data-check="p3"><span>Clipboard from the toolbar: your last 5 copies, tap one to paste, ⊗ to forget it, Clear for all (needs Allow Full Access). This preview reads your browser's clipboard when it opens.</span></label>
-        <label class="check"><input type="checkbox" data-check="p10"><span>Type in あ, tap 確定: the blue underline goes straight away. Hold delete with nothing left: the haptics stop.</span></label>
-        <label class="check"><input type="checkbox" data-check="p11"><span>✨ with Apple: Grammar and です/ます on Japanese text either answer or say Apple's safety filter stopped it (then tap the Apple/Claude pill to switch).</span></label>
+        <label class="check"><input type="checkbox" data-check="p10"><span>Type in あ, tap 確定: the blue underline goes straight away. Hold delete with nothing left: the haptics stop. The keyboard's top corners are rounded and the bar and rows are a little taller.</span></label>
+        <label class="check"><input type="checkbox" data-check="p11"><span>✨ with Apple: Grammar and です/ます on Japanese text either answer or say Apple's safety filter stopped it (with the reason underneath, and an <em>Ask Claude instead</em> button).</span></label>
         <label class="check"><input type="checkbox" data-check="p4"><span>Your iOS text replacements (omw) and contact names in suggestions; English uses Apple's spell checker.</span></label>
         <label class="check"><input type="checkbox" data-check="p6"><span>Dictation: iOS doesn't let keyboards use the microphone, so use the system 🎤 below the keyboard. It works while RomaKey is showing.</span></label>
         <label class="check"><input type="checkbox" data-check="p5"><span>Haptics, key sounds, and the Apple Intelligence test in the app.</span></label>
@@ -704,7 +719,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
     keySounds: true, haptics: false, predictiveText: true, aiProvider: "apple",
     backgroundOpacity: 1, backgroundGradient: false, gradientColor: "#8ec5fc", gradientDirection: "down",
-    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, klipyAPIKey: "", gifRating: "pg", keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, liveConversion: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
+    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, klipyAPIKey: "", gifRating: "pg", gifInsertsLink: true, keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, liveConversion: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
@@ -713,7 +728,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   if (!Array.isArray(settings.disabledSecondaryKeys)) settings.disabledSecondaryKeys = [];
   const saveSettings = () => { try { localStorage.setItem("kb-settings", JSON.stringify(settings)); } catch (_) {} };
   const THRESHOLD = { gentle: 30, normal: 20, quick: 12 };
-  const ROW_H = { compact: 48, standard: 54, tall: 60 };
+  const ROW_H = { compact: 51, standard: 57, tall: 63 };
 
   // ---- Dictionary (JapaneseDictionary.swift) ------------------------------------
   const TSV = __DICT__;
@@ -1516,7 +1531,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   const kbEl = $("kb"), keysEl = $("keys"), candsEl = $("cands"), overlayEl = $("overlay"), docEl = $("doc");
   let active = romaji, builtSig = "", builtWidth = 0, builtRowH = 0, items = [], flashNext = false;
   let entryOpen = null;
-  const rowH = () => ROW_H[settings.height] || 54;
+  const rowH = () => ROW_H[settings.height] || 57;
 
   function build() {
     keysEl.textContent = "";
@@ -1562,7 +1577,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
 
   function render() {
     kbEl.dataset.kbTheme = settings.theme;
-    kbEl.style.height = 40 + 4 * rowH() + "px";
+    kbEl.style.height = 46 + 4 * rowH() + "px";
     if (active.signature() + "/" + settings.keySpacing !== builtSig || keysEl.clientWidth !== builtWidth || rowH() !== builtRowH) build();
     const flash = flashNext; flashNext = false;
     kbEl.classList.toggle("anim", !!settings.animations);
@@ -1655,7 +1670,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         candsEl.append(
           tool(ICONS.emoji, "Emoji", () => showEmojiPanel(recents.length ? "recent" : 0)),
           tool("(^_^)", "Kaomoji", () => showEmojiPanel("kaomoji")),
-          tool("GIF", "GIFs", showGIFPanel),
+          tool("GIF", "GIFs", () => showGIFPanel()),
           tool(ICONS.paste, "Clipboard", showClipboardPanel),
           tool(ICONS.sparkle, "AI", showAIPanel),
           tool(ICONS.gear, "Keyboard settings", showQuickSettings),
@@ -2444,15 +2459,64 @@ Text: よろしくおねがいします
     panel.append(list, bar);
   }
 
-  function showGIFPanel() {
+  // GIFs (GIFPanel.swift): mood chips, then a two-column grid of GIFs at their own shapes. iOS
+  // can't put images in a message, so a tap adds the GIF's link (or copies the GIF; the bar's
+  // Link/Copy pill switches, and holding a GIF does the other). This preview can't reach KLIPY,
+  // so the grid shows the shapes it would fill.
+  const GIF_MOODS = [["🔥", "Trending"], ["😂", "Haha"], ["❤️", "Love"], ["👍", "Yes"], ["🙅", "No"], ["👋", "Hi"], ["🙏", "Thanks"],
+    ["🎉", "Yay"], ["😢", "Sad"], ["😮", "Wow"], ["🤔", "Hmm"], ["😴", "Sleepy"], ["🐱", "Cats"], ["🐶", "Dogs"]];
+  function showGIFPanel(query) {
     const panel = openPanel();
-    const msg = document.createElement("div");
-    msg.className = "pmsg";
-    msg.textContent = "On iPhone, GIFs come from KLIPY: add your free API key in the app (Settings → GIF), tap a GIF to copy it, then paste it. This preview can't reach KLIPY.";
+    const body = document.createElement("div");
+    body.className = "gbody";
+    const chips = document.createElement("div");
+    chips.className = "gchips";
+    const moods = query ? [["🔍", query], ...GIF_MOODS] : GIF_MOODS;
+    moods.forEach(([emoji, title], i) => {
+      const chip = document.createElement("button");
+      chip.type = "button"; chip.className = "glass gchip"; chip.textContent = emoji + " " + title;
+      chip.setAttribute("aria-pressed", String(i === 0));
+      chip.addEventListener("click", () => {
+        chips.querySelectorAll(".gchip").forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+        fill();
+      });
+      chips.appendChild(chip);
+    });
+    const grid = document.createElement("div");
+    grid.className = "ggrid";
+    const fill = () => {
+      grid.textContent = "";
+      const cols = [document.createElement("div"), document.createElement("div")];
+      const heights = [0, 0];
+      [0.75, 1, 0.6, 0.9, 1.1, 0.7, 0.85, 1, 0.65, 0.95].forEach((aspect, i) => {
+        const c = heights[0] <= heights[1] ? 0 : 1;
+        const tile = document.createElement("div");
+        tile.className = "gtile"; tile.style.aspectRatio = "1 / " + aspect; tile.style.animationDelay = (i % 4) * 120 + "ms";
+        cols[c].appendChild(tile); heights[c] += aspect;
+      });
+      cols.forEach((col) => { col.className = "gcol"; grid.appendChild(col); });
+    };
+    fill();
+    const note = document.createElement("div");
+    note.className = "glass gnote";
+    note.textContent = "This preview can't reach KLIPY. On iPhone, add your free key (RomaKey → Settings → GIF): the GIFs move here, and a tap " +
+      (settings.gifInsertsLink ? "adds the GIF's link straight away." : "copies the GIF to paste.");
+    body.append(chips, grid, note);
+    const mode = document.createElement("button");
+    const label = () => { mode.textContent = settings.gifInsertsLink ? "🔗 Link" : "📋 Copy"; };
+    mode.type = "button"; mode.className = "glass gmode"; label();
+    mode.setAttribute("aria-label", "Switch between adding the link and copying the GIF");
+    mode.addEventListener("click", () => {
+      settings.gifInsertsLink = !settings.gifInsertsLink; saveSettings(); label();
+      note.textContent = note.textContent.replace(/a tap .*$/, "a tap " + (settings.gifInsertsLink ? "adds the GIF's link straight away." : "copies the GIF to paste."));
+      flash(settings.gifInsertsLink ? "Tap a GIF: its link goes straight in" : "Tap a GIF: it's copied, then paste it");
+    });
+    const by = document.createElement("span");
+    by.className = "gby"; by.textContent = "Powered by KLIPY";
     const bar = document.createElement("div");
     bar.className = "ebar";
-    bar.append(barButton("ABC", "Back to the keys", () => { closePanel(); render(); }, "word"), barButton("🔍", "Search GIFs", () => beginSearch("gif")));
-    panel.append(msg, bar);
+    bar.append(barButton("ABC", "Back to the keys", () => { closePanel(); render(); }, "word"), barButton("🔍", "Search GIFs", () => beginSearch("gif")), mode, by);
+    panel.append(body, bar);
   }
   // Search: the keys come back, and typing goes into the search field.
   function beginSearch(target) { closePanel(); active.commit(); searching = target; search.text = ""; search.marked = ""; render(); }
@@ -2460,14 +2524,14 @@ Text: よろしくおねがいします
   function submitSearch() {
     const target = searching;
     searching = null;
-    if (target === "gif") showGIFPanel(); else showEmojiPanel(recents.length ? "recent" : 0);
+    if (target === "gif") showGIFPanel((search.text + search.marked).trim() || undefined); else showEmojiPanel(recents.length ? "recent" : 0);
   }
 
   function showEntry(e) {
     closeOverlays();
     const box = document.createElement("div");
     box.className = "entry";
-    box.style.top = 40 + 4 + "px";
+    box.style.top = 46 + 4 + "px";
     const head = document.createElement("div"); head.className = "head";
     const t = document.createElement("div");
     const w = document.createElement("div"); w.className = "word"; w.textContent = e.word;
@@ -2585,7 +2649,9 @@ Text: よろしくおねがいします
       if (isModeKey(key)) {
         const w = wheel; wheel = null; overlayEl.textContent = ""; keysEl.classList.remove("faint");
         if (cancelled || !w) return;
-        if (w.slot) pickSlot(w.slot);
+        // かな swaps the board: only once the cross has been seen, so a slipped tap never does.
+        const deliberate = w.shownAt && performance.now() - w.shownAt >= 250;
+        if (w.slot) { if (deliberate || w.slot !== "kana") pickSlot(w.slot); }
         else if (!w.open) { if (active === romaji) { romaji.press(key); render(); } else switchKeyboard(romaji); }
         return;
       }
@@ -2678,43 +2744,44 @@ Text: よろしくおねがいします
   function hidePopup() { if (popupEl) { popupEl.remove(); popupEl = null; } }
 
   // ---- Mode wheel (ModeWheel.swift) ------------------------------------------------------------
-  // Slots left to right; each is always the same direction from the mode key.
-  const SLOTS = [["japanese", "あ", "Japanese romaji"], ["english", "EN", "English"], ["dictionary", "辞", "Dictionary"], ["kana", "かな", "Kana flick keyboard"], ["next", "🌐", "Next keyboard"]];
-  const SECTOR = Math.PI / SLOTS.length;
-  // Left to right; the left-handed setting mirrors it.
-  const slotOrder = () => settings.leftHandedWheel ? [...SLOTS].reverse() : SLOTS;
-  const slotAngle = (i) => Math.PI - SECTOR * (i + 0.5);
+  // A cross of four around the mode key (ModeWheel.swift): ← あ, → EN, ↑ 辞, ↓ かな. Each is
+  // always the same direction; left-handed swaps left and right. Other keyboards: 🌐 under the keyboard.
+  const SLOTS = [["japanese", "あ", "Japanese romaji"], ["english", "EN", "English"], ["dictionary", "辞", "Dictionary"], ["kana", "かな", "Kana flick keyboard"]];
+  const slotAngle = (id) => ({ japanese: settings.leftHandedWheel ? 0 : Math.PI, english: settings.leftHandedWheel ? Math.PI : 0,
+    dictionary: Math.PI / 2, kana: -Math.PI / 2 })[id];
   let wheel = null;
   const isModeKey = (key) => key.kind === "languageToggle" || key.kind === "modeKey";
+  // Whichever axis moved further decides. Down needs less: the key is on the bottom row.
   function wheelSlot(dx, dy) {
-    if (dx * dx + dy * dy < 22 * 22) return null;
-    let a = Math.atan2(-dy, dx);
-    if (a < 0) a = dx < 0 ? Math.PI : 0;  // below the key: the nearest end
-    return slotOrder()[Math.min(Math.floor((Math.PI - a) / SECTOR), SLOTS.length - 1)][0];
+    const down = dy > Math.abs(dx), need = down ? 20 : 30;
+    if (dx * dx + dy * dy < need * need) return null;
+    if (Math.abs(dx) > Math.abs(dy)) return (dx < 0) !== !!settings.leftHandedWheel ? "japanese" : "english";
+    return dy < 0 ? "dictionary" : "kana";
   }
-  // Small chips around the finger, each sitting in the direction you'd swipe to pick it.
   const WHEEL_RADIUS = 64;
   function openWheel() {
     if (!wheel || wheel.open) return;
     wheel.open = true;
+    wheel.shownAt = performance.now();
     hidePopup();
     const kb = kbEl.getBoundingClientRect(), px = wheel.start.x - kb.left, py = wheel.start.y - kb.top;
     overlayEl.textContent = "";
     keysEl.classList.add("faint");
     const current = active === flick ? "kana" : romaji.mode;
-    const spots = slotOrder().map((slot, i) => {
-      const a = slotAngle(i);
+    const spots = SLOTS.map((slot) => {
+      const a = slotAngle(slot[0]);
       return { slot, x: px + Math.cos(a) * WHEEL_RADIUS - 18, y: py - Math.sin(a) * WHEEL_RADIUS - 14 };
     });
-    // Near an edge, the whole wheel slides over just enough to fit, keeping its shape.
-    const minX = Math.min(...spots.map((s) => s.x)), maxX = Math.max(...spots.map((s) => s.x));
-    const shift = minX < 2 ? 2 - minX : maxX > kb.width - 38 ? kb.width - 38 - maxX : 0;
+    // Near an edge (always the bottom one), the whole cross slides over just enough to fit.
+    const fit = (lo, hi, limit) => lo < 2 ? 2 - lo : hi > limit - 2 ? limit - 2 - hi : 0;
+    const dx = fit(Math.min(...spots.map((s) => s.x)), Math.max(...spots.map((s) => s.x)), kb.width - 36);
+    const dy = fit(Math.min(...spots.map((s) => s.y)), Math.max(...spots.map((s) => s.y)), kb.height - 28);
     for (const { slot: [id, label, name], x, y } of spots) {
       const el = document.createElement("div");
-      el.className = "wheel-slot" + (id === current ? " cur" : "") + (id === "next" ? " next" : "");
+      el.className = "wheel-slot" + (id === current ? " cur" : "");
       el.dataset.slot = id; el.textContent = label; el.title = name;
       el.style.animationDelay = overlayEl.childElementCount * 18 + "ms";
-      Object.assign(el.style, { left: x + shift + "px", top: Math.max(y, 2) + "px" });
+      Object.assign(el.style, { left: x + dx + "px", top: y + dy + "px" });
       overlayEl.appendChild(el);
     }
     highlightWheel();
@@ -2724,7 +2791,6 @@ Text: よろしくおねがいします
     for (const el of overlayEl.querySelectorAll(".wheel-slot")) el.classList.toggle("on", el.dataset.slot === wheel.slot);
   }
   function pickSlot(id) {
-    if (id === "next") { flash("🌐 On your phone, this goes to your next keyboard"); return; }
     if (id === "kana") { flick.commit(); flick.page = "kana"; flick.toggle = null; switchKeyboard(flick); render(); return; }
     switchKeyboard(romaji);
     romaji.setMode(id);

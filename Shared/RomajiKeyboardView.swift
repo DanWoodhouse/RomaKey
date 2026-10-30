@@ -3,7 +3,7 @@ import UIKit
 
 /// The romaji QWERTY keyboard. Switching between あ, EN and 辞 only relabels keys; the candidate
 /// bar is there in every mode, so the keyboard's height doesn't change either. The mode key
-/// opens the mode wheel, which replaces 🌐.
+/// opens the mode wheel: ← あ, → EN, ↑ 辞, ↓ かな.
 final class RomajiKeyboardView: KeyboardViewBase {
     private let engine: KeyboardEngine
     private var buttons: [[RomajiKeyButton]] = []
@@ -76,10 +76,6 @@ final class RomajiKeyboardView: KeyboardViewBase {
 
     override func commitTyping() {
         engine.commitComposition()
-    }
-
-    override var searchLanguage: String {
-        engine.mode == .english ? "en" : "ja"
     }
 
     /// Rebuilds the keys if the page changed, otherwise just relabels them.

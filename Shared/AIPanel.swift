@@ -57,9 +57,11 @@ final class AIPanel: UIView {
         /// What "Use this" puts in place of the text, if anything.
         var replacement: String?
         var kind: Kind = .answer
+        /// For a problem: what went wrong at each step, small, so a screenshot shows why.
+        var details: String?
 
-        static func problem(_ message: String) -> Outcome {
-            Outcome(main: message, kind: .problem)
+        static func problem(_ message: String, details: String? = nil) -> Outcome {
+            Outcome(main: message, kind: .problem, details: details)
         }
     }
 
@@ -92,6 +94,7 @@ final class AIPanel: UIView {
     private var actionButtons: [Action: UIButton] = [:]
     private var selectedAction: Action?
     private var bar: UIView?
+    private var providerButton: UIButton?
     private var task: Task<Void, Never>?
     private static let barHeight: CGFloat = 38
 
@@ -275,20 +278,26 @@ final class AIPanel: UIView {
         bar.addArrangedSubview(heading)
         // A small capsule rather than a segmented control, so the bar never crowds the panel.
         let providerButton = UIButton(configuration: providerConfiguration())
-        providerButton.addAction(UIAction { [weak self, weak providerButton] _ in
-            guard let self, let providerButton else { return }
-            self.task?.cancel()
-            self.provider = self.provider == .apple ? .claude : .apple
-            self.onProviderChange?(self.provider)
-            providerButton.configuration = self.providerConfiguration()
-            self.updateProviderLabel(providerButton)
+        providerButton.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            self.setProvider(self.provider == .apple ? .claude : .apple)
             self.select(nil)
             self.resultCard.isHidden = true
         }, for: .touchUpInside)
         providerButton.setContentHuggingPriority(.required, for: .horizontal)
+        self.providerButton = providerButton
         updateProviderLabel(providerButton)
         bar.addArrangedSubview(providerButton)
         return bar
+    }
+
+    private func setProvider(_ newProvider: KeyboardSettings.AIProvider) {
+        task?.cancel()
+        provider = newProvider
+        onProviderChange?(newProvider)
+        guard let providerButton else { return }
+        providerButton.configuration = providerConfiguration()
+        updateProviderLabel(providerButton)
     }
 
     private func providerConfiguration() -> UIButton.Configuration {
@@ -384,6 +393,15 @@ final class AIPanel: UIView {
             results.addArrangedSubview(badgeRow(symbol: "checkmark.seal.fill", color: .systemGreen, text: result.main, bold: true))
         case .problem:
             results.addArrangedSubview(badgeRow(symbol: "exclamationmark.circle.fill", color: .systemOrange, text: result.main, bold: false))
+            if let details = result.details, !details.isEmpty {
+                let detailLabel = label(details, size: 11, secondary: true)
+                detailLabel.font = .monospacedSystemFont(ofSize: 10.5, weight: .regular)
+                results.addArrangedSubview(detailLabel)
+            }
+            // When Apple's model can't help, the same request goes to Claude in one tap.
+            if provider == .apple, let action = selectedAction {
+                results.addArrangedSubview(askClaudeRow(action))
+            }
         case .answer:
             results.addArrangedSubview(label(result.main, size: 18))
             for fix in result.fixes {
@@ -397,6 +415,32 @@ final class AIPanel: UIView {
             }
         }
         reveal()
+    }
+
+    private func askClaudeRow(_ action: Action) -> UIView {
+        var configuration: UIButton.Configuration
+        if #available(iOS 26.0, *) {
+            configuration = .glass()
+        } else {
+            configuration = .gray()
+        }
+        configuration.cornerStyle = .capsule
+        configuration.baseForegroundColor = theme.text
+        configuration.image = UIImage(systemName: "sparkles", withConfiguration: UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold))
+        configuration.imagePadding = 6
+        var title = AttributedString("Ask Claude instead")
+        title.font = .systemFont(ofSize: 13, weight: .semibold)
+        configuration.attributedTitle = title
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 7, leading: 12, bottom: 7, trailing: 14)
+        let button = UIButton(configuration: configuration, primaryAction: UIAction { [weak self] _ in
+            guard let self else { return }
+            self.setProvider(.claude)
+            self.run(action)
+        })
+        button.accessibilityHint = "Sends this text to Claude with your API key"
+        let row = UIStackView(arrangedSubviews: [button, UIView()])
+        row.alignment = .center
+        return row
     }
 
     /// A grammar fix: the wrong part struck through in red → the fix in green, then why.
@@ -590,7 +634,7 @@ final class AIPanel: UIView {
         } catch let failure as ClaudeAIEngine.Failure {
             return .problem(failure.localizedDescription)
         } catch let failure as LocalizedError where failure.errorDescription?.hasPrefix("Apple's on-device safety filter") == true {
-            return .problem(failure.localizedDescription)
+            return .problem(failure.errorDescription ?? failure.localizedDescription, details: failure.failureReason)
         } catch {
             if engine is ClaudeAIEngine {
                 return .problem("Couldn't reach Claude. Check your connection, and that Full Access is on.")

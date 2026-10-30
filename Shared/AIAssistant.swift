@@ -184,7 +184,7 @@ enum AIAssistant {
                 fields["text"] = AIValidation.englishTranslation(response.english)
             }
         } catch {
-            raw = "Error: \(error.localizedDescription)"
+            raw = "Error: \(error.localizedDescription)" + ((error as? LocalizedError)?.failureReason.map { "\n" + $0 } ?? "")
         }
         let output = AIEvalOutput(fields: fields)
         return AIEvalResult(
@@ -211,12 +211,19 @@ enum AIAssistant {
         GenerationOptions(samplingMode: .greedy, maximumResponseTokens: maximumTokens)
     }
 
-    /// Apple's safety filter stopped the text at every attempt.
+    /// Apple's safety filter stopped the text at every attempt. `notes` says what each attempt
+    /// ran into, so a screenshot of the failure shows why.
     enum Failure: LocalizedError {
-        case blockedBySafetyFilter
+        case blockedBySafetyFilter(notes: [String])
 
         var errorDescription: String? {
-            "Apple's on-device safety filter stopped this text, even with relaxed settings. Switch to Claude below for this one."
+            "Apple's on-device safety filter stopped this text, even with relaxed settings."
+        }
+
+        var failureReason: String? {
+            switch self {
+            case .blockedBySafetyFilter(let notes): return notes.joined(separator: "\n")
+            }
         }
     }
 
@@ -225,17 +232,20 @@ enum AIAssistant {
     /// Apple's safety filter sometimes stops ordinary text (私は昨日学校を行きました。 was refused
     /// on an iPhone). Every mode only transforms the person's own text, which is what the
     /// permissive guardrails are for, so a refusal is retried with them: first asking for JSON in
-    /// the same shape (they only cover plain-text answers), then, if that's stopped too and the
+    /// the same shape (they only cover plain-text answers), then, if that fails too and the
     /// mode allows it (`plain`), with short instructions and no examples, for the bare answer.
+    /// Under relaxed guardrails the model can still decline in words ("I'm sorry…"); that
+    /// counts as stopped, not as an answer.
     private static func generate<Response: Generable>(
         _ prompt: AIPrompt, input: String, as type: Response.Type, maximumTokens: Int,
-        plain: (instructions: String, make: (String) -> Response)? = nil
+        plain: (instructions: String, japaneseAnswer: Bool, make: (String) -> Response)? = nil
     ) async throws -> Response {
         do {
             return try await LanguageModelSession(instructions: instructions(for: prompt))
                 .respond(to: AIPrompts.prompt(for: input), generating: type, options: options(maximumTokens: maximumTokens))
                 .content
         } catch let error as LanguageModelSession.GenerationError where isSafetyStop(error) {
+            var notes = ["1 Structured: \(describe(error))"]
             let permissive = SystemLanguageModel(guardrails: .permissiveContentTransformations)
             do {
                 let session = LanguageModelSession(model: permissive, instructions: instructions(for: prompt) + """
@@ -245,18 +255,29 @@ enum AIAssistant {
                 let answer = try await session
                     .respond(to: AIPrompts.prompt(for: input), options: options(maximumTokens: maximumTokens))
                     .content
-                return try Response(GeneratedContent(json: jsonObject(in: answer)))
-            } catch {
-                guard let plain else { throw Failure.blockedBySafetyFilter }
-                do {
-                    let answer = try await LanguageModelSession(model: permissive, instructions: plain.instructions)
-                        .respond(to: input, options: options(maximumTokens: maximumTokens))
-                        .content
-                    return plain.make(answer.trimmingCharacters(in: .whitespacesAndNewlines))
-                } catch {
-                    throw Failure.blockedBySafetyFilter
+                if let response = try? Response(GeneratedContent(json: jsonObject(in: answer))) {
+                    return response
                 }
+                notes.append("2 Relaxed JSON: answered “\(answer.prefix(60))”")
+            } catch {
+                notes.append("2 Relaxed JSON: \(describe(error))")
             }
+            guard let plain else { throw Failure.blockedBySafetyFilter(notes: notes) }
+            let answer: String
+            do {
+                answer = try await LanguageModelSession(model: permissive, instructions: plain.instructions)
+                    .respond(to: input, options: options(maximumTokens: maximumTokens))
+                    .content
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            } catch {
+                notes.append("3 Relaxed text: \(describe(error))")
+                throw Failure.blockedBySafetyFilter(notes: notes)
+            }
+            if isRefusal(answer, japaneseAnswer: plain.japaneseAnswer) {
+                notes.append("3 Relaxed text: declined, “\(answer.prefix(60))”")
+                throw Failure.blockedBySafetyFilter(notes: notes)
+            }
+            return plain.make(answer)
         }
     }
 
@@ -265,6 +286,24 @@ enum AIAssistant {
         case .guardrailViolation, .refusal: return true
         default: return false
         }
+    }
+
+    private static func describe(_ error: Error) -> String {
+        switch error as? LanguageModelSession.GenerationError {
+        case .guardrailViolation?: return "safety filter"
+        case .refusal?: return "model refused"
+        default: return error.localizedDescription
+        }
+    }
+
+    /// An answer that turns the request down instead of doing it.
+    private static func isRefusal(_ answer: String, japaneseAnswer: Bool) -> Bool {
+        if answer.isEmpty || (japaneseAnswer && !AIText.containsJapanese(answer)) {
+            return true
+        }
+        let start = answer.lowercased()
+        return ["i'm sorry", "i’m sorry", "i am sorry", "sorry,", "i can't", "i can’t", "i cannot", "as an ai", "申し訳"]
+            .contains { start.hasPrefix($0) }
     }
 
     /// The outermost {…} in an answer, without any text or code fences around it.
@@ -278,6 +317,7 @@ enum AIAssistant {
         return try await generate(AIPrompts.grammar(for: input), input: input, as: GrammarResponse.self, maximumTokens: 500,
                                   plain: (instructions: "Correct any grammar or spelling mistakes in this \(japanese ? "Japanese" : "English") text. "
                                             + "Change nothing else. Reply with only the corrected text.",
+                                          japaneseAnswer: japanese,
                                           make: { GrammarResponse(mistakes: [], corrected: $0) }))
     }
 
@@ -289,6 +329,7 @@ enum AIAssistant {
         let style = target == .casual ? "casual plain form" : target == .polite ? "polite です/ます form" : "respectful 敬語"
         return try await generate(AIPrompts.politeness(target), input: input, as: RewriteResponse.self, maximumTokens: 300,
                                   plain: (instructions: "Rewrite this Japanese text in \(style). Keep the meaning. Reply with only the rewritten text.",
+                                          japaneseAnswer: true,
                                           make: { RewriteResponse(text: $0) }))
     }
 
@@ -300,12 +341,14 @@ enum AIAssistant {
         try await generate(AIPrompts.englishRewrite(style), input: input, as: RewriteResponse.self, maximumTokens: 300,
                            plain: (instructions: "Rewrite this English text to be \(style == .shorter ? "shorter" : style.rawValue). "
                                      + "Keep the meaning. Reply with only the rewritten text.",
+                                   japaneseAnswer: false,
                                    make: { RewriteResponse(text: $0) }))
     }
 
     private static func englishTranslationResponse(_ input: String) async throws -> EnglishTranslationResponse {
         try await generate(AIPrompts.toEnglish, input: input, as: EnglishTranslationResponse.self, maximumTokens: 300,
                            plain: (instructions: "Translate this Japanese text into natural English. Reply with only the translation.",
+                                   japaneseAnswer: false,
                                    make: { EnglishTranslationResponse(english: $0) }))
     }
 

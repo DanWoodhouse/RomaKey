@@ -35,27 +35,25 @@ This is enforced in code. `KeyboardLayout` has no input-mode parameter at all, a
 
 ### Mode wheel
 
-There's no 🌐 key: the mode key does its job, so the space bar is wider (4.5 key widths instead of 3.25).
+There's no 🌐 key: iOS shows one under the keyboard, so the space bar is wider (4.5 key widths instead of 3.25).
 
 - **Tap** the mode key to step through **あ → EN → 辞** (choose which in Settings).
-- **Press and drag** to pick from a half wheel above the key. Hold to see the wheel first, or just swipe: a quick swipe picks without waiting.
+- **Press and drag** to pick from a cross around the key. Hold to see it first, or just swipe: a quick swipe picks あ, EN or 辞 without waiting.
 
 ```
-              辞
-        EN          かな
-     あ                  🌐
-           [mode key]
+          辞
+    あ  [mode]  EN
+         かな
 ```
 
 | Swipe | Picks |
 |---|---|
 | ← left | あ Japanese romaji |
-| ↖ up-left | EN English |
+| → right | EN English |
 | ↑ up | 辞 Dictionary |
-| ↗ up-right | かな flick board |
-| → right | 🌐 next keyboard |
+| ↓ down | かな flick board (hold a moment first) |
 
-The slots never move and never change with the current mode (it's only outlined), so each direction becomes muscle memory. Dragging below the key picks the nearest end. Let go without dragging out of the key to close the wheel.
+The slots never move and never change with the current mode (it's only outlined), so each direction becomes muscle memory. Whichever way you moved further wins, so a crooked swipe still lands. かな changes the whole board, so it only counts once the cross has been showing for a quarter of a second: a tap that slips off the key never swaps the layout. Let go without dragging out of the key to close it. Left-handed mode swaps left and right.
 
 | Input | Result |
 |---|---|
@@ -95,7 +93,7 @@ Made to be your only keyboard, without moving any key. When you're not typing, t
 |---|---|
 | 😊 **Emoji** | Recents and every category in one continuous scroll (the tabs jump to a section and follow along as you scroll), and search in English or Japanese (ねこ, cat → 🐈). Long-press for skin tones; your choice is remembered. Only emoji your iOS version can draw are shown |
 | (^_^) **顔文字** | Kaomoji by mood: 嬉しい, ありがとう, 悲しい, 驚き… |
-| **GIF** | KLIPY search with your own free API key (Settings → GIF). Tap a GIF to copy it, then paste it; iOS doesn't let keyboards insert images. Off until you add a key, because searches go to KLIPY |
+| **GIF** | KLIPY search with your own free API key (Settings → GIF): mood chips (Haha, Love, Yes…), Recent, and a two-column grid of moving GIFs that loads more as you scroll. iOS doesn't let keyboards insert images, so a tap adds the GIF's link straight away (most messaging apps show it as the GIF), or copies the GIF to paste; hold a GIF for the other one. Off until you add a key, because searches go to KLIPY |
 | 📋 **Clipboard** | Your last 5 copies, newest first: tap one to paste it, ⊗ to forget it, Clear for all. Kept on the phone; reading the clipboard needs Full Access |
 
 While typing:
@@ -218,7 +216,7 @@ Step-by-step, from installing Xcode to typing with it: [docs/setup-iphone.md](do
 
 ## Enabling the keyboards
 
-Settings → General → Keyboard → Keyboards → Add New Keyboard… → **日本語キーボード**, then turn on **ローマ字** and/or **かな**. Tap each one and turn on **Allow Full Access** so it can use your settings. Swipe right from the mode key to reach your other keyboards.
+Settings → General → Keyboard → Keyboards → Add New Keyboard… → **日本語キーボード**, then turn on **ローマ字** and/or **かな**. Tap each one and turn on **Allow Full Access** so it can use your settings. Use 🌐 below the keyboard to reach your other keyboards.
 
 ## Next steps
 
