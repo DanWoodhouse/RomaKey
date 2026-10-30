@@ -92,7 +92,8 @@ public final class ConversionHistory {
     }
 
     public func record(reading: String, word: String) {
-        guard !reading.isEmpty, reading != word else { return }
+        // Kana is remembered too, so a word kept in kana isn't converted automatically.
+        guard !reading.isEmpty else { return }
         var words = choices[reading] ?? []
         words.removeAll { $0 == word }
         words.insert(word, at: 0)

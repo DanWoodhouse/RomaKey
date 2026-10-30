@@ -44,6 +44,31 @@ public final class FlickKeyboardEngine {
         onChange?()
     }
     public var isComposing: Bool { !composer.isEmpty }
+
+    /// Live conversion is off while typing goes into an emoji or GIF search.
+    public var convertsAutomatically = true
+
+    /// What the composition shows, and what 確定 or space confirms: with live conversion on,
+    /// the words the keyboard is sure of are already in kanji (たべた → 食べた).
+    private func liveText(_ text: String, converting kana: String) -> String {
+        guard settings.liveConversion, convertsAutomatically, let dictionary, !kana.isEmpty else { return text }
+        let converted = KanaKanjiConverter(dictionary: dictionary, history: history).liveConversion(kana)
+        return converted + text.dropFirst(kana.count)
+    }
+
+    /// The text 確定 or space confirms.
+    private var committedText: String {
+        let finalized = composer.finalizedText
+        return liveText(finalized, converting: finalized)
+    }
+
+    private func showComposition() {
+        if composer.isEmpty {
+            output?.show(composer)
+        } else {
+            output?.setMarkedText(liveText(composer.displayText, converting: composer.kana))
+        }
+    }
     public var candidates: [Candidate] {
         if composer.isEmpty {
             // Straight after a word is committed: the words likely to come next.
@@ -99,7 +124,7 @@ public final class FlickKeyboardEngine {
             if let last = composer.kana.last, let modified = Self.modifierCycle[last] {
                 composer.deleteBackward()
                 composer.inputLiteral(String(modified))
-                output?.show(composer)
+                showComposition()
             }
         case .caseToggle:
             if let previousDirect {
@@ -115,7 +140,7 @@ public final class FlickKeyboardEngine {
         case .delete:
             if isComposing {
                 composer.deleteBackward()
-                output?.show(composer)
+                showComposition()
             } else {
                 output?.deleteBackward()
             }
@@ -142,7 +167,7 @@ public final class FlickKeyboardEngine {
             output?.commit(candidate.text)
             composer.removeFirst(part)
             toggle = nil
-            output?.show(composer)
+            showComposition()
             onChange?()
             return
         }
@@ -182,8 +207,9 @@ public final class FlickKeyboardEngine {
 
     public func commitComposition() {
         guard isComposing else { return }
-        predictionContext.committed(composer.finalizedText, predictor: predictor)
-        output?.commit(composer.finalizedText)
+        let text = committedText
+        predictionContext.committed(text, predictor: predictor)
+        output?.commit(text)
         composer.reset()
     }
 
@@ -213,7 +239,7 @@ public final class FlickKeyboardEngine {
                 predictionContext.compositionStarted(textBefore: output?.textBeforeCursor)
             }
             composer.inputLiteral(text)
-            output?.show(composer)
+            showComposition()
         } else {
             commitComposition()
             output?.insertText(text)
@@ -225,7 +251,7 @@ public final class FlickKeyboardEngine {
         if page == .kana {
             composer.deleteBackward()
             composer.inputLiteral(text)
-            output?.show(composer)
+            showComposition()
         } else {
             output?.deleteBackward()
             output?.insertText(text)

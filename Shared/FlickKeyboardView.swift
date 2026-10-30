@@ -59,6 +59,8 @@ final class FlickKeyboardView: KeyboardViewBase {
     override func routeTyping(to output: TextOutput?) {
         engine.commitComposition()
         engine.output = output ?? documentOutput
+        // Searches stay in kana (ねこ finds 🐈).
+        engine.convertsAutomatically = output == nil
     }
 
     override func commitTyping() {

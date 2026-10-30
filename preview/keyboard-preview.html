@@ -477,6 +477,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <div class="row"><label for="set-autocorrect">Autocorrect</label><input type="checkbox" id="set-autocorrect"></div>
         <div class="row"><label for="set-wordSuggestions">Word suggestions</label><input type="checkbox" id="set-wordSuggestions"></div>
         <div class="row"><label for="set-predictiveText">Predictive text</label><input type="checkbox" id="set-predictiveText"></div>
+        <div class="row"><label for="set-liveConversion">Convert to kanji automatically</label><input type="checkbox" id="set-liveConversion"></div>
         <div class="row"><label for="set-emojiSuggestions">Emoji suggestions</label><input type="checkbox" id="set-emojiSuggestions"></div>
         <div class="row"><span>Skin tone</span><span class="seg" id="seg-skinTone"></span></div>
         <div class="btns"><button class="btn" type="button" id="forget">Forget learned words and kanji choices</button></div>
@@ -538,6 +539,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="j4"><span>Turn on <em>Show romaji readings</em>: suggestions read 猫 ねこ neko.</span></label>
         <label class="check"><input type="checkbox" data-check="j6"><span>Conjugated words: type <em>tabemashita</em> (食べました), <em>itta</em> (行った), <em>kita</em> (来た), <em>takakatta</em> (高かった), <em>benkyoushiteimasu</em> (勉強しています).</span></label>
         <label class="check"><input type="checkbox" data-check="j7"><span>Whole phrases: type <em>kyouhaiitenkidesune</em> → 今日はいい天気ですね, <em>ashitagakkouniikimasu</em> → 明日学校に行きます.</span></label>
+        <label class="check"><input type="checkbox" data-check="j9"><span>Live conversion: type <em>tabeta</em>: the underlined text already reads 食べた, and return confirms it. <em>kyouhaiitenkidesune</em> shows 今日はいい天気ですね; <em>hashiwotabemasu</em> shows はしを食べます (橋, 箸 or 端 is your pick).</span></label>
+        <label class="check"><input type="checkbox" data-check="j10"><span>Type <em>neko</em> (shows 猫) and tap ねこ in the bar. Type <em>neko</em> again, and <em>nekogasuki</em>: ねこ stays in kana. Turn off <em>Convert to kanji automatically</em> (or ⚙︎ → Auto kanji): everything stays kana until you pick.</span></label>
         <label class="check"><input type="checkbox" data-check="j8"><span>One part at a time: type <em>hashiwotabemasu</em> and tap <em>箸…</em> further along the bar. 箸 goes in and をたべます stays to convert: tap を食べます. Type it again: 箸を食べます now comes first.</span></label>
       </div>
       <div class="checks"><h3>辞書 dictionary</h3>
@@ -623,7 +626,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
     keySounds: true, haptics: false, predictiveText: true, aiProvider: "apple",
     backgroundOpacity: 1, backgroundGradient: false, gradientColor: "#8ec5fc", gradientDirection: "down",
-    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, giphyAPIKey: "", gifRating: "pg", keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
+    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, giphyAPIKey: "", gifRating: "pg", keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, liveConversion: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
@@ -814,6 +817,37 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     return out;
   }
 
+  // Live conversion: as you type, the words the converter is sure of show in kanji (たべた →
+  // 食べた). A word is sure when every close alternative agrees on it; one with close rivals
+  // (はし: 橋, 箸, 端) stays in kana until you pick. Kana you chose before for the reading stays.
+  const CONFIDENT = 380;  // about six times as common as the nearest alternative
+  let liveCache = [null, null];
+  function liveConversion(reading) {
+    const r = hiragana(reading);
+    if (liveCache[0] === r) return liveCache[1];
+    let out = r;
+    if ((history[r] || [])[0] !== r) {
+      const all = convert(r, 6), best = all[0];
+      if (best) {
+        const rivals = all.slice(1).filter((c) => c.cost <= best.cost + CONFIDENT);
+        const spanText = (c, start, end) => { let p = 0; for (const s of c.segments) { const q = p + chars(s.reading).length; if (p === start && q === end) return s.text; if (p >= end) break; p = q; } return null; };
+        let pos = 0;
+        out = "";
+        for (const seg of best.segments) {
+          const start = pos, end = pos + chars(seg.reading).length;
+          pos = end;
+          const keptKana = (history[seg.reading] || [])[0] === seg.reading;
+          const sure = seg.text !== seg.reading && !seg.unknown && !keptKana && (end - start >= 2 || learnedFor(seg.reading, seg.text))
+            && rivals.every((c) => spanText(c, start, end) === seg.text);
+          out += sure ? seg.text : seg.reading;
+        }
+      }
+    }
+    liveCache = [r, out];
+    return out;
+  }
+  const liveConversionOn = () => settings.liveConversion && !searching;
+
   const predictions = (p, limit = 8) => { const k = hiragana(p); if (!k) return []; return prefixed(readIdx, k).filter((x) => x[0] !== k).map((x) => x[1]).sort((a, b) => a - b).slice(0, limit).map((i) => entries[i]); };
 
   // ---- Emoji (Emoji.swift) and kaomoji (Kaomoji.swift) ------------------------------------
@@ -891,8 +925,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   const isSingleEmoji = (t) => { try { return [...new Intl.Segmenter().segment(t)].length === 1; } catch (_) { return chars(t).length <= 2; } };
   const useRecent = (t) => { recents = [t, ...recents.filter((x) => x !== t)].slice(0, 32); keep("kb-recent", recents); };
   const recordChoice = (reading, word) => {
-    if (!reading || reading === word) return;
+    // Kana is remembered too, so a word you keep in kana isn't converted automatically.
+    if (!reading) return;
     history[reading] = [word, ...(history[reading] || []).filter((w) => w !== word)].slice(0, 5);
+    liveCache = [null, null];
     keep("kb-history", history);
   };
 
@@ -905,6 +941,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     constructor() { this.kana = ""; this.pending = ""; }
     get isEmpty() { return !this.kana && !this.pending; }
     get display() { return this.kana + (this.pending === "nn" ? "ん" : this.pending); }
+    // What the underlined text shows, and what 確定 or space confirms: with live conversion,
+    // the words it's sure of are already in kanji.
+    get shown() { return liveConversionOn() && this.kana ? liveConversion(this.kana) + this.display.slice(this.kana.length) : this.display; }
+    get toCommit() { return liveConversionOn() && !this.isEmpty ? liveConversion(this.finalized) : this.finalized; }
     get finalized() { return this.kana + (this.pending === "n" || this.pending === "nn" ? "ん" : this.pending); }
     candidates() {
       if (this.isEmpty) return [];
@@ -959,7 +999,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     unmarkText() { search.text += search.marked; search.marked = ""; },
     moveCursor() {},
     get textBeforeCursor() { return search.text + search.marked; },
-    show(c) { if (c.isEmpty) { this.setMarkedText(""); this.unmarkText(); } else this.setMarkedText(c.display); },
+    show(c) { if (c.isEmpty) { this.setMarkedText(""); this.unmarkText(); } else this.setMarkedText(c.shown); },
     commit(t) { this.setMarkedText(t); this.unmarkText(); },
   };
   const docOut = {
@@ -969,7 +1009,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     unmarkText() { const m = doc.marked; doc.marked = ""; this.insertText(m); },
     moveCursor(n) { doc.cursor = Math.max(0, Math.min(doc.text.length, doc.cursor + n)); },
     get textBeforeCursor() { return doc.text.slice(0, doc.cursor).join("") + doc.marked; },
-    show(c) { if (c.isEmpty) { this.setMarkedText(""); this.unmarkText(); } else this.setMarkedText(c.display); },
+    show(c) { if (c.isEmpty) { this.setMarkedText(""); this.unmarkText(); } else this.setMarkedText(c.shown); },
     commit(t) { this.setMarkedText(t); this.unmarkText(); },
   };
   const out = new Proxy({}, { get: (_, p) => {
@@ -1279,7 +1319,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     },
     commit() {
       if (this.query) out.commit(this.query);
-      else if (!this.composer.isEmpty) { if (this.mode === "japanese") this.ja.committed(this.composer.finalized); out.commit(this.composer.finalized); }
+      else if (!this.composer.isEmpty) { const t = this.composer.toCommit; if (this.mode === "japanese") this.ja.committed(t); out.commit(t); }
       this.query = ""; this.composer.reset();
     },
     select(t) { if (this.mode === "japanese") this.ja.committed(t); out.commit(t); this.query = ""; this.composer.reset(); this.autoCap(); },
@@ -1372,7 +1412,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     },
     insert(t) { if (this.page === "kana") { if (this.composer.isEmpty) this.ja.started(); this.composer.inputLiteral(t); out.show(this.composer); } else { this.commit(); out.insertText(t); this.lastDirect = t; } },
     replaceLast(t) { if (this.page === "kana") { this.composer.deleteBackward(); this.composer.inputLiteral(t); out.show(this.composer); } else { out.deleteBackward(); out.insertText(t); this.lastDirect = t; } },
-    commit() { if (this.composing) { this.ja.committed(this.composer.finalized); out.commit(this.composer.finalized); this.composer.reset(); } },
+    commit() { if (this.composing) { const t = this.composer.toCommit; this.ja.committed(t); out.commit(t); this.composer.reset(); } },
     select(t) { this.ja.committed(t); out.commit(t); this.composer.reset(); this.toggle = null; },
     selectPart(t, reading) { out.commit(t); this.composer.dropFirst(reading); this.toggle = null; out.show(this.composer); },
     moveCursor(n) { this.commit(); this.toggle = null; out.moveCursor(n); },
@@ -2105,7 +2145,7 @@ Text: よろしくおねがいします
     ["spaceBarCursor", "Trackpad", '<path d="M3.5 12h17M7 8.5 3.5 12 7 15.5M17 8.5l3.5 3.5-3.5 3.5"/>'],
     ["leftHandedWheel", "Left hand", '<path d="M19 16a7 7 0 0 0-14 0"/><path d="m3 13 2 3 3-2"/>'],
     ["flickOnly", "Flick only", '<rect x="8.5" y="8.5" width="7" height="7" rx="1.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>'],
-    ["fullWidthSpace", "Wide space", '<path d="M3 12v3.5h18V12"/>'],
+    ["liveConversion", "Auto kanji", CC_TEXT("漢", 12)],
   ];
   const CC_SHOW = [
     ["emojiSuggestions", "Emoji", '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c1 1.3 2.2 2 3.5 2s2.5-.7 3.5-2"/><path d="M9 9.8h.01M15 9.8h.01" stroke-width="2.4"/>'],
@@ -2532,7 +2572,7 @@ Text: よろしくおねがいします
     Object.assign(settings, DEFAULTS, { customColors: { ...PALETTES["藍 Ai light"] } });
     changed();
   });
-  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "keySecondaries", "swipeUpSecondaries", "animations", "leftHandedWheel", "dictionaryTypesDirectly", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics", "boldKeys", "backgroundGradient", "keyShadows", "keyOutlines", "accentReturnKey"];
+  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "keySecondaries", "swipeUpSecondaries", "animations", "leftHandedWheel", "dictionaryTypesDirectly", "liveConversion", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics", "boldKeys", "backgroundGradient", "keyShadows", "keyOutlines", "accentReturnKey"];
   for (const key of TOGGLES) {
     $("set-" + key).addEventListener("change", (e) => { settings[key] = e.target.checked; changed(); });
   }

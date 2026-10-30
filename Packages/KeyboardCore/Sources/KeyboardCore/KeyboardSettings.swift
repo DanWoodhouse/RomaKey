@@ -139,6 +139,8 @@ public struct KeyboardSettings: Equatable {
     public var emojiSuggestions = true
     /// Likely next words after a word is finished.
     public var predictiveText = true
+    /// Words the keyboard is sure of turn into kanji as you type (たべた → 食べた).
+    public var liveConversion = true
 
     // Emoji and GIFs
     /// 0 = default yellow, 1–5 = light to dark.
@@ -231,6 +233,7 @@ public struct KeyboardSettings: Equatable {
         static let wordSuggestions = "wordSuggestions"
         static let emojiSuggestions = "emojiSuggestions"
         static let predictiveText = "predictiveText"
+        static let liveConversion = "liveConversion"
         static let skinTone = "skinTone"
         static let giphyAPIKey = "giphyAPIKey"
         static let gifRating = "gifRating"
@@ -300,6 +303,7 @@ public struct KeyboardSettings: Equatable {
         wordSuggestions = bool(Key.wordSuggestions, wordSuggestions)
         emojiSuggestions = bool(Key.emojiSuggestions, emojiSuggestions)
         predictiveText = bool(Key.predictiveText, predictiveText)
+        liveConversion = bool(Key.liveConversion, liveConversion)
         skinTone = min(max(defaults.object(forKey: Key.skinTone) as? Int ?? skinTone, 0), 5)
         giphyAPIKey = defaults.string(forKey: Key.giphyAPIKey) ?? giphyAPIKey
         gifRating = ["g", "pg", "pg-13", "r"].contains(defaults.string(forKey: Key.gifRating) ?? "")
@@ -358,6 +362,7 @@ public struct KeyboardSettings: Equatable {
         defaults.set(wordSuggestions, forKey: Key.wordSuggestions)
         defaults.set(emojiSuggestions, forKey: Key.emojiSuggestions)
         defaults.set(predictiveText, forKey: Key.predictiveText)
+        defaults.set(liveConversion, forKey: Key.liveConversion)
         defaults.set(skinTone, forKey: Key.skinTone)
         defaults.set(giphyAPIKey, forKey: Key.giphyAPIKey)
         defaults.set(gifRating, forKey: Key.gifRating)

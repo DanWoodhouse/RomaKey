@@ -40,7 +40,7 @@ final class QuickSettingsPanel: UIView {
         Toggle(title: "Trackpad", symbol: "arrow.left.and.right", keyPath: \.spaceBarCursor),
         Toggle(title: "Left hand", symbol: "hand.raised", keyPath: \.leftHandedWheel),
         Toggle(title: "Flick only", symbol: "hand.draw", keyPath: \.flickOnly),
-        Toggle(title: "Wide space", symbol: "arrow.left.and.right.square", keyPath: \.fullWidthSpace),
+        Toggle(title: "Auto kanji", symbol: "character.textbox", keyPath: \.liveConversion),
     ]
 
     private static let show: [Toggle] = [

@@ -171,6 +171,9 @@ public struct KanaKanjiConverter {
         static let everyday = 600
         /// Alternatives costing more than this over the best are odd splits (ね子 for ねこ).
         static let margin = 2500
+        /// Live conversion only converts a word with no alternative within this: about six
+        /// times as common as the nearest one.
+        static let confident = 380
     }
 
     /// Particles and other little words that stay in kana between the converted words.
@@ -257,6 +260,46 @@ public struct KanaKanjiConverter {
                 }
                 return Conversion(text: node.text, segments: segments, cost: node.cost)
             }
+    }
+
+    /// Live conversion: the reading with the words the converter is sure of already in kanji
+    /// (たべた → 食べた, はしをたべます → はしを食べます). A word is sure when every close
+    /// alternative agrees on it; one with close rivals (はし: 橋, 箸, 端) stays in kana until
+    /// it's picked. Readings kept in kana before stay in kana.
+    public func liveConversion(_ reading: String) -> String {
+        let reading = KanaConverter.hiragana(from: reading)
+        guard !keptInKana(reading) else { return reading }
+        let all = convert(reading, limit: 6)
+        guard let best = all.first else { return reading }
+        let rivals = all.dropFirst().filter { $0.cost <= best.cost + Cost.confident }
+
+        func text(of conversion: Conversion, from start: Int, to end: Int) -> String? {
+            var position = 0
+            for segment in conversion.segments {
+                let next = position + segment.reading.count
+                if position == start && next == end { return segment.text }
+                if position >= end { break }
+                position = next
+            }
+            return nil
+        }
+
+        var result = ""
+        var position = 0
+        for segment in best.segments {
+            let start = position, end = position + segment.reading.count
+            position = end
+            let sure = segment.text != segment.reading
+                && !keptInKana(segment.reading)
+                && (end - start >= 2 || learned(segment.reading, segment.text))
+                && rivals.allSatisfy { text(of: $0, from: start, to: end) == segment.text }
+            result += sure ? segment.text : segment.reading
+        }
+        return result
+    }
+
+    private func keptInKana(_ reading: String) -> Bool {
+        history?.choices(for: reading).first == reading
     }
 
     /// Words for the start of a phrase, to convert it one part at a time (箸 | をたべる): the

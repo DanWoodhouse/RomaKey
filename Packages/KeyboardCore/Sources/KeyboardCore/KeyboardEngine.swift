@@ -59,6 +59,31 @@ public final class KeyboardEngine {
 
     public var isComposing: Bool { !composer.isEmpty || !englishQuery.isEmpty }
 
+    /// Live conversion is off while typing goes into an emoji or GIF search.
+    public var convertsAutomatically = true
+
+    /// What the composition shows, and what 確定 or space confirms: with live conversion on,
+    /// the words the keyboard is sure of are already in kanji (たべた → 食べた).
+    private func liveText(_ text: String, converting kana: String) -> String {
+        guard settings.liveConversion, convertsAutomatically, let dictionary, !kana.isEmpty else { return text }
+        let converted = KanaKanjiConverter(dictionary: dictionary, history: history).liveConversion(kana)
+        return converted + text.dropFirst(kana.count)
+    }
+
+    /// The text 確定 or space confirms.
+    private var committedText: String {
+        let finalized = composer.finalizedText
+        return liveText(finalized, converting: finalized)
+    }
+
+    private func showComposition() {
+        if composer.isEmpty {
+            output?.show(composer)
+        } else {
+            output?.setMarkedText(liveText(composer.displayText, converting: composer.kana))
+        }
+    }
+
     /// 辞 has two styles, switched with the key next to return: look words up (the English is a
     /// search, confirmed with 確定), or type English straight into the text, seeing the Japanese.
     public var typesDirectly: Bool { mode == .dictionary && settings.dictionaryTypesDirectly }
@@ -156,7 +181,7 @@ public final class KeyboardEngine {
             switch mode {
             case .japanese:
                 composer.input("-")
-                output?.show(composer)
+                showComposition()
             case .english:
                 output?.insertText("-")
             case .dictionary:
@@ -205,7 +230,7 @@ public final class KeyboardEngine {
             history?.record(reading: part, word: candidate.text)
             output?.commit(candidate.text)
             composer.removeFirst(part)
-            output?.show(composer)
+            showComposition()
             onChange?()
             return
         }
@@ -262,7 +287,7 @@ public final class KeyboardEngine {
         if !englishQuery.isEmpty {
             commit(englishQuery)
         } else if !composer.isEmpty {
-            commit(composer.finalizedText)
+            commit(committedText)
         }
     }
 
@@ -376,7 +401,7 @@ public final class KeyboardEngine {
                     composer.input(romaji)
                 }
             }
-            output?.show(composer)
+            showComposition()
         case .dictionary:
             appendToQuery(text)
         }
@@ -492,7 +517,7 @@ public final class KeyboardEngine {
             }
         } else if !composer.isEmpty {
             composer.deleteBackward()
-            output?.show(composer)
+            showComposition()
         } else {
             output?.deleteBackward()
         }

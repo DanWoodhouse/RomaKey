@@ -79,6 +79,46 @@ final class ConversionTests: XCTestCase {
         XCTAssertEqual(learned.convert("はしをたべます").first?.text, "箸を食べます")
     }
 
+    func testLiveConversionConvertsOnlyWhatItIsSureOf() {
+        XCTAssertEqual(converter.liveConversion("たべた"), "食べた")
+        XCTAssertEqual(converter.liveConversion("きょうはいいてんきですね"), "今日はいい天気ですね")
+        // 橋 and 箸 are too close to call, so はし waits to be picked.
+        XCTAssertEqual(converter.liveConversion("はしをたべます"), "はしを食べます")
+        XCTAssertEqual(converter.liveConversion("ぴよぴよ"), "ぴよぴよ")
+    }
+
+    func testLiveConversionLearns() {
+        let history = ConversionHistory(store: MemoryStore())
+        let learning = KanaKanjiConverter(dictionary: dictionary, history: history)
+        history.record(reading: "はし", word: "箸")
+        XCTAssertEqual(learning.liveConversion("はしをたべます"), "箸を食べます")
+        // Kana you chose stays kana, on its own and in phrases.
+        history.record(reading: "たべた", word: "たべた")
+        XCTAssertEqual(learning.liveConversion("たべた"), "たべた")
+        history.record(reading: "はし", word: "はし")
+        XCTAssertEqual(learning.liveConversion("はしをたべます"), "はしを食べます")
+    }
+
+    func testEngineShowsAndConfirmsTheLiveConversion() {
+        let output = RecordingOutput()
+        let engine = KeyboardEngine(mode: .japanese)
+        engine.output = output
+        engine.dictionary = dictionary
+        "tabeta".forEach { engine.press(.character(String($0))) }
+        XCTAssertEqual(output.marked, "食べた")
+        engine.press(.returnKey)
+        XCTAssertEqual(output.committed, "食べた")
+
+        // Off in settings, and while typing into a search.
+        engine.settings.liveConversion = false
+        "tabeta".forEach { engine.press(.character(String($0))) }
+        XCTAssertEqual(output.marked, "たべた")
+        engine.settings.liveConversion = true
+        engine.convertsAutomatically = false
+        engine.press(.character("a"))
+        XCTAssertEqual(output.marked, "たべたあ")
+    }
+
     func testCandidatesOfferPhrasesThenTheFirstWord() {
         var composer = RomajiComposer()
         composer.inputLiteral("はしをたべます")

@@ -157,8 +157,9 @@ struct SuggestionSettingsView: View {
                 Toggle("Word suggestions", isOn: $store.settings.wordSuggestions)
                 Toggle("Predictive text", isOn: $store.settings.predictiveText)
                 Toggle("Emoji suggestions", isOn: $store.settings.emojiSuggestions)
+                Toggle("Convert to kanji automatically", isOn: $store.settings.liveConversion)
             } footer: {
-                Text("English suggestions and autocorrect use Apple's built-in spell checker, your text replacements and words you type often. Press delete straight after an autocorrection to undo it. Predictive text offers the next word after each word you finish, learning the pairs you type (in Japanese too). All of this stays on your phone.")
+                Text("English suggestions and autocorrect use Apple's built-in spell checker, your text replacements and words you type often. Press delete straight after an autocorrection to undo it. Predictive text offers the next word after each word you finish, learning the pairs you type (in Japanese too). Converting automatically turns the words the keyboard is sure of into kanji as you type (たべた → 食べた); ones it isn't sure of (はし: 橋, 箸, 端) stay in kana until you pick. Pick the hiragana and that word stays in kana next time. All of this stays on your phone.")
             }
 
             Section {
