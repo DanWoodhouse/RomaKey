@@ -3,30 +3,20 @@ import UIKit
 
 /// The 12-key flick keyboard, laid out like the iPhone's built-in 日本語かな keyboard.
 /// Tap a key for its centre kana (あ), or press and slide left/up/right/down for the rest (いうえお).
-final class FlickKeyboardView: UIView, UIInputViewAudioFeedback, KeyboardContentView {
+final class FlickKeyboardView: KeyboardViewBase {
     private let engine: FlickKeyboardEngine
     private weak var globeTarget: UIInputViewController?
-    private let candidateBar = CandidateBar()
-    private let keyArea = UIView()
     private let guide = FlickGuideView()
     private var buttons: [FlickKeyButton] = []
     private var builtLayout: FlickLayout?
     private let deleteRepeater = KeyRepeater()
+    private var spaceBarCursor: SpaceBarCursor?
 
-    var enableInputClicksWhenVisible: Bool { true }
-
-    init(engine: FlickKeyboardEngine, globeTarget: UIInputViewController) {
+    init(engine: FlickKeyboardEngine, globeTarget: UIInputViewController, feedback: KeyFeedback) {
         self.engine = engine
         self.globeTarget = globeTarget
-        super.init(frame: .zero)
-        backgroundColor = .clear
-        addSubview(candidateBar)
-        addSubview(keyArea)
+        super.init(feedback: feedback)
         addSubview(guide)
-        candidateBar.onSelect = { [weak self] candidate in
-            UIDevice.current.playInputClick()
-            self?.engine.selectCandidate(candidate)
-        }
         engine.onChange = { [weak self] in self?.reload() }
         reload()
     }
@@ -36,17 +26,34 @@ final class FlickKeyboardView: UIView, UIInputViewAudioFeedback, KeyboardContent
         fatalError("init(coder:) has not been implemented")
     }
 
-    func update(showsGlobe: Bool) {
+    override func update(showsGlobe: Bool) {
         // The grid always keeps its globe key, so its shape is the same on every phone.
     }
 
-    func reload() {
+    override func settingsDidChange() {
+        engine.settings = settings
+        for button in buttons {
+            button.theme = theme
+        }
+        spaceBarCursor?.isEnabled = settings.spaceBarCursor
+    }
+
+    override func selectCandidate(_ candidate: Candidate) {
+        engine.selectCandidate(candidate)
+    }
+
+    override func insertWord(_ text: String) {
+        engine.insertWord(text)
+    }
+
+    override func reload() {
         if engine.layout != builtLayout {
             rebuildKeys()
         }
         for button in buttons {
             button.label = engine.label(for: button.kind)
         }
+        candidateBar.showsMeanings = settings.showMeanings
         candidateBar.candidates = engine.candidates
     }
 
@@ -55,6 +62,7 @@ final class FlickKeyboardView: UIView, UIInputViewAudioFeedback, KeyboardContent
         let layout = engine.layout
         buttons = layout.cells.map { cell in
             let button = FlickKeyButton(kind: cell.kind)
+            button.theme = theme
             configureActions(for: button)
             keyArea.addSubview(button)
             return button
@@ -85,16 +93,20 @@ final class FlickKeyboardView: UIView, UIInputViewAudioFeedback, KeyboardContent
             button.addTarget(self, action: #selector(keyDown), for: .touchDown)
             button.addTarget(self, action: #selector(keyUp(_:)), for: .touchUpInside)
         }
+
+        if button.kind == .space {
+            let cursor = SpaceBarCursor(
+                button: button,
+                onActiveChange: { [weak self] active in self?.setTrackpadActive(active) },
+                onMove: { [weak self] offset in self?.engine.moveCursor(by: offset) }
+            )
+            cursor.isEnabled = settings.spaceBarCursor
+            spaceBarCursor = cursor
+        }
     }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        let rowHeight = KeyboardMetrics.rowHeight(compact: traitCollection.verticalSizeClass == .compact)
-        let barHeight = KeyboardMetrics.candidateBarHeight
-        candidateBar.frame = CGRect(x: 0, y: 0, width: bounds.width, height: barHeight)
-        keyArea.frame = CGRect(x: 0, y: barHeight, width: bounds.width, height: bounds.height - barHeight)
+    override func layoutKeys(rowHeight: CGFloat) {
         guide.frame = bounds
-
         let frames = engine.layout.frames(width: Double(bounds.width), rowHeight: Double(rowHeight))
         for (button, frame) in zip(buttons, frames) {
             button.frame = CGRect(x: frame.x, y: frame.y, width: frame.width, height: frame.height)
@@ -105,7 +117,8 @@ final class FlickKeyboardView: UIView, UIInputViewAudioFeedback, KeyboardContent
     // MARK: - Flick keys
 
     @objc private func flickBegan(_ sender: FlickKeyButton, forEvent event: UIEvent) {
-        UIDevice.current.playInputClick()
+        feedback.keyDown()
+        hideEntry()
         sender.touchStart = event.touches(for: sender)?.first?.location(in: self)
         showGuide(for: sender, direction: .center)
     }
@@ -129,27 +142,33 @@ final class FlickKeyboardView: UIView, UIInputViewAudioFeedback, KeyboardContent
     private func direction(of sender: FlickKeyButton, event: UIEvent) -> FlickDirection {
         guard let start = sender.touchStart,
               let point = event.touches(for: sender)?.first?.location(in: self) else { return .center }
-        return FlickDirection(dx: Double(point.x - start.x), dy: Double(point.y - start.y))
+        return FlickDirection(
+            dx: Double(point.x - start.x),
+            dy: Double(point.y - start.y),
+            threshold: settings.flickSensitivity.threshold
+        )
     }
 
     private func showGuide(for button: FlickKeyButton, direction: FlickDirection) {
         guard case .flick(let key) = button.kind else { return }
-        guide.show(key, around: button.convert(button.bounds, to: self), selected: direction)
+        guide.show(key, around: button.convert(button.bounds, to: self), selected: direction, theme: theme)
     }
 
     // MARK: - Other keys
 
     @objc private func keyDown() {
-        UIDevice.current.playInputClick()
+        feedback.keyDown()
     }
 
     @objc private func keyUp(_ sender: FlickKeyButton) {
+        hideEntry()
         engine.press(sender.kind)
     }
 
     @objc private func deleteDown() {
-        UIDevice.current.playInputClick()
-        deleteRepeater.start { [weak self] in self?.engine.press(.delete) }
+        feedback.keyDown()
+        hideEntry()
+        deleteRepeater.start { [weak self] _ in self?.engine.press(.delete) }
     }
 
     @objc private func deleteUp() {
@@ -202,7 +221,7 @@ final class FlickGuideView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func show(_ key: FlickKey, around keyFrame: CGRect, selected: FlickDirection) {
+    func show(_ key: FlickKey, around keyFrame: CGRect, selected: FlickDirection, theme: KeyboardTheme) {
         isHidden = false
         for (direction, tile) in tiles {
             guard let text = key.outputs[direction] else {
@@ -221,8 +240,8 @@ final class FlickGuideView: UIView {
             tile.text = text
             tile.frame = frame.insetBy(dx: 2, dy: 2).intersection(bounds)
             let isSelected = direction == selected
-            tile.backgroundColor = isSelected ? .systemBlue : .secondarySystemBackground
-            tile.textColor = isSelected ? .white : .label
+            tile.backgroundColor = isSelected ? theme.accent : theme.key
+            tile.textColor = isSelected ? .white : theme.text
         }
     }
 

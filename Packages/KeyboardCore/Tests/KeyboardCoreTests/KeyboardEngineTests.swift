@@ -23,9 +23,11 @@ final class KeyboardEngineTests: XCTestCase {
         for showsGlobe in [true, false] {
             let engine = makeEngine(mode: .english, showsGlobe: showsGlobe)
             let english = engine.layout.frames(width: 375, rowHeight: 54)
-            engine.press(.languageToggle)
-            XCTAssertEqual(engine.mode, .japanese)
-            XCTAssertEqual(engine.layout.frames(width: 375, rowHeight: 54), english)
+            for expected in [InputMode.dictionary, .japanese, .english] {
+                engine.press(.languageToggle)
+                XCTAssertEqual(engine.mode, expected)
+                XCTAssertEqual(engine.layout.frames(width: 375, rowHeight: 54), english)
+            }
         }
     }
 
@@ -85,8 +87,8 @@ final class KeyboardEngineTests: XCTestCase {
     func testKatakanaCandidate() {
         let engine = makeEngine(mode: .japanese)
         type("ko-hi-", into: engine)
-        XCTAssertEqual(engine.candidates, ["こーひー", "コーヒー"])
-        engine.selectCandidate("コーヒー")
+        XCTAssertEqual(engine.candidates.map(\.text), ["こーひー", "コーヒー"])
+        engine.selectCandidate(Candidate("コーヒー"))
         XCTAssertEqual(output.committed, "コーヒー")
     }
 
@@ -112,6 +114,7 @@ final class KeyboardEngineTests: XCTestCase {
     func testShiftDoubleTapLocks() {
         var time = Date(timeIntervalSinceReferenceDate: 0)
         let engine = KeyboardEngine(mode: .english, now: { time })
+        engine.settings.autoCapitalization = false
         engine.press(.shift)
         time += 0.2
         engine.press(.shift)
@@ -120,5 +123,114 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertEqual(engine.shift, .locked)
         engine.press(.shift)
         XCTAssertEqual(engine.shift, .off)
+    }
+
+    // MARK: - 辞書 mode and kanji
+
+    func testLanguageKeyCyclesThroughEnabledModes() {
+        let engine = makeEngine(mode: .japanese)
+        engine.press(.languageToggle)
+        engine.press(.languageToggle)
+        XCTAssertEqual(engine.mode, .dictionary)
+        XCTAssertEqual(engine.label(for: .languageToggle), .text("辞"))
+        engine.press(.languageToggle)
+        XCTAssertEqual(engine.mode, .japanese)
+
+        engine.settings.languageKeyModes = [.japanese, .english]
+        engine.press(.languageToggle)
+        engine.press(.languageToggle)
+        XCTAssertEqual(engine.mode, .japanese)
+    }
+
+    func testDictionaryModeLooksUpEnglish() {
+        let engine = makeEngine(mode: .dictionary)
+        engine.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        type("dog", into: engine)
+        XCTAssertEqual(output.marked, "dog")
+        XCTAssertEqual(engine.candidates.map(\.text), ["犬", "戌"])
+        XCTAssertEqual(engine.candidates.first?.entry?.reading, "いぬ")
+
+        engine.selectCandidate(engine.candidates[0])
+        XCTAssertEqual(output.committed, "犬")
+        XCTAssertEqual(output.marked, "")
+    }
+
+    func testDictionaryModeMultiWordAndReturn() {
+        let engine = makeEngine(mode: .dictionary)
+        engine.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        type("thank you", into: engine)
+        XCTAssertEqual(output.marked, "thank you")
+        XCTAssertEqual(engine.candidates.map(\.text), ["どうも", "ありがとう"])
+        // Return keeps the English as typed.
+        engine.press(.returnKey)
+        XCTAssertEqual(output.committed, "thank you")
+    }
+
+    func testJapaneseModeOffersKanji() {
+        let engine = makeEngine(mode: .japanese)
+        engine.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        type("inu", into: engine)
+        XCTAssertEqual(engine.candidates.map(\.text), ["いぬ", "犬", "戌", "イヌ"])
+        engine.press(.returnKey)
+
+        // Predictions: longer words starting with what's been typed so far.
+        type("ta", into: engine)
+        XCTAssertEqual(engine.candidates.map(\.text), ["た", "タ", "食べる"])
+    }
+
+    // MARK: - Quality of life
+
+    func testAutoCapitalisation() {
+        let engine = makeEngine(mode: .english)
+        engine.textDidChange()
+        XCTAssertEqual(engine.shift, .once)
+        type("hi. so", into: engine)
+        XCTAssertEqual(output.committed, "Hi. So")
+        XCTAssertEqual(engine.shift, .off)
+    }
+
+    func testDoubleSpaceTypesFullStop() {
+        let engine = makeEngine(mode: .english)
+        engine.settings.autoCapitalization = false
+        type("ok  ", into: engine)
+        XCTAssertEqual(output.committed, "ok. ")
+        engine.settings.doubleSpacePeriod = false
+        type("x  ", into: engine)
+        XCTAssertEqual(output.committed, "ok. x  ")
+    }
+
+    func testDeleteWord() {
+        let engine = makeEngine(mode: .english)
+        output.committed = "hello wide world  "
+        engine.deleteWordBackward()
+        XCTAssertEqual(output.committed, "hello wide ")
+        engine.deleteWordBackward()
+        XCTAssertEqual(output.committed, "hello ")
+        output.committed = "日本語"
+        engine.deleteWordBackward()
+        XCTAssertEqual(output.committed, "日本")
+    }
+
+    func testSpaceReturnsToLetters() {
+        let engine = makeEngine(mode: .english)
+        engine.press(.pageToggle)
+        engine.press(.character("4"))
+        engine.press(.space)
+        XCTAssertEqual(engine.page, .letters)
+    }
+
+    func testFullWidthSpaceSetting() {
+        let engine = makeEngine(mode: .japanese)
+        engine.settings.fullWidthSpace = true
+        engine.press(.space)
+        XCTAssertEqual(output.committed, "　")
+    }
+
+    func testCursorMoveConfirmsComposition() {
+        let engine = makeEngine(mode: .japanese)
+        type("ka", into: engine)
+        engine.moveCursor(by: -1)
+        XCTAssertEqual(output.committed, "か")
+        XCTAssertEqual(output.cursorMoves, -1)
     }
 }

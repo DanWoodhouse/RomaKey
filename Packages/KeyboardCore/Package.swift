@@ -8,7 +8,14 @@ let package = Package(
         .library(name: "KeyboardCore", targets: ["KeyboardCore"]),
     ],
     targets: [
-        .target(name: "KeyboardCore"),
+        .target(
+            name: "KeyboardCore",
+            resources: [
+                // Common words from JMdict (CC BY-SA, EDRDG). Rebuild with tools/build_dictionary.py.
+                .copy("Resources/dictionary.tsv"),
+                .copy("Resources/JMdict-LICENSE.md"),
+            ]
+        ),
         .testTarget(name: "KeyboardCoreTests", dependencies: ["KeyboardCore"]),
     ]
 )

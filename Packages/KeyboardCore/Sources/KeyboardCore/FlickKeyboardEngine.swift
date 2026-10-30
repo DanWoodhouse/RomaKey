@@ -6,6 +6,12 @@ public final class FlickKeyboardEngine {
     public private(set) var page: FlickPage = .kana
     public private(set) var composer = RomajiComposer()
 
+    public var settings = KeyboardSettings()
+    /// Loaded in the background; until then there's no kanji conversion.
+    public var dictionary: JapaneseDictionary? {
+        didSet { onChange?() }
+    }
+
     public weak var output: TextOutput?
     public var onChange: (() -> Void)?
 
@@ -18,7 +24,7 @@ public final class FlickKeyboardEngine {
 
     public var layout: FlickLayout { .layout(for: page) }
     public var isComposing: Bool { !composer.isEmpty }
-    public var candidates: [String] { composer.candidates }
+    public var candidates: [Candidate] { composer.candidates(using: dictionary) }
 
     public func press(_ kind: FlickKeyKind, direction: FlickDirection = .center) {
         // Anything other than another tap on the same key ends the tap cycle.
@@ -33,7 +39,7 @@ public final class FlickKeyboardEngine {
                 if let text = key.outputs[direction] {
                     insert(text)
                 }
-            } else if let previousToggle, previousToggle.key == key {
+            } else if !settings.flickOnly, let previousToggle, previousToggle.key == key {
                 let index = (previousToggle.index + 1) % key.cycle.count
                 replaceLast(with: key.cycle[index])
                 toggle = (key, index)
@@ -89,7 +95,7 @@ public final class FlickKeyboardEngine {
             if isComposing {
                 commitComposition()
             } else {
-                output?.insertText(" ")
+                output?.insertText(page == .kana && settings.fullWidthSpace ? "　" : " ")
             }
         case .returnKey:
             if isComposing {
@@ -101,10 +107,23 @@ public final class FlickKeyboardEngine {
         onChange?()
     }
 
-    public func selectCandidate(_ candidate: String) {
-        output?.commit(candidate)
+    public func selectCandidate(_ candidate: Candidate) {
+        output?.commit(candidate.text)
         composer.reset()
         toggle = nil
+        onChange?()
+    }
+
+    /// Inserts a specific form of a dictionary word (kanji, hiragana or katakana).
+    public func insertWord(_ text: String) {
+        selectCandidate(Candidate(text))
+    }
+
+    /// Space-bar trackpad: moves the cursor, confirming any composition first.
+    public func moveCursor(by offset: Int) {
+        commitComposition()
+        toggle = nil
+        output?.moveCursor(by: offset)
         onChange?()
     }
 

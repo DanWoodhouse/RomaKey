@@ -17,7 +17,13 @@ targets:
   JapaneseKeyboard:
     type: application
     platform: iOS
-    sources: [App]
+    sources:
+      - App
+      - Shared/KeyboardTheme.swift  # for the theme previews in Settings
+    entitlements:
+      path: App/JapaneseKeyboard.entitlements
+      properties: &appGroups
+        com.apple.security.application-groups: [group.com.danwoodhouse.JapaneseKeyboard]
     info:
       path: App/Info.plist
       properties:
@@ -31,12 +37,16 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.danwoodhouse.JapaneseKeyboard
     dependencies:
+      - package: KeyboardCore
       - target: RomajiKeyboard
       - target: KanaKeyboard
   # Two keyboards, each listed separately in Settings and switched with 🌐.
   RomajiKeyboard:
     templates: [KeyboardExtension]
     sources: [RomajiKeyboard, Shared]
+    entitlements:
+      path: RomajiKeyboard/RomajiKeyboard.entitlements
+      properties: *appGroups
     info:
       path: RomajiKeyboard/Info.plist
       properties:
@@ -48,13 +58,18 @@ targets:
             PrimaryLanguage: ja-JP
             IsASCIICapable: false
             PrefersRightToLeft: false
-            RequestsOpenAccess: false
+            # Full Access lets the keyboards read settings from the shared App Group and use
+            # haptics. They make no network requests.
+            RequestsOpenAccess: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.danwoodhouse.JapaneseKeyboard.Romaji
   KanaKeyboard:
     templates: [KeyboardExtension]
     sources: [KanaKeyboard, Shared]
+    entitlements:
+      path: KanaKeyboard/KanaKeyboard.entitlements
+      properties: *appGroups
     info:
       path: KanaKeyboard/Info.plist
       properties:

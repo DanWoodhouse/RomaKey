@@ -3,6 +3,7 @@
 App/Info.plist
 RomajiKeyboard/Info.plist
 KanaKeyboard/Info.plist
+*.entitlements
 
 # Xcode / SwiftPM
 xcuserdata/

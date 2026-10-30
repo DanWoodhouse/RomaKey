@@ -109,7 +109,23 @@ final class FlickKeyboardEngineTests: XCTestCase {
     func testKatakanaCandidate() {
         engine.press(key("か"), direction: .left)
         engine.press(key("ら"), direction: .center)
-        XCTAssertEqual(engine.candidates, ["きら", "キラ"])
+        XCTAssertEqual(engine.candidates.map(\.text), ["きら", "キラ"])
+    }
+
+    func testFlickOnlyModeDoesNotCycle() {
+        engine.settings.flickOnly = true
+        engine.press(key("あ"))
+        engine.press(key("あ"))
+        XCTAssertEqual(output.marked, "ああ")
+    }
+
+    func testKanjiCandidates() {
+        engine.dictionary = JapaneseDictionary(tsv: SampleDictionary.tsv)
+        engine.press(key("な"), direction: .right)  // ね
+        engine.press(key("か"), direction: .down)   // こ
+        XCTAssertEqual(engine.candidates.map(\.text), ["ねこ", "猫", "ネコ"])
+        engine.selectCandidate(engine.candidates[1])
+        XCTAssertEqual(output.committed, "猫")
     }
 
     func testDirectionFromDrag() {

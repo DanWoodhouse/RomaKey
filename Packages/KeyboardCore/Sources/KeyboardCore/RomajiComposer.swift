@@ -118,4 +118,18 @@ public enum KanaConverter {
         }
         return String(scalars)
     }
+
+    /// カタカナ → ひらがな. Anything that isn't katakana is left alone.
+    public static func hiragana(from text: String) -> String {
+        var scalars = String.UnicodeScalarView()
+        for scalar in text.unicodeScalars {
+            if (0x30A1...0x30F6).contains(scalar.value) || (0x30FD...0x30FE).contains(scalar.value),
+               let shifted = Unicode.Scalar(scalar.value - 0x60) {
+                scalars.append(shifted)
+            } else {
+                scalars.append(scalar)
+            }
+        }
+        return String(scalars)
+    }
 }

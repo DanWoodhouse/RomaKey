@@ -1,6 +1,8 @@
-public enum InputMode: Equatable {
-    case english
+public enum InputMode: String, CaseIterable {
     case japanese
+    case english
+    /// Type English, pick a Japanese word from the dictionary.
+    case dictionary
 }
 
 public enum KeyboardPage: Equatable {

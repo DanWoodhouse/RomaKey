@@ -14,4 +14,5 @@ final class RecordingOutput: TextOutput {
         marked = ""
     }
     func moveCursor(by offset: Int) { cursorMoves += offset }
+    var textBeforeCursor: String? { committed + marked }
 }
