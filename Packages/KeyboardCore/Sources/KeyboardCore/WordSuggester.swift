@@ -23,7 +23,9 @@ public struct WordSuggestions: Equatable {
 /// English suggestions and autocorrect, like the system keyboard's, built from the spell checker,
 /// the user's text replacements (omw → On my way!) and words the user has typed before.
 public final class WordSuggester {
-    public var checker: SpellChecking?
+    public var checker: SpellChecking? {
+        didSet { clearCheckerCache() }
+    }
     public var learned: LearnedWords
     /// iOS text replacements, shortcut → phrase.
     public var textReplacements: [String: String] = [:]
@@ -46,11 +48,11 @@ public final class WordSuggester {
                 alternatives.append(candidate)
             }
         }
-        if autocorrection == nil, let checker, !isKnown(word) {
-            checker.corrections(for: word).prefix(2).forEach(add)
+        if autocorrection == nil, checker != nil, !isKnown(word) {
+            checkerCorrections(word).prefix(2).forEach(add)
         }
         learned.completions(for: word).forEach(add)
-        checker?.completions(for: word).prefix(3).forEach(add)
+        checkerCompletions(word).prefix(3).forEach(add)
         return WordSuggestions(typed: word, autocorrection: autocorrection, alternatives: Array(alternatives.prefix(3)))
     }
 
@@ -61,7 +63,7 @@ public final class WordSuggester {
         }
         // Leave short words, known words, words the user has used and anything with digits alone.
         guard word.count >= 3, !isKnown(word), !word.contains(where: \.isNumber),
-              let best = checker?.corrections(for: word).first else { return nil }
+              let best = checkerCorrections(word).first else { return nil }
         // Only small fixes: one typo in a short word, two in a longer one, never a different word.
         let allowed = word.count <= 4 ? 1 : 2
         guard Self.typoDistance(word.lowercased(), best.lowercased()) <= allowed else { return nil }
@@ -89,7 +91,48 @@ public final class WordSuggester {
     }
 
     public func isKnown(_ word: String) -> Bool {
-        knownWords.contains(word.lowercased()) || learned.contains(word) || checker?.isKnown(word) ?? true
+        knownWords.contains(word.lowercased()) || learned.contains(word) || checkerKnows(word)
+    }
+
+    // MARK: - Spell checker, remembered
+
+    // The system spell checker can take a moment, and every letter typed asks again about the
+    // same word, so its answers are remembered (they only depend on the word).
+    private var knownCache: [String: Bool] = [:]
+    private var correctionsCache: [String: [String]] = [:]
+    private var completionsCache: [String: [String]] = [:]
+
+    private func clearCheckerCache() {
+        knownCache = [:]
+        correctionsCache = [:]
+        completionsCache = [:]
+    }
+
+    private func remembered<Value>(_ cache: inout [String: Value], _ word: String, _ ask: () -> Value) -> Value {
+        if let value = cache[word] {
+            return value
+        }
+        if cache.count > 300 {
+            cache = [:]
+        }
+        let value = ask()
+        cache[word] = value
+        return value
+    }
+
+    private func checkerKnows(_ word: String) -> Bool {
+        guard let checker else { return true }
+        return remembered(&knownCache, word) { checker.isKnown(word) }
+    }
+
+    private func checkerCorrections(_ word: String) -> [String] {
+        guard let checker else { return [] }
+        return remembered(&correctionsCache, word) { checker.corrections(for: word) }
+    }
+
+    private func checkerCompletions(_ prefix: String) -> [String] {
+        guard let checker else { return [] }
+        return remembered(&completionsCache, prefix) { checker.completions(for: prefix) }
     }
 
     /// "hel" → "hello", "Hel" → "Hello", "HEL" → "HELLO".

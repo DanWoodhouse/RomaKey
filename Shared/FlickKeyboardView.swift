@@ -76,6 +76,10 @@ final class FlickKeyboardView: KeyboardViewBase {
         for button in buttons {
             button.label = engine.label(for: button.kind)
         }
+        updateCandidatesSoon()
+    }
+
+    override func updateCandidates() {
         showCandidates(engine.candidates, showsMeanings: settings.showMeanings, placeholder: "", notice: engine.loadingMessage)
     }
 
@@ -190,7 +194,13 @@ final class FlickKeyboardView: KeyboardViewBase {
     @objc private func deleteDown() {
         feedback.keyDown()
         hideEntry()
-        deleteRepeater.start { [weak self] _ in self?.engine.press(.delete) }
+        deleteRepeater.start { [weak self] repeatCount in
+            // Every repeat clicks and taps, like the first press.
+            if repeatCount > 0 {
+                self?.feedback.keyDown()
+            }
+            self?.engine.press(.delete)
+        }
     }
 
     @objc private func deleteUp() {

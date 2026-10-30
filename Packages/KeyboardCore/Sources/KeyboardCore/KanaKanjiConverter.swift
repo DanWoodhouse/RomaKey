@@ -212,6 +212,22 @@ public struct KanaKanjiConverter {
 
     /// The best few conversions of the whole reading, best first.
     public func convert(_ reading: String, limit: Int = 3) -> [Conversion] {
+        // Each key press asks for the same reading twice (the underlined text and the bar), so
+        // recent answers are kept, until a new choice is learned.
+        let key = reading + "\u{1}" + String(history?.revision ?? -1)
+        if let cached = dictionary.conversionCache[key] {
+            return Array(cached.prefix(limit))
+        }
+        let all = convertUncached(reading)
+        if dictionary.conversionCache.count > 64 {
+            dictionary.conversionCache = [:]
+        }
+        dictionary.conversionCache[key] = all
+        return Array(all.prefix(limit))
+    }
+
+    private func convertUncached(_ reading: String) -> [Conversion] {
+        let limit = 6
         let kana = Array(KanaConverter.hiragana(from: reading))
         let count = kana.count
         guard count > 0, count <= 40 else { return [] }
@@ -354,7 +370,7 @@ public struct KanaKanjiConverter {
             }
         }
 
-        let longest = min(16, kana.count - start)
+        let longest = min(dictionary.longestKey, kana.count - start)
         guard longest > 0 else { return [] }
         for length in 1...longest {
             let piece = String(kana[start..<start + length])

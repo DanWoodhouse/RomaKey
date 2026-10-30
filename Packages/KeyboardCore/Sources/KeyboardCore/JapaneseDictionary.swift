@@ -101,6 +101,14 @@ public final class JapaneseDictionary {
     private let stems: [IndexItem]
     /// Conjugating words whose stem is empty (する, 来る), tried at every position.
     let emptyStemEntries: [Int]
+    /// Exact lookups for conversion, by hiragana reading and by stem: hashing is much quicker
+    /// than a binary search comparing Japanese strings, and conversion does hundreds per key.
+    private let readingTable: [String: [Int32]]
+    private let stemTable: [String: [Int32]]
+    /// The longest reading or stem, so conversion never looks for anything longer.
+    let longestKey: Int
+    /// Recent conversions by reading, shared by live conversion and the candidate bar.
+    var conversionCache: [String: [KanaKanjiConverter.Conversion]] = [:]
 
     /// Parses the tab-separated format written by `tools/build_dictionary.py`:
     /// kanji, reading, usually-kana (0/1), part of speech, senses, and (optionally) conjugation.
@@ -133,6 +141,17 @@ public final class JapaneseDictionary {
             }
         }
 
+        var readingTable: [String: [Int32]] = [:]
+        var stemTable: [String: [Int32]] = [:]
+        for item in readings {
+            readingTable[item.key, default: []].append(item.entry)
+        }
+        for item in stems {
+            stemTable[item.key, default: []].append(item.entry)
+        }
+        self.readingTable = readingTable
+        self.stemTable = stemTable
+        longestKey = max(readings.map(\.key.count).max() ?? 0, stems.map(\.key.count).max() ?? 0)
         readings.sort { $0.key < $1.key }
         stems.sort { $0.key < $1.key }
         self.entries = entries
@@ -168,12 +187,12 @@ public final class JapaneseDictionary {
 
     /// Indexes of the words read exactly `key` (hiragana), most common first.
     func entryIndexes(reading key: String) -> [Int] {
-        Self.items(in: readings, equalTo: key).map { Int($0.entry) }
+        readingTable[key]?.map(Int.init) ?? []
     }
 
     /// Indexes of the conjugating words whose stem is exactly `key` (hiragana).
     func entryIndexes(stem key: String) -> [Int] {
-        Self.items(in: stems, equalTo: key).map { Int($0.entry) }
+        stemTable[key]?.map(Int.init) ?? []
     }
 
     /// The dictionary bundled with the keyboard. Takes a moment to build, so call it off the main thread.

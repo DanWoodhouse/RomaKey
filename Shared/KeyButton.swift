@@ -98,21 +98,40 @@ class KeyButton: UIControl {
         keycap.layer.add(scale, forKey: "press")
     }
 
-    /// Changes the label; animated, it fades across with a small pop, as when the mode changes.
+    /// Changes the label. Animated (when the mode changes), the new label arrives a little
+    /// larger in the accent colour and settles back, as in the web preview; only the text moves,
+    /// never the key itself.
     func setLabel(_ newLabel: KeyLabel, animated: Bool) {
         guard newLabel != label else { return }
         label = newLabel
         guard animated else { return }
         let fade = CATransition()
         fade.type = .fade
-        fade.duration = 0.18
-        keycap.layer.add(fade, forKey: "label")
-        let pop = CAKeyframeAnimation(keyPath: "transform.scale")
-        pop.values = [1.14, 1]
-        pop.duration = 0.3
+        fade.duration = 0.16
+        titleLabel.layer.add(fade, forKey: "label")
+        iconView.layer.add(fade, forKey: "label")
+        let pop = CABasicAnimation(keyPath: "transform.scale")
+        pop.fromValue = 1.12
+        pop.toValue = 1
+        pop.duration = 0.42
         pop.timingFunction = CAMediaTimingFunction(name: .easeOut)
         titleLabel.layer.add(pop, forKey: "pop")
         iconView.layer.add(pop, forKey: "pop")
+        // The accent return key already has white text on the accent colour.
+        guard !(isPrimaryAction && theme.accentReturnKey) else { return }
+        let textColor = titleLabel.textColor
+        let iconColor = iconView.tintColor
+        titleLabel.textColor = theme.accent
+        iconView.tintColor = theme.accent
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            UIView.transition(with: self.titleLabel, duration: 0.42, options: [.transitionCrossDissolve, .allowUserInteraction]) {
+                self.titleLabel.textColor = textColor
+            }
+            UIView.animate(withDuration: 0.42, delay: 0, options: [.allowUserInteraction]) {
+                self.iconView.tintColor = iconColor
+            }
+        }
     }
 
     override func layoutSubviews() {
@@ -231,6 +250,8 @@ final class KeyFeedback {
         }
         if playsHaptics {
             generator.impactOccurred()
+            // Ready for the next one straight away, so quick taps and held delete keep up.
+            generator.prepare()
         }
     }
 }

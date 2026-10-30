@@ -96,6 +96,10 @@ final class RomajiKeyboardView: KeyboardViewBase {
         if modeChanged {
             pulseKeys()
         }
+        updateCandidatesSoon()
+    }
+
+    override func updateCandidates() {
         showCandidates(
             engine.candidates,
             showsMeanings: settings.showMeanings || engine.mode == .dictionary,
@@ -282,6 +286,10 @@ final class RomajiKeyboardView: KeyboardViewBase {
         hideEntry()
         // After about a second of holding, delete whole words.
         deleteRepeater.start { [weak self] repeatCount in
+            // Every repeat clicks and taps, like the first press.
+            if repeatCount > 0 {
+                self?.feedback.keyDown()
+            }
             if repeatCount < 12 {
                 self?.engine.press(.delete)
             } else {

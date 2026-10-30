@@ -91,9 +91,13 @@ public final class ConversionHistory {
         order = store.stringArray(forKey: Self.key + ".order") ?? Array(saved.keys)
     }
 
+    /// Changes whenever a choice is recorded or forgotten, so remembered conversions are redone.
+    public private(set) var revision = 0
+
     public func record(reading: String, word: String) {
         // Kana is remembered too, so a word kept in kana isn't converted automatically.
         guard !reading.isEmpty else { return }
+        revision += 1
         var words = choices[reading] ?? []
         words.removeAll { $0 == word }
         words.insert(word, at: 0)
@@ -116,6 +120,7 @@ public final class ConversionHistory {
     }
 
     public func reset() {
+        revision += 1
         choices = [:]
         order = []
         store.set(nil, forKey: Self.key)

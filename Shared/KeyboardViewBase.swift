@@ -116,6 +116,24 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     /// "ja" or "en", for GIF search.
     var searchLanguage: String { "en" }
 
+    /// Subclasses show their engine's candidates here.
+    func updateCandidates() {}
+
+    private var candidatesPending = false
+
+    /// Suggestions are worked out just after a key press has been handled, so a slow one (the
+    /// spell checker, a long phrase to convert) never holds up the key or the next one. Quick
+    /// presses in a row share one update.
+    func updateCandidatesSoon() {
+        guard !candidatesPending else { return }
+        candidatesPending = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.candidatesPending else { return }
+            self.candidatesPending = false
+            self.updateCandidates()
+        }
+    }
+
     /// Subclasses show their engine's candidates through this, so search results aren't replaced.
     func showCandidates(_ candidates: [Candidate], showsMeanings: Bool, placeholder: String, notice: String? = nil) {
         guard searchTarget == nil else { return }
