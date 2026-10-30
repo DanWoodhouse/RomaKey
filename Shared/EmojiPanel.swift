@@ -36,6 +36,8 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
     private let collection: UICollectionView
     private let bar = UIStackView()
     private var tabButtons: [Tab: UIButton] = [:]
+    /// The highlight behind the current tab, which slides from tab to tab.
+    private let indicator = UIView()
     private let deleteRepeater = KeyRepeater()
     private var tonePicker: UIStackView?
 
@@ -67,9 +69,13 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
         collection.addGestureRecognizer(UILongPressGestureRecognizer(target: self, action: #selector(longPressed(_:))))
         addSubview(collection)
 
+        indicator.backgroundColor = theme.pressedKey
+        indicator.layer.cornerRadius = 7
+        indicator.layer.cornerCurve = .continuous
+        addSubview(indicator)
         buildBar()
         addSubview(bar)
-        select(tab)
+        select(tab, animated: false)
     }
 
     @available(*, unavailable)
@@ -83,6 +89,8 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
         let resized = collection.frame != frame
         collection.frame = frame
         bar.frame = CGRect(x: 4, y: bounds.height - Self.barHeight, width: bounds.width - 8, height: Self.barHeight)
+        bar.layoutIfNeeded()
+        moveIndicator(animated: false)
         if resized {
             collection.collectionViewLayout.invalidateLayout()
             // The first layout: now the sections have positions, go to the tab it opened on.
@@ -108,9 +116,9 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
         for tab in tabs {
             let button: UIButton
             switch tab {
-            case .recent: button = barButton(title: nil, symbol: "clock") { [weak self] in self?.select(tab) }
-            case .group(let group): button = barButton(title: group.icon, symbol: nil) { [weak self] in self?.select(tab) }
-            case .kaomoji: button = barButton(title: "顔", symbol: nil) { [weak self] in self?.select(tab) }
+            case .recent: button = barButton(title: nil, symbol: "clock") { [weak self] in self?.select(tab, animated: true) }
+            case .group(let group): button = barButton(title: group.icon, symbol: nil) { [weak self] in self?.select(tab, animated: true) }
+            case .kaomoji: button = barButton(title: "顔", symbol: nil) { [weak self] in self?.select(tab, animated: true) }
             }
             tabButtons[tab] = button
             bar.addArrangedSubview(button)
@@ -139,16 +147,37 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
         return button
     }
 
-    private func select(_ tab: Tab) {
+    /// Animated, the highlight slides to the tab and the list scrolls smoothly to its section;
+    /// switching between emoji and 顔文字 crossfades the list, sliding in from that side.
+    private func select(_ tab: Tab, animated: Bool) {
+        let animated = animated && theme.animates
         let wantsKaomoji = tab == .kaomoji
-        if wantsKaomoji != showingKaomoji || sections.isEmpty {
+        let switching = wantsKaomoji != showingKaomoji || sections.isEmpty
+        if switching {
             showingKaomoji = wantsKaomoji
             loadSections()
             collection.reloadData()
             collection.layoutIfNeeded()
+            if animated {
+                crossfadeList(fromRight: wantsKaomoji)
+            }
         }
-        highlight(tab)
-        scroll(to: tab, animated: false)
+        highlight(tab, animated: animated)
+        scroll(to: tab, animated: animated && !switching)
+    }
+
+    private func crossfadeList(fromRight: Bool) {
+        let fade = CATransition()
+        fade.type = .fade
+        fade.duration = 0.2
+        collection.layer.add(fade, forKey: "switch")
+        let slide = CASpringAnimation(keyPath: "transform.translation.x")
+        slide.fromValue = fromRight ? 14 : -14
+        slide.toValue = 0
+        slide.damping = 24
+        slide.stiffness = 300
+        slide.duration = slide.settlingDuration
+        collection.layer.add(slide, forKey: "slide")
     }
 
     private func loadSections() {
@@ -167,10 +196,25 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
         }
     }
 
-    private func highlight(_ tab: Tab) {
+    private func highlight(_ tab: Tab, animated: Bool = false) {
         self.tab = tab
         for (key, button) in tabButtons {
-            button.backgroundColor = key == tab ? theme.pressedKey : .clear
+            button.accessibilityTraits = key == tab ? [.button, .selected] : .button
+        }
+        moveIndicator(animated: animated && theme.animates)
+    }
+
+    private func moveIndicator(animated: Bool) {
+        guard let button = tabButtons[tab], bar.bounds.width > 0 else { return }
+        let frame = button.convert(button.bounds, to: self).insetBy(dx: 1, dy: 3)
+        guard frame != indicator.frame else { return }
+        if animated {
+            UIView.animate(withDuration: 0.32, delay: 0, usingSpringWithDamping: 0.82, initialSpringVelocity: 0,
+                           options: [.beginFromCurrentState, .allowUserInteraction]) {
+                self.indicator.frame = frame
+            }
+        } else {
+            indicator.frame = frame
         }
     }
 
@@ -212,7 +256,7 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
             current = sections.count - 1
         }
         if sectionTabs[current] != tab {
-            highlight(sectionTabs[current])
+            highlight(sectionTabs[current], animated: true)
         }
     }
 
@@ -239,10 +283,7 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
     func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String,
                         at indexPath: IndexPath) -> UICollectionReusableView {
         let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "header", for: indexPath) as! SectionHeader
-        header.label.text = sections[indexPath.section].title
-        header.label.textColor = theme.secondaryText
-        // Headings stay pinned at the top while their section scrolls under them.
-        header.backgroundColor = theme.background.withAlphaComponent(0.92)
+        header.configure(title: sections[indexPath.section].title, theme: theme)
         return header
     }
 
@@ -356,21 +397,30 @@ private final class EmojiCell: UICollectionViewCell {
         label.text = text
         label.font = .systemFont(ofSize: isKaomoji ? 16 : 30)
         label.textColor = theme.text
-        contentView.backgroundColor = isKaomoji ? theme.key : .clear
+        pressedColor = theme.pressedKey
     }
 
+    private var pressedColor: UIColor = .clear
+
     override var isHighlighted: Bool {
-        didSet { contentView.alpha = isHighlighted ? 0.5 : 1 }
+        didSet { contentView.backgroundColor = isHighlighted ? pressedColor : .clear }
     }
 }
 
+/// A pinned section heading: a small frosted pill rather than a full-width band, so it reads
+/// over any background, photo or key opacity, and the emoji stay visible beside it.
 private final class SectionHeader: UICollectionReusableView {
-    let label = UILabel()
+    private let pill = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterial))
+    private let label = UILabel()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         label.font = .systemFont(ofSize: 11, weight: .semibold)
-        addSubview(label)
+        pill.layer.cornerRadius = 9
+        pill.layer.cornerCurve = .continuous
+        pill.clipsToBounds = true
+        pill.contentView.addSubview(label)
+        addSubview(pill)
     }
 
     @available(*, unavailable)
@@ -378,8 +428,17 @@ private final class SectionHeader: UICollectionReusableView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    func configure(title: String?, theme: KeyboardTheme) {
+        label.text = title
+        label.textColor = theme.secondaryText
+        pill.contentView.backgroundColor = theme.panel.withAlphaComponent(0.45)
+        setNeedsLayout()
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
-        label.frame = bounds.insetBy(dx: 8, dy: 0)
+        let size = label.sizeThatFits(CGSize(width: bounds.width - 28, height: bounds.height))
+        pill.frame = CGRect(x: 6, y: 2, width: min(size.width + 18, bounds.width - 12), height: bounds.height - 4)
+        label.frame = pill.bounds.insetBy(dx: 9, dy: 0)
     }
 }

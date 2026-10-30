@@ -148,15 +148,30 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .esec { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); align-content: start; }
 .egrid.kao { padding: 0 6px 6px; }
 .egrid.kao .esec { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding-bottom: 6px; }
-.egrid h4 { width: 100%; margin: 0; padding: 4px 2px 2px; font: 600 11px var(--font-key); color: var(--kb-muted); grid-column: 1 / -1;
-  position: sticky; top: 0; z-index: 1; background: var(--kb-bg); padding: 6px 2px 4px; }
+.egrid h4 { width: 100%; margin: 0; font: 600 11px var(--font-key); color: var(--kb-muted); grid-column: 1 / -1;
+  position: sticky; top: 0; z-index: 1; padding: 5px 2px 4px; pointer-events: none; }
+/* A small frosted pill, not a band: it reads over any background, photo or key opacity. */
+.egrid h4 span { display: inline-block; padding: 3px 9px; border-radius: 9px; box-shadow: 0 1px 2px var(--kb-shadow);
+  background: color-mix(in srgb, var(--kb-key) 62%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5); }
+.egrid, .cc, .aibody, .qlist { scrollbar-width: none; }
+.egrid::-webkit-scrollbar, .cc::-webkit-scrollbar, .aibody::-webkit-scrollbar, .qlist::-webkit-scrollbar { display: none; }
+.ebar.tabs { position: relative; }
+.ebar.tabs button { position: relative; z-index: 1; }
+.ebar.tabs button.on { background: transparent; }
+.eind { position: absolute; top: 3px; height: 32px; border-radius: 7px; background: var(--kb-pressed); pointer-events: none; }
+.kb.anim .eind { transition: left 320ms cubic-bezier(0.3, 1.25, 0.5, 1), width 320ms cubic-bezier(0.3, 1.25, 0.5, 1); }
+.kb.anim .eind.jump { transition: none; }
+.kb.anim .egrid.from-r { animation: kbslider 260ms cubic-bezier(0.2, 0.9, 0.3, 1); }
+.kb.anim .egrid.from-l { animation: kbslidel 260ms cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes kbslider { from { transform: translateX(14px); opacity: 0; } }
+@keyframes kbslidel { from { transform: translateX(-14px); opacity: 0; } }
 .key.hinted .cap { padding-top: 6px; box-sizing: border-box; }
 .khint { position: absolute; font: 500 9px var(--font-key); line-height: 12px; color: var(--kb-muted); text-align: right; pointer-events: none; }
 .cand.auto { background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); }
 .cand.auto .w { font-weight: 600; }
 input[type="password"], input[type="text"] { font: 13px var(--font-mono); color: var(--ink); background: var(--field); border: 1px solid var(--rule); border-radius: 8px; padding: 5px 8px; min-width: 0; width: 13em; }
 .ecell { font-size: 28px; height: 44px; background: transparent; border: 0; border-radius: 8px; cursor: pointer; color: var(--kb-text); font-family: var(--font-key); }
-.ecell.kao { font-size: 15px; height: 36px; padding: 0 10px; background: var(--kb-key); box-shadow: 0 1px 0 var(--kb-shadow); }
+.ecell.kao { font-size: 15px; height: 36px; padding: 0 10px; }
 .ecell:active { background: var(--kb-pressed); }
 .ebar { display: flex; align-items: center; padding: 0 4px; gap: 1px; }
 .ebar button { flex: 1; min-width: 0; height: 32px; font: 15px var(--font-key); color: var(--kb-text); background: transparent; border: 0; border-radius: 6px; cursor: pointer; padding: 0; }
@@ -223,7 +238,7 @@ input[type="checkbox"].qswitch:checked::before { transform: translateX(18px); }
 .kb.anim .keys.rise { animation: kbrise6 240ms cubic-bezier(0.2, 0.9, 0.3, 1); }
 @keyframes kbrise6 { from { transform: translateY(6px); opacity: 0; } }
 .kb.anim .panel { animation: kbrise 280ms cubic-bezier(0.2, 0.9, 0.3, 1); }
-.kb.anim .panel.still { animation: none; }
+.kb.anim .panel.still { animation: kbfade 180ms ease-out; }
 @keyframes kbrise { from { transform: translateY(12px); opacity: 0; } }
 .kb.anim .wheel-slot { animation: kbpop 220ms cubic-bezier(0.3, 1.5, 0.5, 1) backwards; }
 @keyframes kbpop { from { transform: scale(0.6); opacity: 0; } }
@@ -233,7 +248,7 @@ input[type="checkbox"].qswitch:checked::before { transform: translateX(18px); }
 @keyframes kbtile { from { transform: scale(0.88); } }
 .kb.anim .popup.up { animation: kbfade 120ms ease-out; }
 @media (prefers-reduced-motion: reduce) {
-  .kb.anim .cap, .kb.anim .keys, .kb.anim .panel, .kb.anim .wheel-slot, .kb.anim .cands, .kb.anim .ccircle, .kb.anim .popup { animation: none !important; transition: none !important; }
+  .kb.anim .cap, .kb.anim .keys, .kb.anim .panel, .kb.anim .egrid, .kb.anim .eind, .kb.anim .wheel-slot, .kb.anim .cands, .kb.anim .ccircle, .kb.anim .popup { animation: none !important; transition: none !important; }
   .ccircle { transition: none; }
 }
 .xkeys { display: grid; gap: 5px; margin: 8px 0 4px; }
@@ -513,9 +528,11 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="x3"><span>Customise → Key extras: tap <span class="k">q</span> and <span class="k">a</span> in the key grid. Their corner hints go, and swiping up types the letter. <em>Key extras</em> off hides them all; <em>Swipe up for them</em> off leaves hold only.</span></label>
       </div>
       <div class="checks"><h3>Animations</h3>
-        <label class="check"><input type="checkbox" data-check="m1"><span>Keys press in slightly under your finger. Tap the mode key: the changing labels flash and the whole keyboard dips gently.</span></label>
-        <label class="check"><input type="checkbox" data-check="m2"><span>Open emoji or ⚙︎: the panel rises into place, and the keys settle back when you close it. Drag from the mode key: the chips pop in. Switch to かな: the board fades up.</span></label>
-        <label class="check"><input type="checkbox" data-check="m3"><span>Turn <em>Animations</em> off (in ⚙︎ or Customise): everything works the same, without motion.</span></label>
+        <label class="check"><input type="checkbox" data-check="n1"><span>Keys press in slightly under your finger. Tap the mode key: the changing labels flash and the whole keyboard dips gently.</span></label>
+        <label class="check"><input type="checkbox" data-check="n2"><span>Open emoji or ⚙︎: the panel rises into place, and the keys settle back when you close it. Drag from the mode key: the chips pop in. Switch to かな: the board fades up.</span></label>
+        <label class="check"><input type="checkbox" data-check="n4"><span>In emoji, tap the tabs along the bottom: the highlight slides across and the list scrolls smoothly to the section. Tap <span class="k">顔</span>: the 顔文字 list slides in from the right.</span></label>
+        <label class="check"><input type="checkbox" data-check="n5"><span>Lower <em>Key opacity</em>, add a gradient or a photo, then open emoji: the section titles are small frosted pills rather than dark bands, and 顔文字 have no boxes behind them.</span></label>
+        <label class="check"><input type="checkbox" data-check="n3"><span>Turn <em>Animations</em> off (in ⚙︎ or Customise): everything works the same, without motion.</span></label>
       </div>
       <div class="checks"><h3>Settings</h3>
         <label class="check"><input type="checkbox" data-check="s1"><span>Clear the text and tap ⚙︎ in the toolbar: it looks like Control Centre. Tap the round <em>Autocorrect</em> and <em>Capitals</em> tiles off: <em>teh</em> stays as typed and new sentences start lowercase.</span></label>
@@ -1380,8 +1397,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   }
 
   // ---- Emoji, kaomoji and GIF panels, shown in place of the keys (EmojiPanel.swift) -------------
-  let panelEl = null, panelTab = 0;
-  function closePanel(quietly) { if (panelEl) { panelEl.remove(); panelEl = null; keysEl.hidden = false; if (!quietly) replay(keysEl, "rise"); } }
+  let panelEl = null, panelTab = 0, lastIndicator = null;
+  function closePanel(quietly) { if (!quietly) lastIndicator = null; if (panelEl) { panelEl.remove(); panelEl = null; keysEl.hidden = false; if (!quietly) replay(keysEl, "rise"); } }
   function openPanel() {
     const replacing = !!panelEl;
     closePanel(true); closeOverlays();
@@ -1403,9 +1420,12 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   function showEmojiPanel(tab, scrollTop) {
     panelTab = tab;
     const kao = tab === "kaomoji";
+    // Between emoji and 顔文字 the list slides in from that side's tab.
+    const was = panelEl && panelEl.querySelector(".egrid") ? !!panelEl.querySelector(".egrid.kao") : null;
     const panel = openPanel();
     const grid = document.createElement("div");
     grid.className = "egrid" + (kao ? " kao" : "");
+    if (was !== null && was !== kao) replay(grid, kao ? "from-r" : "from-l");
     // 顔文字 aren't added to the emoji recents.
     const insert = (t) => { if (!kao) useRecent(t); active.commit(); out.insertText(t); render(); };
     const cell = (t, e) => {
@@ -1427,7 +1447,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     // Each section is its own box, so its pinned heading slides away with it when the next one arrives.
     const section = (id, title) => {
       const box = document.createElement("section"); box.className = "esec"; box.dataset.tab = id;
-      const h = document.createElement("h4"); h.textContent = title;
+      const h = document.createElement("h4"), pill = document.createElement("span");
+      pill.textContent = title; h.appendChild(pill);
       box.appendChild(h);
       grid.appendChild(box);
       return box;
@@ -1448,18 +1469,35 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       }
     }
     const bar = document.createElement("div");
-    bar.className = "ebar";
+    bar.className = "ebar tabs";
+    // The highlight slides from tab to tab, carrying on from where the last panel left it.
+    const ind = document.createElement("span");
+    ind.className = "eind jump";
+    bar.appendChild(ind);
     const tabs = [["recent", "🕘", "Recent"], ...GROUPS.map(([g, icon, name]) => [String(g), icon, name]), ["kaomoji", "顔", "Kaomoji"]];
     const tabButtons = tabs.map(([id, icon, name]) => {
-      const b = barButton(icon, name, () => jump(id));
+      const b = barButton(icon, name, () => jump(id, true));
       b.dataset.tab = id;
       return b;
     });
-    const highlight = (id) => { panelTab = id === "recent" || id === "kaomoji" ? id : +id; for (const b of tabButtons) b.classList.toggle("on", b.dataset.tab === id); };
-    const jump = (id) => {
+    // While a tapped tab's smooth scroll is on its way, the highlight stays on that tab.
+    let jumping = null;
+    const highlight = (id) => {
+      panelTab = id === "recent" || id === "kaomoji" ? id : +id;
+      for (const b of tabButtons) {
+        const on = b.dataset.tab === id;
+        b.classList.toggle("on", on);
+        if (on) { ind.style.left = b.offsetLeft + "px"; ind.style.width = b.offsetWidth + "px"; lastIndicator = { left: ind.style.left, width: ind.style.width }; }
+      }
+    };
+    const jump = (id, smooth) => {
       if ((id === "kaomoji") !== kao) { showEmojiPanel(id === "kaomoji" || id === "recent" ? id : +id); return; }
       const box = grid.querySelector(`.esec[data-tab="${id}"]`);
-      grid.scrollTop = box ? box.offsetTop : 0;
+      const top = box ? box.offsetTop : 0;
+      if (smooth && settings.animations && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        jumping = { top: Math.min(top, grid.scrollHeight - grid.clientHeight), until: Date.now() + 2000 };
+        grid.scrollTo({ top, behavior: "smooth" });
+      } else grid.scrollTop = top;
       highlight(id);
     };
     bar.append(
@@ -1469,18 +1507,28 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       barButton("⌫", "Delete", () => { active.press(active === romaji ? K("delete") : F("delete")); render(); }),
     );
     panel.append(grid, bar);
+    if (lastIndicator) { ind.style.left = lastIndicator.left; ind.style.width = lastIndicator.width; }
+    void ind.offsetWidth;
+    if (lastIndicator) ind.classList.remove("jump");
     if (kao) highlight("kaomoji");
     else {
       grid.addEventListener("scroll", () => {
+        if (jumping) {
+          if (Math.abs(grid.scrollTop - jumping.top) > 1 && Date.now() < jumping.until) return;
+          jumping = null;
+        }
         const anchors = [...grid.querySelectorAll(".esec")];
         let current = anchors[0];
         for (const a of anchors) { if (a.offsetTop <= grid.scrollTop + 1) current = a; else break; }
         if (grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 1) current = anchors[anchors.length - 1];
         highlight(current.dataset.tab);
       }, { passive: true });
+      // Scrolling by hand takes over from a jump.
+      for (const type of ["wheel", "pointerdown", "touchstart"]) grid.addEventListener(type, () => { jumping = null; }, { passive: true });
       if (scrollTop != null) { grid.scrollTop = scrollTop; highlight(String(tab)); }
       else jump(String(tab));
     }
+    requestAnimationFrame(() => ind.classList.remove("jump"));
   }
   function showTones(cellEl, e) {
     overlayEl.textContent = "";

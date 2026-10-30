@@ -307,6 +307,13 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         setNeedsLayout()
         if !replacing {
             rise(newPanel, by: 12)
+        } else if animates {
+            // From one panel to another (emoji → GIF …): a quick fade in.
+            let fade = CABasicAnimation(keyPath: "opacity")
+            fade.fromValue = 0
+            fade.toValue = 1
+            fade.duration = 0.18
+            newPanel.layer.add(fade, forKey: "swap")
         }
     }
 

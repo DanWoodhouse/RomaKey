@@ -120,7 +120,7 @@ Learned words and choices stay on your phone, in each keyboard's own storage. Se
 - **Auto-capitals** at the start of English sentences, and **double-space** for a full stop.
 - The 123 page goes back to letters after a space.
 - Settings are re-read every time the keyboard appears, so changes in the app apply straight away.
-- **Animations**, kept quiet: keys press in, changing labels flash, the whole keyboard dips gently when the mode changes, panels rise into place and the mode wheel's chips pop in. Off in Settings → Sound & motion, or with Reduce Motion.
+- **Animations**, kept quiet: keys press in, changing labels flash, the whole keyboard dips gently when the mode changes, panels rise into place (or fade, from one panel to another), the mode wheel's chips pop in, and in emoji the tab highlight slides along while the list scrolls smoothly to the section (顔文字 slides in from the side). Off in Settings → Sound & motion, or with Reduce Motion.
 
 ## Customisation
 
