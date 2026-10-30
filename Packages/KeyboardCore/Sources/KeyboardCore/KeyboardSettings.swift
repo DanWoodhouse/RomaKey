@@ -98,8 +98,15 @@ public struct KeyboardSettings: Equatable {
     public var autoCapitalization = true
     public var doubleSpacePeriod = true
     public var keyPopups = true
-    /// Hold q–p on the letters page for 1–0. The keys show the numbers as small hints.
-    public var holdForNumbers = true
+    /// Secondary characters on the letter keys (q → 1, a → @ …) and punctuation on ー/-, shown
+    /// as small hints: swipe up for them, or hold.
+    public var keySecondaries = true
+    /// Swipe up on a key for its secondary character straight away. Holding always works.
+    public var swipeUpSecondaries = true
+    /// Keys whose secondary is turned off ("q" … "m", and "ー" for the ー/- key).
+    public var disabledSecondaryKeys: [String] = []
+    /// Key presses, panels and mode changes animate. Reduce Motion turns them off too.
+    public var animations = true
     /// Mirrors the mode wheel (→ あ … ← 🌐) for typing with the left thumb.
     public var leftHandedWheel = false
 
@@ -174,6 +181,11 @@ public struct KeyboardSettings: Equatable {
 
     public init() {}
 
+    /// Whether a key ("q" … "m", or "ー") has its secondary character turned on.
+    public func secondaryIsOn(for key: String) -> Bool {
+        keySecondaries && !disabledSecondaryKeys.contains(key.lowercased())
+    }
+
     /// The mode the ローマ字 keyboard opens in.
     public var initialMode: InputMode {
         switch startingMode {
@@ -192,7 +204,11 @@ public struct KeyboardSettings: Equatable {
         static let autoCapitalization = "autoCapitalization"
         static let doubleSpacePeriod = "doubleSpacePeriod"
         static let keyPopups = "keyPopups"
-        static let holdForNumbers = "holdForNumbers"
+        // Was "hold for numbers"; the key is kept so the setting carries over.
+        static let keySecondaries = "holdForNumbers"
+        static let swipeUpSecondaries = "swipeUpSecondaries"
+        static let disabledSecondaryKeys = "disabledSecondaryKeys"
+        static let animations = "animations"
         static let leftHandedWheel = "leftHandedWheel"
         static let showRomaji = "showRomaji"
         static let flickOnly = "flickOnly"
@@ -257,7 +273,10 @@ public struct KeyboardSettings: Equatable {
         autoCapitalization = bool(Key.autoCapitalization, autoCapitalization)
         doubleSpacePeriod = bool(Key.doubleSpacePeriod, doubleSpacePeriod)
         keyPopups = bool(Key.keyPopups, keyPopups)
-        holdForNumbers = bool(Key.holdForNumbers, holdForNumbers)
+        keySecondaries = bool(Key.keySecondaries, keySecondaries)
+        swipeUpSecondaries = bool(Key.swipeUpSecondaries, swipeUpSecondaries)
+        disabledSecondaryKeys = defaults.stringArray(forKey: Key.disabledSecondaryKeys) ?? disabledSecondaryKeys
+        animations = bool(Key.animations, animations)
         leftHandedWheel = bool(Key.leftHandedWheel, leftHandedWheel)
         showRomaji = bool(Key.showRomaji, showRomaji)
         flickOnly = bool(Key.flickOnly, flickOnly)
@@ -311,7 +330,10 @@ public struct KeyboardSettings: Equatable {
         defaults.set(autoCapitalization, forKey: Key.autoCapitalization)
         defaults.set(doubleSpacePeriod, forKey: Key.doubleSpacePeriod)
         defaults.set(keyPopups, forKey: Key.keyPopups)
-        defaults.set(holdForNumbers, forKey: Key.holdForNumbers)
+        defaults.set(keySecondaries, forKey: Key.keySecondaries)
+        defaults.set(swipeUpSecondaries, forKey: Key.swipeUpSecondaries)
+        defaults.set(disabledSecondaryKeys, forKey: Key.disabledSecondaryKeys)
+        defaults.set(animations, forKey: Key.animations)
         defaults.set(leftHandedWheel, forKey: Key.leftHandedWheel)
         defaults.set(showRomaji, forKey: Key.showRomaji)
         defaults.set(flickOnly, forKey: Key.flickOnly)

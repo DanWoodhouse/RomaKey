@@ -25,6 +25,10 @@ struct KeyboardTheme {
     /// How far the drawn key sits inside its touch area, horizontally and vertically.
     var keyInset = CGSize(width: 3, height: 5)
     var accentReturnKey = false
+    /// Key presses and label changes animate (unless Reduce Motion is on).
+    var animations = true
+
+    var animates: Bool { animations && !UIAccessibility.isReduceMotionEnabled }
     var backgroundOpacity: CGFloat = 1
     /// The colour the background fades into, if it's a gradient.
     var gradientEnd: UIColor?
@@ -43,6 +47,7 @@ struct KeyboardTheme {
         case .airy: keyInset = CGSize(width: 4.5, height: 6.5)
         }
         accentReturnKey = settings.accentReturnKey
+        animations = settings.animations
         backgroundOpacity = CGFloat(settings.backgroundOpacity)
         gradientEnd = settings.backgroundGradient ? UIColor(hex: settings.gradientColor) : nil
         gradientDirection = settings.gradientDirection

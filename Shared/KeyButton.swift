@@ -19,11 +19,14 @@ class KeyButton: UIControl {
         }
     }
 
-    /// A small label in the top corner, e.g. the number a held letter types.
+    /// A small label in the top corner: the extra a swipe up or hold types (q → 1, a → @).
     var hint: String? {
         didSet {
             hintLabel.text = hint
             hintLabel.isHidden = hint == nil
+            if (hint == nil) != (oldValue == nil) {
+                setNeedsLayout()
+            }
         }
     }
 
@@ -58,7 +61,7 @@ class KeyButton: UIControl {
         iconView.contentMode = .center
         keycap.addSubview(iconView)
 
-        hintLabel.font = .systemFont(ofSize: 10, weight: .medium)
+        hintLabel.font = .systemFont(ofSize: 9, weight: .medium)
         hintLabel.textAlignment = .right
         hintLabel.isHidden = true
         keycap.addSubview(hintLabel)
@@ -73,16 +76,56 @@ class KeyButton: UIControl {
     }
 
     override var isHighlighted: Bool {
-        didSet { applyColors() }
+        didSet {
+            applyColors()
+            if isHighlighted != oldValue {
+                animatePress()
+            }
+        }
+    }
+
+    /// The key sinks a little under the finger and springs back when let go.
+    private func animatePress() {
+        guard theme.animates else { return }
+        let scale = CASpringAnimation(keyPath: "transform.scale")
+        scale.fromValue = keycap.layer.presentation()?.value(forKeyPath: "transform.scale") ?? (isHighlighted ? 1 : 0.95)
+        scale.toValue = isHighlighted ? 0.95 : 1
+        scale.damping = isHighlighted ? 30 : 14
+        scale.stiffness = 400
+        scale.duration = isHighlighted ? 0.08 : scale.settlingDuration
+        scale.fillMode = .forwards
+        scale.isRemovedOnCompletion = !isHighlighted
+        keycap.layer.add(scale, forKey: "press")
+    }
+
+    /// Changes the label; animated, it fades across with a small pop, as when the mode changes.
+    func setLabel(_ newLabel: KeyLabel, animated: Bool) {
+        guard newLabel != label else { return }
+        label = newLabel
+        guard animated else { return }
+        let fade = CATransition()
+        fade.type = .fade
+        fade.duration = 0.18
+        keycap.layer.add(fade, forKey: "label")
+        let pop = CAKeyframeAnimation(keyPath: "transform.scale")
+        pop.values = [1.14, 1]
+        pop.duration = 0.3
+        pop.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        titleLabel.layer.add(pop, forKey: "pop")
+        iconView.layer.add(pop, forKey: "pop")
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
         // Gaps between keys are drawn, but still belong to a key's touch area.
-        keycap.frame = keycapFrame.insetBy(dx: theme.keyInset.width, dy: theme.keyInset.height)
-        titleLabel.frame = keycap.bounds.insetBy(dx: 2, dy: 0)
+        // Bounds and centre rather than frame, so the press animation's scale never distorts it.
+        let capFrame = keycapFrame.insetBy(dx: theme.keyInset.width, dy: theme.keyInset.height)
+        keycap.bounds = CGRect(origin: .zero, size: capFrame.size)
+        keycap.center = CGPoint(x: capFrame.midX, y: capFrame.midY)
+        // With a hint in the corner, the letter sits a little lower to leave it room.
+        titleLabel.frame = keycap.bounds.insetBy(dx: 2, dy: 0).offsetBy(dx: 0, dy: hint == nil ? 0 : 3)
         iconView.frame = keycap.bounds
-        hintLabel.frame = CGRect(x: 0, y: 2, width: keycap.bounds.width - 4, height: 12)
+        hintLabel.frame = CGRect(x: 0, y: 1, width: keycap.bounds.width - 4, height: 12)
     }
 
     /// The visible key, in `view`'s coordinates (for popups and guides).

@@ -77,6 +77,9 @@ final class ModeWheelTracker: NSObject {
         host.addSubview(view)
         view.layout(around: start)
         view.highlight(selected)
+        if host.animates {
+            view.popIn()
+        }
         wheel = view
         // The keys fade so the chips stand out.
         host.keyArea.alpha = 0.35
@@ -161,6 +164,29 @@ final class ModeWheelView: UIView {
             chip.bounds = CGRect(origin: .zero, size: size)
             chip.center = CGPoint(x: origin.x + shift + size.width / 2, y: origin.y + size.height / 2)
             dots[slot]?.frame = CGRect(x: size.width / 2 - 2, y: size.height - 7, width: 4, height: 4)
+        }
+    }
+
+    /// The chips pop out from the finger one after another, left to right.
+    func popIn() {
+        for (index, slot) in ModeWheel.order(leftHanded: leftHanded).enumerated() {
+            guard let chip = chips[slot] else { continue }
+            let pop = CASpringAnimation(keyPath: "transform.scale")
+            pop.fromValue = 0.5
+            pop.toValue = 1
+            pop.damping = 16
+            pop.stiffness = 320
+            pop.duration = pop.settlingDuration
+            let fade = CABasicAnimation(keyPath: "opacity")
+            fade.fromValue = 0
+            fade.toValue = 1
+            fade.duration = 0.12
+            for animation in [pop, fade] as [CAAnimation] {
+                animation.beginTime = CACurrentMediaTime() + Double(index) * 0.018
+                animation.fillMode = .backwards
+            }
+            chip.layer.add(pop, forKey: "pop")
+            chip.layer.add(fade, forKey: "fade")
         }
     }
 

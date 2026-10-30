@@ -98,11 +98,27 @@ public struct KeyboardLayout: Hashable {
         }
     }
 
-    /// The number a top-row letter types when held (q → 1 … p → 0), for the hold-for-numbers setting.
-    public static func heldNumber(for letter: String) -> String? {
-        guard let index = Array("qwertyuiop").firstIndex(where: { String($0) == letter.lowercased() }) else { return nil }
-        return String(Array("1234567890")[index])
+    /// What a letter types when swiped up (or held): q–p give 1–0, the other letters symbols,
+    /// as on Gboard (a → @ … m → ?). Shown as a small hint in the key's corner.
+    public static func secondary(for letter: String) -> String? {
+        secondaries[letter.lowercased()]
     }
+
+    private static let secondaries: [String: String] = Dictionary(uniqueKeysWithValues: zip(
+        "qwertyuiopasdfghjklzxcvbnm".map(String.init),
+        "1234567890@#$_&-+()*\"':;!?".map(String.init)
+    ))
+
+    /// The ー/- key's swipe-up and hold options: the label shown, and the character typed. In
+    /// Japanese the composer turns the typed romaji punctuation into 、。！？〜.
+    public static func punctuation(japanese: Bool) -> [(label: String, typed: String)] {
+        let typed = [",", ".", "!", "?", "~"]
+        let labels = japanese ? ["、", "。", "！", "？", "〜"] : typed
+        return Array(zip(labels, typed))
+    }
+
+    /// The key name the secondary settings use for the ー/- key.
+    public static let longVowelKeyName = "ー"
 
     /// Lays the rows out in a `width`-wide area, top to bottom.
     public func frames(width: Double, rowHeight: Double) -> [[KeyFrame]] {

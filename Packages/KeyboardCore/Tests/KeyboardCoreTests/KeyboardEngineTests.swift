@@ -41,10 +41,37 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertEqual(space.width, 45, accuracy: 0.001)
     }
 
-    func testHeldNumbersFollowTheTopRow() {
-        XCTAssertEqual("qwertyuiop".map { KeyboardLayout.heldNumber(for: String($0)) ?? "" }.joined(), "1234567890")
-        XCTAssertEqual(KeyboardLayout.heldNumber(for: "P"), "0")
-        XCTAssertNil(KeyboardLayout.heldNumber(for: "a"))
+    func testEveryLetterHasASecondary() {
+        let secondaries = { (letters: String) in letters.map { KeyboardLayout.secondary(for: String($0)) ?? "?" }.joined() }
+        XCTAssertEqual(secondaries("qwertyuiop"), "1234567890")
+        XCTAssertEqual(secondaries("asdfghjkl"), "@#$_&-+()")
+        XCTAssertEqual(secondaries("zxcvbnm"), "*\"':;!?")
+        XCTAssertEqual(KeyboardLayout.secondary(for: "P"), "0")
+        XCTAssertNil(KeyboardLayout.secondary(for: "1"))
+    }
+
+    func testLongVowelPunctuation() {
+        XCTAssertEqual(KeyboardLayout.punctuation(japanese: true).map(\.label), ["、", "。", "！", "？", "〜"])
+        XCTAssertEqual(KeyboardLayout.punctuation(japanese: false).map(\.label), [",", ".", "!", "?", "~"])
+        // Japanese types romaji punctuation, which the composer converts.
+        let engine = KeyboardEngine(mode: .japanese)
+        let output = RecordingOutput()
+        engine.output = output
+        for option in KeyboardLayout.punctuation(japanese: true) {
+            engine.press(.character(option.typed))
+        }
+        engine.press(.returnKey)
+        XCTAssertEqual(output.committed, "、。！？〜")
+    }
+
+    func testSecondariesCanBeTurnedOffPerKey() {
+        var settings = KeyboardSettings()
+        XCTAssertTrue(settings.secondaryIsOn(for: "Q"))
+        settings.disabledSecondaryKeys = ["q"]
+        XCTAssertFalse(settings.secondaryIsOn(for: "q"))
+        XCTAssertTrue(settings.secondaryIsOn(for: "w"))
+        settings.keySecondaries = false
+        XCTAssertFalse(settings.secondaryIsOn(for: "w"))
     }
 
     func testLetterRowsAreStandardQwerty() {

@@ -105,8 +105,9 @@ While typing:
 - **Predictive text:** after each word, the likely next words (thank → you, going → to), from common English word pairs and from the pairs you type, which come first. In Japanese, after a word you convert, what you usually type next, then particles (猫 → は, が, を…). A 😊 button stays in front of the predictions.
 - **✨ AI (Apple Intelligence):** finish a sentence and tap ✨ in the toolbar. Japanese actions come first, English ones underneath. For Japanese text: check grammar, explain (reading, meaning and notes), rewrite as casual, です/ます or 敬語, convert hiragana to kanji, or translate into English. For English text: translate into casual, polite or 敬語 Japanese, check grammar, or rewrite it formal, casual or shorter. "Use this" swaps the result in. By default it runs on Apple's on-device model, so nothing leaves the phone and there's nothing to set up beyond building with Xcode 26: it needs iOS 26 on an iPhone 15 Pro or newer with Apple Intelligence on. Whether the model runs inside a keyboard isn't documented, so run the app's **Apple Intelligence test** first. You can switch to **Claude** in Settings → AI or in the ✨ panel: it uses your own API key and Claude Opus 5.5 with the same prompts, sends the text to Anthropic, and needs Full Access. ✨ sits in the toolbar and, between words, in front of the predictions next to 😊. Prompts and their test set: [docs/ai-prompts.md](docs/ai-prompts.md).
 - **Dictation:** iOS doesn't let third-party keyboards use the microphone, so there's no dictation key. The system 🎤 below the keyboard (on iPhones with Face ID) still works while RomaKey is showing, in Japanese or English.
-- **Quick settings:** clear the text and tap ⚙︎ in the toolbar to switch autocorrect, auto-capitalisation, predictive text and the other typing settings without leaving the app you're in. Without Full Access they're saved on the keyboard only.
+- **Quick settings:** clear the text and tap ⚙︎ in the toolbar. Laid out like Control Centre: round toggles for autocorrect, capitals, predictive text and the other typing settings, plus ✨ AI provider, height and text size, without leaving the app you're in. **Open RomaKey** jumps to the app's full settings (iOS gives keyboards no official way to open an app, so this uses a workaround that's fine on your own phone but App Review might not accept). Without Full Access the changes are saved on the keyboard only.
 - **Learned kanji:** the word you picked last time for a reading comes first (きかい → 機会, if that's what you use).
+- **Key extras:** every letter has a second character in its corner, as on Gboard (q–p → 1–0, a → @, s → #, … m → ?). **Swipe up** on the key for it straight away, or hold. ー/- holds 、。！？〜 (, . ! ? ~ in EN), and a swipe up gives the first. Each key can be turned off in Settings → Key extras.
 - **Accents:** hold a letter (EN and 辞 modes) for é, ü, ñ…
 
 Learned words and choices stay on your phone, in each keyboard's own storage. Settings → **Forget learned words** clears them.
@@ -119,10 +120,11 @@ Learned words and choices stay on your phone, in each keyboard's own storage. Se
 - **Auto-capitals** at the start of English sentences, and **double-space** for a full stop.
 - The 123 page goes back to letters after a space.
 - Settings are re-read every time the keyboard appears, so changes in the app apply straight away.
+- **Animations**, kept quiet: keys press in, changing labels flash, the whole keyboard dips gently when the mode changes, panels rise into place and the mode wheel's chips pop in. Off in Settings → Sound & motion, or with Reduce Motion.
 
 ## Customisation
 
-The app's **設定 · Settings** screen has the following. Theme, colours, photo and height are on its **見た目 · Look** page, which has a live preview:
+The app's **設定 · Settings** screen is laid out like the iPhone's Settings app: one row per area (Look, Typing, Key extras, Flick, Suggestions, ✨ AI, GIF, Sound & motion), each opening its own page. The keyboard's ⚙︎ panel opens it directly with **Open RomaKey** (a `romakey://settings` link). Theme, colours, photo and height are on the **見た目 · Look** page, which has a live preview:
 
 | Setting | Options |
 |---|---|
@@ -135,12 +137,14 @@ The app's **設定 · Settings** screen has the following. Theme, colours, photo
 | Keys | Corner radius (square to pill), spacing (tight, standard, airy), shadows, outlines, accent-coloured return key |
 | Start in | あ, EN, 辞, or the last mode used |
 | Mode key | Which of あ / EN / 辞 a tap steps through (at least two); left-handed (mirrored) mode wheel |
-| Typing | Auto-capitalisation, double-space full stop, key popups, hold top row for numbers (q → 1 … p → 0) |
+| Typing | Auto-capitalisation, double-space full stop, key popups, space-bar cursor, full-width space |
+| Key extras | On or off, swipe up for them or hold only, and each key on or off (q … m and ー) |
 | Suggestions | Autocorrect, word suggestions, predictive text, emoji suggestions; forget learned words and kanji choices |
 | AI | Apple Intelligence (default) or Claude with your API key |
 | GIF | Your GIPHY API key and content rating |
 | Flick | Flick only (no tap cycling), sensitivity: gentle / normal / quick |
-| Both | English meanings under suggestions, romaji readings (猫 ねこ neko), full-width space, space-bar cursor, key sounds, haptics |
+| Readings | English meanings under suggestions, romaji readings (猫 ねこ neko) |
+| Sound & motion | Key sounds, haptics, animations |
 
 Settings are stored in an App Group shared by the app and both keyboards. The app scales the photo down to 1400 px and saves it there as a JPEG; the keyboards load an even smaller copy, to stay within a keyboard's tight memory limit. iOS only lets a keyboard use that shared storage, and haptics, with **Allow Full Access** turned on. Without it the keyboards still work, and the ⚙︎ quick settings are saved on the keyboard itself. The only network requests are GIF searches, once you add a GIPHY key, and ✨ requests if you choose Claude.
 

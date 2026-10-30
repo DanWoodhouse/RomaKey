@@ -105,6 +105,7 @@ The RomaKey app opens on the phone when it works.
 
 - Open Notes, tap in a note, and hold 🌐 (bottom left, below the keyboard) to pick **ローマ字**.
 - Work through the test checklist in the web preview: it covers every feature.
+- Clear the text and tap ⚙︎ in the keyboard's toolbar for its Control Centre-style settings. **Open RomaKey** there opens the app's Settings.
 - In the RomaKey app: **Settings → Apple Intelligence test** checks whether Apple's model works inside the keyboard on your phone. Run it before trying ✨ with Apple. To use Claude instead, add your API key under **Settings → ✨ AI**.
 
 ## Debugging the keyboard

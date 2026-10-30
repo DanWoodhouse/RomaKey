@@ -11,6 +11,8 @@ struct JapaneseKeyboardApp: App {
 
 struct ContentView: View {
     @State private var text = ""
+    /// Set by romakey://settings, from the keyboard's Open RomaKey button.
+    @State private var showsSettings = false
     @Environment(\.openURL) private var openURL
 
     var body: some View {
@@ -32,8 +34,8 @@ struct ContentView: View {
                         .lineLimit(3...8)
                 }
                 Section {
-                    NavigationLink {
-                        SettingsView()
+                    Button {
+                        showsSettings = true
                     } label: {
                         Label("設定 · Settings", systemImage: "slider.horizontal.3")
                     }
@@ -51,6 +53,14 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("日本語キーボード")
+            .navigationDestination(isPresented: $showsSettings) {
+                SettingsView()
+            }
+        }
+        .onOpenURL { url in
+            if url.scheme == "romakey" {
+                showsSettings = true
+            }
         }
     }
 }

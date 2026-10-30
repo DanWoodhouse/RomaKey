@@ -150,7 +150,8 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .egrid.kao .esec { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding-bottom: 6px; }
 .egrid h4 { width: 100%; margin: 0; padding: 4px 2px 2px; font: 600 11px var(--font-key); color: var(--kb-muted); grid-column: 1 / -1;
   position: sticky; top: 0; z-index: 1; background: var(--kb-bg); padding: 6px 2px 4px; }
-.khint { position: absolute; font: 500 10px var(--font-key); color: var(--kb-muted); text-align: right; pointer-events: none; }
+.key.hinted .cap { padding-top: 6px; box-sizing: border-box; }
+.khint { position: absolute; font: 500 9px var(--font-key); line-height: 12px; color: var(--kb-muted); text-align: right; pointer-events: none; }
 .cand.auto { background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); }
 .cand.auto .w { font-weight: 600; }
 input[type="password"], input[type="text"] { font: 13px var(--font-mono); color: var(--ink); background: var(--field); border: 1px solid var(--rule); border-radius: 8px; padding: 5px 8px; min-width: 0; width: 13em; }
@@ -189,7 +190,60 @@ input[type="checkbox"].qswitch:checked::before { transform: translateX(18px); }
 .ainote { font-size: 11px; color: var(--kb-muted); line-height: 1.4; }
 .qnote { margin: 8px 0 0; font: 12px var(--font-key); color: var(--kb-muted); }
 .qhead { flex: 4; text-align: center; font: 600 12px var(--font-key); color: var(--kb-muted); }
-@media (prefers-reduced-motion: reduce) { .qswitch, .qswitch::before { transition: none; } }
+.cc { overflow-y: auto; overscroll-behavior: contain; padding: 6px 10px 8px; display: grid; gap: 8px; align-content: start; font-family: var(--font-key); }
+.cctop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.cccol { display: grid; gap: 8px; }
+.ccmod { background: color-mix(in srgb, var(--kb-key) var(--key-op, 100%), transparent); border-radius: 18px; padding: 8px; box-shadow: 0 1px 0 var(--kb-shadow); min-width: 0; }
+.ccgrid { display: grid; gap: 6px 2px; }
+.ccgrid.c2 { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: center; height: 100%; }
+.ccgrid.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cctile { display: grid; justify-items: center; gap: 4px; background: transparent; border: 0; padding: 2px 0; cursor: pointer; color: var(--kb-text); font: 500 10px var(--font-key); min-width: 0; }
+.ccircle { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--kb-special); color: var(--kb-text); transition: background-color 160ms, color 160ms; }
+.cctile[aria-pressed="true"] .ccircle { background: var(--kb-accent); color: #fff; }
+.ccircle svg { width: 20px; height: 20px; display: block; }
+.cctile:active .ccircle { opacity: 0.7; }
+.cctile:focus-visible { outline: none; }
+.cctile:focus-visible .ccircle { outline: 2px solid var(--kb-accent); outline-offset: 2px; }
+.cclabel { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ccpick { display: grid; gap: 6px; align-content: center; }
+.ccpick > span { font: 600 12px var(--font-key); color: var(--kb-muted); }
+.ccseg { display: flex; gap: 2px; padding: 2px; border-radius: 9px; background: var(--kb-special); }
+.ccseg button { flex: 1; min-width: 0; height: 28px; border: 0; border-radius: 7px; background: transparent; color: var(--kb-text); font: 600 12px var(--font-key); cursor: pointer; padding: 0; }
+.ccseg button[aria-pressed="true"] { background: var(--kb-accent); color: #fff; }
+.ccopen { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; border: 0; border-radius: 14px; background: var(--kb-accent); color: #fff; font: 600 15px var(--font-key); cursor: pointer; padding: 0 12px; }
+.ccopen svg { width: 18px; height: 18px; }
+.cc .qnote { margin: 0; text-align: center; font-size: 11px; }
+/* Animations: the Animations setting adds .anim; Reduce Motion turns them all off. */
+.kb.anim .cap { transition: transform 140ms cubic-bezier(0.3, 1.5, 0.5, 1), background-color 80ms; }
+.kb.anim .key.down .cap { transform: scale(0.95); transition-duration: 60ms; }
+.kb.anim .keys.pulse { animation: kbpulse 340ms ease-out; }
+@keyframes kbpulse { 30% { transform: scale(0.985); opacity: 0.88; } }
+.kb.anim .keys.appear { animation: kbappear 260ms cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes kbappear { from { transform: scale(0.98); opacity: 0; } }
+.kb.anim .keys.rise { animation: kbrise6 240ms cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes kbrise6 { from { transform: translateY(6px); opacity: 0; } }
+.kb.anim .panel { animation: kbrise 280ms cubic-bezier(0.2, 0.9, 0.3, 1); }
+.kb.anim .panel.still { animation: none; }
+@keyframes kbrise { from { transform: translateY(12px); opacity: 0; } }
+.kb.anim .wheel-slot { animation: kbpop 220ms cubic-bezier(0.3, 1.5, 0.5, 1) backwards; }
+@keyframes kbpop { from { transform: scale(0.6); opacity: 0; } }
+.kb.anim .cands.swap { animation: kbfade 180ms ease-out; }
+@keyframes kbfade { from { opacity: 0; } }
+.kb.anim .cctile.pop .ccircle { animation: kbtile 260ms cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes kbtile { from { transform: scale(0.88); } }
+.kb.anim .popup.up { animation: kbfade 120ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .kb.anim .cap, .kb.anim .keys, .kb.anim .panel, .kb.anim .wheel-slot, .kb.anim .cands, .kb.anim .ccircle, .kb.anim .popup { animation: none !important; transition: none !important; }
+  .ccircle { transition: none; }
+}
+.xkeys { display: grid; gap: 5px; margin: 8px 0 4px; }
+.xkeys.off { opacity: 0.4; pointer-events: none; }
+.xrow { display: flex; gap: 4px; justify-content: center; }
+.xkey { flex: 0 1 34px; min-width: 0; height: 42px; display: grid; place-items: center; align-content: center; border: 1px solid var(--rule); border-radius: 7px; background: var(--field); color: var(--ink); font: 16px var(--font-body); cursor: pointer; padding: 0; line-height: 1.1; }
+.xkey small { font: 600 10px var(--font-body); color: var(--ai); }
+.xkey.wide { flex-basis: 130px; }
+.xkey[aria-pressed="false"] { opacity: 0.4; }
+.xkey[aria-pressed="false"] small { text-decoration: line-through; }
 .pmsg { display: grid; place-items: center; padding: 16px 28px; text-align: center; color: var(--kb-muted); font: 14px/1.5 var(--font-key); }
 .tones, .accents { position: absolute; display: flex; gap: 2px; padding: 4px; background: var(--kb-key); border-radius: 10px; box-shadow: 0 2px 8px var(--kb-shadow); pointer-events: auto; }
 .tones button { font-size: 28px; background: transparent; border: 0; border-radius: 6px; padding: 2px 6px; cursor: pointer; }
@@ -357,8 +411,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <div class="row"><label for="set-autoCapitalization">Auto-capitalisation</label><input type="checkbox" id="set-autoCapitalization"></div>
         <div class="row"><label for="set-doubleSpacePeriod">Double-space for full stop</label><input type="checkbox" id="set-doubleSpacePeriod"></div>
         <div class="row"><label for="set-keyPopups">Key popups</label><input type="checkbox" id="set-keyPopups"></div>
-        <div class="row"><label for="set-holdForNumbers">Hold top row for numbers</label><input type="checkbox" id="set-holdForNumbers"></div>
-        <p class="help">Hold q for 1 … p for 0. In EN, slide along for accents too.</p>
+        <p class="help">Hold the space bar and slide to move the cursor (in Both keyboards below).</p>
+      </div>
+      <div class="group">
+        <h3>キー · Key extras</h3>
+        <div class="row"><label for="set-keySecondaries">Key extras (1, @, # … in the corners)</label><input type="checkbox" id="set-keySecondaries"></div>
+        <div class="row"><label for="set-swipeUpSecondaries">Swipe up for them</label><input type="checkbox" id="set-swipeUpSecondaries"></div>
+        <div class="xkeys" id="xkeys" role="group" aria-label="Key extras for each key"></div>
+        <p class="help">Swipe up on a key for the character in its corner, or hold it. Tap a key here to turn its extra off. <span class="k">ー</span> holds 、。！？〜 (, . ! ? ~ in EN); keys with several choices keep the hold. In EN, holding a letter also offers accents.</p>
       </div>
       <div class="group">
         <h3>候補 · Suggestions</h3>
@@ -394,7 +454,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <div class="row"><label for="set-spaceBarCursor">Space bar moves cursor</label><input type="checkbox" id="set-spaceBarCursor"></div>
         <div class="row"><label for="set-keySounds">Key sounds</label><input type="checkbox" id="set-keySounds"></div>
         <div class="row"><label for="set-haptics">Haptics</label><input type="checkbox" id="set-haptics"></div>
-        <p class="help">Romaji readings: 猫 ねこ neko. Haptics vibrate where the browser allows it (not Safari); on iPhone they need Full Access.</p>
+        <div class="row"><label for="set-animations">Animations</label><input type="checkbox" id="set-animations"></div>
+        <p class="help">Animations: keys press in, the keyboard dips gently when the mode changes, and panels rise into place. Reduce Motion turns them off too. Romaji readings: 猫 ねこ neko. Haptics vibrate where the browser allows it (not Safari); on iPhone they need Full Access.</p>
       </div>
       <div class="btns"><button class="btn" type="button" id="reset-settings">Reset to defaults</button></div>
     </section>
@@ -431,7 +492,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="e1"><span>Type <em>teh</em> and space: it becomes <em>the</em>. Press delete straight away: <em>teh</em> comes back and is learned.</span></label>
         <label class="check"><input type="checkbox" data-check="e2"><span>Type <em>helo</em>: “helo” and <strong>hello</strong> appear. Type <em>wor</em>: completions (work, world…). Turn off <em>Autocorrect</em> and the fix becomes a plain suggestion.</span></label>
         <label class="check"><input type="checkbox" data-check="e3"><span>A new sentence starts with a capital, and two spaces type a full stop.</span></label>
-        <label class="check"><input type="checkbox" data-check="e4"><span>Hold <span class="k">e</span> and slide to é. Hold <span class="k">q</span> for 1 (in あ mode too). The digits show in the key corners.</span></label>
+        <label class="check"><input type="checkbox" data-check="e4"><span>Hold <span class="k">e</span> and slide to é. Hold <span class="k">q</span> for 1 (in あ mode too).</span></label>
         <label class="check"><input type="checkbox" data-check="e6"><span>Type <em>thank</em> and space: <strong>you</strong> is predicted. Tap it and the next word is predicted too. Type a pair of your own twice (<em>see ya</em>): it comes first next time.</span></label>
         <label class="check"><input type="checkbox" data-check="e5"><span>Type <em>pizza</em>: 🍕 is offered and goes in after the word.</span></label>
       </div>
@@ -446,8 +507,19 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       <div class="checks"><h3>Cursor and delete</h3>
         <label class="check"><input type="checkbox" data-check="c1"><span>Hold the space bar and slide to move the cursor. Hold delete: it speeds up to whole words.</span></label>
       </div>
+      <div class="checks"><h3>Key extras</h3>
+        <label class="check"><input type="checkbox" data-check="x1"><span>Every letter has a small character in its corner. Swipe up on <span class="k">q</span> for 1, <span class="k">a</span> for @, <span class="k">m</span> for ?, with no wait. Swipe up then back down before letting go: the letter is typed instead.</span></label>
+        <label class="check"><input type="checkbox" data-check="x2"><span>In あ, swipe up on <span class="k">ー</span> for 、, or hold it and slide along 、。！？〜. In EN the same key gives , . ! ? ~.</span></label>
+        <label class="check"><input type="checkbox" data-check="x3"><span>Customise → Key extras: tap <span class="k">q</span> and <span class="k">a</span> in the key grid. Their corner hints go, and swiping up types the letter. <em>Key extras</em> off hides them all; <em>Swipe up for them</em> off leaves hold only.</span></label>
+      </div>
+      <div class="checks"><h3>Animations</h3>
+        <label class="check"><input type="checkbox" data-check="m1"><span>Keys press in slightly under your finger. Tap the mode key: the changing labels flash and the whole keyboard dips gently.</span></label>
+        <label class="check"><input type="checkbox" data-check="m2"><span>Open emoji or ⚙︎: the panel rises into place, and the keys settle back when you close it. Drag from the mode key: the chips pop in. Switch to かな: the board fades up.</span></label>
+        <label class="check"><input type="checkbox" data-check="m3"><span>Turn <em>Animations</em> off (in ⚙︎ or Customise): everything works the same, without motion.</span></label>
+      </div>
       <div class="checks"><h3>Settings</h3>
-        <label class="check"><input type="checkbox" data-check="s1"><span>Clear the text and tap ⚙︎ in the toolbar. Switch off <em>Autocorrect</em> and <em>Auto-capitalisation</em>: <em>teh</em> stays as typed and new sentences start lowercase.</span></label>
+        <label class="check"><input type="checkbox" data-check="s1"><span>Clear the text and tap ⚙︎ in the toolbar: it looks like Control Centre. Tap the round <em>Autocorrect</em> and <em>Capitals</em> tiles off: <em>teh</em> stays as typed and new sentences start lowercase.</span></label>
+        <label class="check"><input type="checkbox" data-check="s3"><span>In ⚙︎, change <em>Height</em> and <em>Text size</em>: the keyboard changes straight away. <em>Open RomaKey</em> jumps to the full settings (on iPhone it opens the app).</span></label>
         <label class="check"><input type="checkbox" data-check="s2"><span>On a phone, <em>Settings ↓</em> at the top jumps to every option: themes, photo, height, GIF and the rest.</span></label>
       </div>
       <div class="checks"><h3>✨ AI</h3>
@@ -470,6 +542,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="p4"><span>Your iOS text replacements (omw) and contact names in suggestions; English uses Apple's spell checker.</span></label>
         <label class="check"><input type="checkbox" data-check="p6"><span>Dictation: iOS doesn't let keyboards use the microphone, so use the system 🎤 below the keyboard. It works while RomaKey is showing.</span></label>
         <label class="check"><input type="checkbox" data-check="p5"><span>Haptics, key sounds, and the Apple Intelligence test in the app.</span></label>
+        <label class="check"><input type="checkbox" data-check="p7"><span>⚙︎ → <em>Open RomaKey</em> opens the app at Settings, with one page per area (Look, Typing, Key extras, Suggestions, ✨ AI …).</span></label>
       </div>
       <p class="credit">English suggestions in this preview: the most common words from <a href="https://github.com/rspeer/wordfreq">wordfreq</a> by Robyn Speer (data under CC BY-SA 4.0).</p>
       <p class="credit">Dictionary: common words from <a href="https://www.edrdg.org/jmdict/j_jmdict.html">JMdict</a> by the Electronic Dictionary Research and Development Group, used under <a href="https://www.edrdg.org/edrdg/licence.html">CC BY-SA 3.0</a>.</p>
@@ -491,10 +564,13 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
     keySounds: true, haptics: false, predictiveText: true, aiProvider: "apple",
     backgroundOpacity: 1, backgroundGradient: false, gradientColor: "#8ec5fc", gradientDirection: "down",
-    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, giphyAPIKey: "", gifRating: "pg", holdForNumbers: true, leftHandedWheel: false, showRomaji: false,
+    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, giphyAPIKey: "", gifRating: "pg", keySecondaries: true, swipeUpSecondaries: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
+  // Saved before key extras: "hold for numbers" carries over.
+  if ("holdForNumbers" in settings) { settings.keySecondaries = settings.holdForNumbers; delete settings.holdForNumbers; }
+  if (!Array.isArray(settings.disabledSecondaryKeys)) settings.disabledSecondaryKeys = [];
   const saveSettings = () => { try { localStorage.setItem("kb-settings", JSON.stringify(settings)); } catch (_) {} };
   const THRESHOLD = { gentle: 30, normal: 20, quick: 12 };
   const ROW_H = { compact: 48, standard: 54, tall: 60 };
@@ -1110,12 +1186,12 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       const [gx, gy] = KEY_GAPS[settings.keySpacing] || KEY_GAPS.standard;
       Object.assign(capEl.style, { left: cap.x - hit.x + gx + "px", top: gy + "px", width: cap.w - 2 * gx + "px", height: cap.h - 2 * gy + "px" });
       el.appendChild(capEl);
-      // The number a held top-row letter types.
+      // The extra a swipe up (or hold) types, in the key's corner.
       let hintEl = null;
-      if (key.kind === "char" && HELD_NUMBERS[key.ch]) {
+      if ((key.kind === "char" && SECONDARIES[key.ch]) || key.kind === "longVowel") {
         hintEl = document.createElement("span");
         hintEl.className = "khint";
-        Object.assign(hintEl.style, { left: cap.x - hit.x + 3 + "px", top: "7px", width: cap.w - 10 + "px" });
+        Object.assign(hintEl.style, { left: cap.x - hit.x + gx + "px", top: gy + 1 + "px", width: cap.w - 2 * gx - 4 + "px" });
         el.appendChild(hintEl);
       }
       el.setAttribute("role", "button");
@@ -1143,9 +1219,10 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     kbEl.style.height = 40 + 4 * rowH() + "px";
     if (active.signature() + "/" + settings.keySpacing !== builtSig || keysEl.clientWidth !== builtWidth || rowH() !== builtRowH) build();
     const flash = flashNext; flashNext = false;
-    const hints = settings.holdForNumbers && active === romaji && romaji.page === "letters";
+    kbEl.classList.toggle("anim", !!settings.animations);
+    if (flash && !keysEl.classList.contains("appear")) replay(keysEl, "pulse");
     for (const it of items) {
-      if (it.hintEl) it.hintEl.textContent = hints ? HELD_NUMBERS[it.key.ch] : "";
+      if (it.hintEl) { const extra = secondaryFor(it.key); it.hintEl.textContent = extra ? extra.label : ""; it.el.classList.toggle("hinted", !!extra); }
       const t = active.label(it.key);
       if (t !== it.text) {
         if (KEY_ICONS[t]) { it.capEl.innerHTML = KEY_ICONS[t]; it.capEl.setAttribute("aria-label", KEY_NAMES[t]); }
@@ -1180,7 +1257,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     return b;
   }
 
+  let barKind = null;
   function renderCandidates() {
+    fillCandidates();
+    const kind = candsEl.querySelector(".cand") ? "cands" : candsEl.querySelector(".tool") ? "tools" : "empty";
+    if (barKind && kind !== barKind) replay(candsEl, "swap");
+    barKind = kind;
+  }
+  function fillCandidates() {
     candsEl.textContent = "";
     if (searching) {
       const x = document.createElement("button"); x.type = "button"; x.className = "sclose"; x.textContent = "✕"; x.setAttribute("aria-label", "Cancel search");
@@ -1252,7 +1336,13 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     docEl.appendChild(document.createTextNode(doc.text.slice(doc.cursor).join("")));
   }
 
-  function switchKeyboard(to) { if (active === to) return; endSearch(); closePanel(); active.commit(); active = to; closeOverlays(); render(); }
+  function switchKeyboard(to) { if (active === to) return; endSearch(); closePanel(); active.commit(); active = to; closeOverlays(); render(); replay(keysEl, "appear"); }
+  // Restarts a one-off animation class (the CSS only animates with .anim on the keyboard).
+  function replay(el, cls) {
+    if (!settings.animations) return;
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    el.addEventListener("animationend", function done(e) { if (e.target !== el) return; el.classList.remove(cls); el.removeEventListener("animationend", done); });
+  }
   function closeOverlays() { overlayEl.textContent = ""; entryOpen = null; }
 
   // ---- Candidate bar: tap inserts, long-press shows the entry ---------------------------------
@@ -1291,11 +1381,12 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
 
   // ---- Emoji, kaomoji and GIF panels, shown in place of the keys (EmojiPanel.swift) -------------
   let panelEl = null, panelTab = 0;
-  function closePanel() { if (panelEl) { panelEl.remove(); panelEl = null; keysEl.hidden = false; } }
+  function closePanel(quietly) { if (panelEl) { panelEl.remove(); panelEl = null; keysEl.hidden = false; if (!quietly) replay(keysEl, "rise"); } }
   function openPanel() {
-    closePanel(); closeOverlays();
+    const replacing = !!panelEl;
+    closePanel(true); closeOverlays();
     panelEl = document.createElement("div");
-    panelEl.className = "panel";
+    panelEl.className = "panel" + (replacing ? " still" : "");
     keysEl.hidden = true;
     kbEl.insertBefore(panelEl, overlayEl);
     return panelEl;
@@ -1726,36 +1817,109 @@ Text: よろしくおねがいします
     }
   }
 
-  // ⚙︎ in the toolbar: the typing settings, in place of the keys (QuickSettingsPanel.swift).
-  const QUICK = [["autocorrect", "Autocorrect"], ["autoCapitalization", "Auto-capitalisation"], ["predictiveText", "Predictive text"],
-    ["wordSuggestions", "Word suggestions"], ["emojiSuggestions", "Emoji suggestions"], ["doubleSpacePeriod", "Double-space for full stop"],
-    ["holdForNumbers", "Hold top row for numbers"], ["keyPopups", "Key popups"], ["showMeanings", "Show English meanings"],
-    ["showRomaji", "Show romaji readings"], ["spaceBarCursor", "Space bar moves cursor"], ["leftHandedWheel", "Left-handed mode wheel"],
-    ["flickOnly", "Flick only (かな)"], ["keySounds", "Key sounds"], ["haptics", "Haptics"]];
+  // ⚙︎ in the toolbar: the keyboard's settings in place of the keys, laid out like Control Centre
+  // (QuickSettingsPanel.swift). Everything else is in the app: Open RomaKey.
+  const CC_ICON = (body) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + "</svg>";
+  const CC_TEXT = (t, size) => '<text x="12" y="' + (size > 9 ? 16 : 14.5) + '" text-anchor="middle" font-size="' + size + '" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui, sans-serif">' + t + "</text>";
+  const CC_ESSENTIALS = [
+    ["autocorrect", "Autocorrect", CC_TEXT("abc", 9) + '<path d="M5 18.5c1.2-1 2.3-1 3.5 0s2.3 1 3.5 0 2.3-1 3.5 0 2.3 1 3.5 0"/>'],
+    ["autoCapitalization", "Capitals", '<path d="M12 4 4 12.5h4.5V19h7v-6.5H20z"/>'],
+    ["predictiveText", "Predictive", '<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 10h.01M12 10h.01M15.5 10h.01" stroke-width="2.6"/>'],
+    ["wordSuggestions", "Suggestions", '<rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M9 6v12M15 6v12"/>'],
+  ];
+  const CC_MORE = [
+    ["swipeUpSecondaries", "Swipe up", '<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M12 16V8m-3.5 3.5L12 8l3.5 3.5"/>'],
+    ["keySecondaries", "Key extras", '<rect x="4" y="4" width="16" height="16" rx="3.5"/>' + CC_TEXT("1", 9).replace('x="12" y="14.5"', 'x="15" y="11.5"') + '<path d="M8.5 16h3"/>'],
+    ["emojiSuggestions", "Emoji", '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c1 1.3 2.2 2 3.5 2s2.5-.7 3.5-2"/><path d="M9 9.8h.01M15 9.8h.01" stroke-width="2.4"/>'],
+    ["doubleSpacePeriod", "Double space", '<path d="M3.5 12v3.5h11V12"/><path d="M19 15.5h.01" stroke-width="3"/>'],
+    ["keyPopups", "Popups", '<rect x="6" y="3.5" width="12" height="11" rx="2.5"/><path d="M9 14.5v4a1.5 1.5 0 0 0 1.5 1.5h3a1.5 1.5 0 0 0 1.5-1.5v-4"/>'],
+    ["showMeanings", "Meanings", '<path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5zM12 6.5v13"/>'],
+    ["showRomaji", "Romaji", CC_TEXT("Aa", 11)],
+    ["spaceBarCursor", "Space cursor", '<path d="M3.5 12h17M7 8.5 3.5 12 7 15.5M17 8.5l3.5 3.5-3.5 3.5"/>'],
+    ["leftHandedWheel", "Left hand", '<path d="M19 16a7 7 0 0 0-14 0"/><path d="m3 13 2 3 3-2"/>'],
+    ["flickOnly", "Flick only", '<rect x="8.5" y="8.5" width="7" height="7" rx="1.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/>'],
+    ["keySounds", "Sounds", '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>'],
+    ["haptics", "Haptics", '<rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4.5 9v6M19.5 9v6"/>'],
+    ["animations", "Animations", '<path d="M4 20 14.5 9.5"/><path d="M16 3v3M19.5 4.5l-2 2M21 8h-3M14 6.5l3.5 3.5"/>'],
+  ];
+  function ccTile([key, name, icon]) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "cctile"; b.setAttribute("aria-pressed", String(!!settings[key])); b.dataset.key = key;
+    b.innerHTML = '<span class="ccircle">' + CC_ICON(icon) + '</span><span class="cclabel"></span>';
+    b.lastChild.textContent = name;
+    b.addEventListener("click", () => {
+      settings[key] = !settings[key];
+      b.setAttribute("aria-pressed", String(settings[key]));
+      replay(b, "pop");
+      changed();
+    });
+    return b;
+  }
+  function ccGrid(list, columns) {
+    const g = document.createElement("div");
+    g.className = "ccgrid c" + columns;
+    for (const t of list) g.appendChild(ccTile(t));
+    return g;
+  }
+  function ccModule(child, extraClass) {
+    const m = document.createElement("div");
+    m.className = "ccmod" + (extraClass ? " " + extraClass : "");
+    m.appendChild(child);
+    return m;
+  }
+  function ccPicker(title, key, options) {
+    const box = document.createElement("div");
+    box.className = "ccpick";
+    const label = document.createElement("span"); label.textContent = title;
+    const seg = document.createElement("div"); seg.className = "ccseg"; seg.setAttribute("role", "group"); seg.setAttribute("aria-label", title);
+    for (const [value, name, aria, size] of options) {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = name; b.dataset.value = value;
+      if (aria) b.setAttribute("aria-label", aria);
+      if (size) b.style.fontSize = size + "px";
+      b.setAttribute("aria-pressed", String(settings[key] === value));
+      b.addEventListener("click", () => {
+        settings[key] = value;
+        for (const o of seg.children) o.setAttribute("aria-pressed", String(o === b));
+        changed();
+      });
+      seg.appendChild(b);
+    }
+    box.append(label, seg);
+    return ccModule(box);
+  }
+  function openAppSettings() {
+    closePanel(); render();
+    flash("On iPhone, this opens the RomaKey app's settings");
+    $("custom-title").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  }
   function showQuickSettings() {
     const panel = openPanel();
-    const list = document.createElement("div");
-    list.className = "qlist";
-    for (const [key, name] of QUICK) {
-      const row = document.createElement("label");
-      row.className = "qrow";
-      const text = document.createElement("span"); text.textContent = name;
-      const input = document.createElement("input");
-      input.type = "checkbox"; input.className = "qswitch"; input.setAttribute("role", "switch"); input.checked = !!settings[key];
-      input.addEventListener("change", () => { settings[key] = input.checked; changed(); });
-      row.append(text, input);
-      list.appendChild(row);
-    }
+    const cc = document.createElement("div");
+    cc.className = "cc";
+    const top = document.createElement("div");
+    top.className = "cctop";
+    const col = document.createElement("div");
+    col.className = "cccol";
+    col.append(ccPicker("✨ AI", "aiProvider", [["apple", "Apple"], ["claude", "Claude"]]),
+      ccPicker("Height", "height", [["compact", "Low", "Compact"], ["standard", "Mid", "Standard"], ["tall", "Tall"]]));
+    top.append(ccModule(ccGrid(CC_ESSENTIALS, 2)), col);
+    const open = document.createElement("button");
+    open.type = "button"; open.className = "ccopen";
+    open.innerHTML = CC_ICON('<rect x="3.5" y="6.5" width="14" height="14" rx="3.5"/><path d="M12 3.5h8.5V12M20.5 3.5 11 13"/>') + "<span>Open RomaKey · アプリを開く</span>";
+    open.addEventListener("click", openAppSettings);
     const note = document.createElement("p");
     note.className = "qnote";
-    note.textContent = "Themes, photo, height and GIFs are in the RomaKey app (here: Customise, below the keyboard).";
-    list.appendChild(note);
+    note.textContent = "Looks, fonts, each key's extras, AI keys and GIFs are in the app (here: Customise, below).";
+    cc.append(top,
+      ccPicker("Text size", "textSize", [["small", "A", "Small", 11], ["standard", "A", "Standard", 14], ["large", "A", "Large", 18]]),
+      ccModule(ccGrid(CC_MORE, 4)), open, note);
     const bar = document.createElement("div");
     bar.className = "ebar";
     const heading = document.createElement("span");
-    heading.className = "qhead"; heading.textContent = "設定 · Keyboard settings";
+    heading.className = "qhead"; heading.textContent = "設定 · Settings";
     bar.append(barButton("ABC", "Back to the keys", () => { closePanel(); render(); }, "word"), heading);
-    panel.append(list, bar);
+    panel.append(cc, bar);
   }
 
   function showGIFPanel() {
@@ -1811,7 +1975,7 @@ Text: よろしくおねがいします
   const inside = (el, e) => { const r = el.getBoundingClientRect(); return e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom; };
 
   function wire(el, capEl, key) {
-    let longTimer = null, mode = null, startX = 0, start = null;
+    let longTimer = null, mode = null, startX = 0, start = null, swipe = null;
     el.addEventListener("contextmenu", (e) => e.preventDefault());
     el.addEventListener("pointerdown", (e) => {
       e.preventDefault();
@@ -1836,7 +2000,8 @@ Text: よろしくおねがいします
         longTimer = setTimeout(openWheel, 300);
         return;
       }
-      const held = key.kind === "char" && active === romaji ? heldOptions(key.ch) : [];
+      if (key.kind === "char" || key.kind === "longVowel") swipe = { y: e.clientY, armed: false };
+      const held = heldOptions(key);
       if (held.length) {
         longTimer = setTimeout(() => { mode = "accent"; hidePopup(); showAccents(capEl, held); }, 350);
       }
@@ -1850,10 +2015,26 @@ Text: よろしくおねがいします
         if (slot !== wheel.slot) { wheel.slot = slot; highlightWheel(); }
       }
       if (mode === "accent") highlightAccent(e);
+      // Swipe up for the key's extra, straight away; back down for the letter again.
+      if (swipe && !mode && settings.swipeUpSecondaries) {
+        const extra = secondaryFor(key), armed = !!extra && swipe.y - e.clientY > 22;
+        if (armed !== swipe.armed) {
+          swipe.armed = armed;
+          if (armed) { clearTimeout(longTimer); keyFeedback(); showPopup(capEl, extra.label); popupEl.classList.add("up"); }
+          else if (key.kind === "char" && settings.keyPopups) showPopup(capEl, active.label(key));
+          else hidePopup();
+        }
+      }
     });
     const end = (e, cancelled) => {
       el.classList.remove("down"); clearTimeout(longTimer); hidePopup();
       if (key.kind === "delete") { stopRepeat(); return; }
+      const swiped = swipe && swipe.armed; swipe = null;
+      if (swiped && !mode) {
+        const extra = secondaryFor(key);
+        if (extra && !cancelled) { romaji.press(K("char", 1, extra.typed)); render(); }
+        return;
+      }
       if (mode === "trackpad") { keysEl.classList.remove("faint"); mode = null; return; }
       if (mode === "accent") {
         mode = null;
@@ -1877,21 +2058,34 @@ Text: よろしくおねがいします
     el.addEventListener("pointercancel", (e) => end(e, true));
   }
 
-  // Hold a letter for its number (q → 1) and, outside あ mode, its accents (é, ü, ñ…).
-  const HELD_NUMBERS = Object.fromEntries(chars("qwertyuiop").map((c, i) => [c, "1234567890"[i]]));
-  function heldOptions(letter) {
-    if (romaji.page !== "letters") return [];
-    const options = settings.holdForNumbers && HELD_NUMBERS[letter] ? [HELD_NUMBERS[letter]] : [];
-    if (romaji.mode !== "japanese") options.push(...chars(ACCENTS[letter] || ""));
+  // Key extras (KeyboardLayout.secondary): q–p give 1–0 and the other letters symbols, as on
+  // Gboard. Swipe up for one straight away, or hold. ー/- holds punctuation; outside あ, letters
+  // also hold their accents (é, ü, ñ…).
+  const SECONDARIES = Object.fromEntries(chars("qwertyuiopasdfghjklzxcvbnm").map((c, i) => [c, chars("1234567890@#$_&-+()*\"':;!?")[i]]));
+  const PUNCT = [[",", "、"], [".", "。"], ["!", "！"], ["?", "？"], ["~", "〜"]];
+  const punctuation = () => PUNCT.map(([typed, jp]) => ({ label: romaji.mode === "japanese" ? jp : typed, typed }));
+  const secondaryOn = (name) => settings.keySecondaries && !settings.disabledSecondaryKeys.includes(name);
+  function secondaryFor(key) {
+    if (active !== romaji) return null;
+    if (key.kind === "longVowel") return secondaryOn("ー") ? punctuation()[0] : null;
+    if (key.kind !== "char" || romaji.page !== "letters" || !SECONDARIES[key.ch] || !secondaryOn(key.ch)) return null;
+    return { label: SECONDARIES[key.ch], typed: SECONDARIES[key.ch] };
+  }
+  function heldOptions(key) {
+    if (active !== romaji) return [];
+    if (key.kind === "longVowel") return secondaryOn("ー") ? punctuation() : [];
+    if (key.kind !== "char" || romaji.page !== "letters") return [];
+    const extra = secondaryFor(key), options = extra ? [extra] : [];
+    if (romaji.mode !== "japanese") options.push(...chars(ACCENTS[key.ch] || "").map((a) => ({ label: a, typed: a })));
     return options;
   }
   function showAccents(capEl, options) {
     overlayEl.textContent = "";
     const box = document.createElement("div");
     box.className = "accents";
-    for (const a of options) {
+    for (const o of options) {
       const sp = document.createElement("span");
-      sp.dataset.ch = a; sp.textContent = romaji.shifted ? a.toUpperCase() : a;
+      sp.dataset.ch = o.typed; sp.textContent = romaji.shifted ? o.label.toUpperCase() : o.label;
       box.appendChild(sp);
     }
     box.firstChild.classList.add("on");
@@ -1980,6 +2174,7 @@ Text: よろしくおねがいします
       const el = document.createElement("div");
       el.className = "wheel-slot" + (id === current ? " cur" : "") + (id === "next" ? " next" : "");
       el.dataset.slot = id; el.textContent = label; el.title = name;
+      el.style.animationDelay = overlayEl.childElementCount * 18 + "ms";
       Object.assign(el.style, { left: x + shift + "px", top: Math.max(y, 2) + "px" });
       overlayEl.appendChild(el);
     }
@@ -2039,9 +2234,30 @@ Text: よろしくおねがいします
     Object.assign(settings, DEFAULTS, { customColors: { ...PALETTES["藍 Ai light"] } });
     changed();
   });
-  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "holdForNumbers", "leftHandedWheel", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics", "boldKeys", "backgroundGradient", "keyShadows", "keyOutlines", "accentReturnKey"];
+  const TOGGLES = ["autoCapitalization", "doubleSpacePeriod", "keyPopups", "keySecondaries", "swipeUpSecondaries", "animations", "leftHandedWheel", "autocorrect", "wordSuggestions", "predictiveText", "emojiSuggestions", "flickOnly", "showMeanings", "showRomaji", "fullWidthSpace", "spaceBarCursor", "keySounds", "haptics", "boldKeys", "backgroundGradient", "keyShadows", "keyOutlines", "accentReturnKey"];
   for (const key of TOGGLES) {
     $("set-" + key).addEventListener("change", (e) => { settings[key] = e.target.checked; changed(); });
+  }
+  // One button per key: tap to turn its extra on or off.
+  for (const row of ["qwertyuiop", "asdfghjkl", "zxcvbnm", "ー"]) {
+    const r = document.createElement("div");
+    r.className = "xrow";
+    for (const k of chars(row)) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "xkey" + (k === "ー" ? " wide" : ""); b.dataset.key = k;
+      const extra = document.createElement("small");
+      extra.textContent = k === "ー" ? PUNCT.map((p) => p[1]).join("") : SECONDARIES[k];
+      b.append(extra, document.createTextNode(k));
+      b.setAttribute("aria-label", k + ", extra " + extra.textContent);
+      b.addEventListener("click", () => {
+        const off = settings.disabledSecondaryKeys.filter((x) => x !== k);
+        if (!settings.disabledSecondaryKeys.includes(k)) off.push(k);
+        settings.disabledSecondaryKeys = off;
+        changed();
+      });
+      r.appendChild(b);
+    }
+    $("xkeys").appendChild(r);
   }
   for (const m of ["japanese", "english", "dictionary"]) {
     $("mode-" + m).addEventListener("change", (e) => {
@@ -2056,6 +2272,9 @@ Text: よろしくおねがいします
     for (const [id, key] of SEGMENTS) for (const b of $(id).children) b.setAttribute("aria-pressed", String(b.dataset.value === String(settings[key])));
     if ($("giphy-key").value !== settings.giphyAPIKey) $("giphy-key").value = settings.giphyAPIKey;
     for (const key of TOGGLES) $("set-" + key).checked = !!settings[key];
+    $("set-swipeUpSecondaries").disabled = !settings.keySecondaries;
+    $("xkeys").classList.toggle("off", !settings.keySecondaries);
+    for (const b of $("xkeys").querySelectorAll(".xkey")) b.setAttribute("aria-pressed", String(!settings.disabledSecondaryKeys.includes(b.dataset.key)));
     for (const [field] of FIELDS) $("color-" + field).value = settings.customColors[field];
     $("dim").value = settings.backgroundDim; $("dim-value").textContent = Math.round(settings.backgroundDim * 100) + "%";
     $("opacity").value = settings.keyOpacity; $("opacity-value").textContent = Math.round(settings.keyOpacity * 100) + "%";

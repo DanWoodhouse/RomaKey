@@ -85,7 +85,10 @@ final class KeyboardSettingsTests: XCTestCase {
         settings.giphyAPIKey = "abc123"
         settings.gifRating = "g"
         settings.learningResetID = "reset-1"
-        settings.holdForNumbers = false
+        settings.keySecondaries = false
+        settings.swipeUpSecondaries = false
+        settings.disabledSecondaryKeys = ["q", "ー"]
+        settings.animations = false
         settings.leftHandedWheel = true
         settings.showRomaji = true
         settings.predictiveText = false

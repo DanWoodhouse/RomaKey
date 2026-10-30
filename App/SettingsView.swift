@@ -61,8 +61,24 @@ final class SettingsStore: ObservableObject {
             }
         )
     }
+
+    /// Whether one key's secondary character is on ("q" … "m", or "ー").
+    func secondaryEnabled(_ key: String) -> Binding<Bool> {
+        Binding(
+            get: { !self.settings.disabledSecondaryKeys.contains(key) },
+            set: { isOn in
+                var disabled = self.settings.disabledSecondaryKeys.filter { $0 != key }
+                if !isOn {
+                    disabled.append(key)
+                }
+                self.settings.disabledSecondaryKeys = disabled
+            }
+        )
+    }
 }
 
+/// The settings hub, laid out like the iPhone's Settings app: one row per area, each opening
+/// its own page. The keyboard's ⚙︎ panel opens straight here with Open RomaKey.
 struct SettingsView: View {
     @StateObject private var store = SettingsStore()
 
@@ -78,141 +94,79 @@ struct SettingsView: View {
             }
 
             Section {
-                NavigationLink {
+                page("見た目 · Look", icon: "paintpalette.fill", color: .pink, detail: lookSummary) {
                     AppearanceView(store: store)
-                } label: {
-                    HStack {
-                        Label("見た目 · Look", systemImage: "paintpalette")
-                        Spacer()
-                        Text(lookSummary).foregroundStyle(.secondary)
-                    }
                 }
-            } footer: {
-                Text("Themes, your own colours, a background photo and keyboard height.")
+                page("入力 · Typing", icon: "keyboard.fill", color: .blue, detail: modeSummary) {
+                    TypingSettingsView(store: store)
+                }
+                page("キー · Key extras", icon: "arrow.up.square.fill", color: .indigo,
+                     detail: store.settings.keySecondaries ? (store.settings.swipeUpSecondaries ? "Swipe up" : "Hold") : "Off") {
+                    KeyExtrasView(store: store)
+                }
+                page("かな · Flick", icon: "hand.draw.fill", color: .teal, detail: store.settings.flickSensitivity.rawValue.capitalized) {
+                    FlickSettingsView(store: store)
+                }
             }
 
             Section {
-                Picker("Start in", selection: $store.settings.startingMode) {
-                    Text("あ Japanese").tag(KeyboardSettings.StartingMode.japanese)
-                    Text("EN English").tag(KeyboardSettings.StartingMode.english)
-                    Text("辞 Dictionary").tag(KeyboardSettings.StartingMode.dictionary)
-                    Text("Last used").tag(KeyboardSettings.StartingMode.lastUsed)
+                page("候補 · Suggestions", icon: "text.badge.checkmark", color: .green,
+                     detail: store.settings.autocorrect ? "Autocorrect on" : "Autocorrect off") {
+                    SuggestionSettingsView(store: store)
                 }
-                Toggle("あ Japanese", isOn: store.languageKeyIncludes(.japanese))
-                Toggle("EN English", isOn: store.languageKeyIncludes(.english))
-                Toggle("辞 Dictionary", isOn: store.languageKeyIncludes(.dictionary))
-                Toggle("Left-handed mode wheel", isOn: $store.settings.leftHandedWheel)
-            } header: {
-                Text("ローマ字 · Language key")
-            } footer: {
-                Text("The modes a tap on the mode key steps through. Drag from the key for the mode wheel: ← あ, ↖ EN, ↑ 辞, ↗ かな, → other keyboards. Left-handed mirrors it: → あ, ← other keyboards.")
+                page("✨ AI", icon: "sparkles", color: .purple,
+                     detail: store.settings.aiProvider == .apple ? "Apple" : "Claude") {
+                    AISettingsView(store: store)
+                }
+                page("GIF", icon: "photo.on.rectangle.angled", color: .orange,
+                     detail: store.settings.giphyAPIKey.isEmpty ? "Off" : store.settings.gifRating.uppercased()) {
+                    GIFSettingsView(store: store)
+                }
+                page("感触 · Sound & motion", icon: "speaker.wave.2.fill", color: .red, detail: feelSummary) {
+                    FeelSettingsView(store: store)
+                }
             }
 
             Section {
-                Toggle("Autocorrect", isOn: $store.settings.autocorrect)
-                Toggle("Word suggestions", isOn: $store.settings.wordSuggestions)
-                Toggle("Predictive text", isOn: $store.settings.predictiveText)
-                Toggle("Emoji suggestions", isOn: $store.settings.emojiSuggestions)
+                page("Apple Intelligence test", icon: "cpu", color: .gray, detail: nil) {
+                    AIProbeView()
+                }
+            } footer: {
+                Text("Checks whether Apple's on-device model can run inside the keyboard on this iPhone.")
+            }
+
+            Section {
                 Button("Forget learned words and kanji choices", role: .destructive) {
                     store.settings.learningResetID = UUID().uuidString
                 }
-            } header: {
-                Text("候補 · Suggestions")
-            } footer: {
-                Text("English suggestions and autocorrect use Apple's built-in spell checker, your text replacements and words you type often. Press delete straight after an autocorrection to undo it. Predictive text offers the next word after each word you finish, learning the pairs you type (in Japanese too). The keyboard also remembers which kanji you pick for each reading. All of this stays on your phone. You can also switch these from the keyboard: clear the text and tap ⚙︎.")
-            }
-
-            Section {
-                Picker("Answered by", selection: $store.settings.aiProvider) {
-                    Text("Apple Intelligence").tag(KeyboardSettings.AIProvider.apple)
-                    Text("Claude").tag(KeyboardSettings.AIProvider.claude)
-                }
-                if store.settings.aiProvider == .claude {
-                    SecureField("Claude API key", text: $store.settings.claudeAPIKey)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    Link("Get a key at platform.claude.com", destination: URL(string: "https://platform.claude.com/settings/keys")!)
-                }
-            } header: {
-                Text("✨ AI")
-            } footer: {
-                Text(store.settings.aiProvider == .apple
-                     ? "Apple Intelligence runs on your iPhone, so nothing you type leaves it. It needs iOS 26 on an iPhone 15 Pro or newer with Apple Intelligence on. Finish a sentence and tap ✨ in the keyboard."
-                     : "Claude answers with the same instructions, using your own API key and the Claude Opus 5.5 model. The text you ask about is sent to Anthropic, and the keyboard needs Allow Full Access. You can switch back to Apple in the ✨ panel at any time.")
-            }
-
-            Section {
-                SecureField("GIPHY API key", text: $store.settings.giphyAPIKey)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                Picker("Content rating", selection: $store.settings.gifRating) {
-                    Text("G").tag("g")
-                    Text("PG").tag("pg")
-                    Text("PG-13").tag("pg-13")
-                    Text("R").tag("r")
-                }
-                Link("Get a free key at developers.giphy.com", destination: URL(string: "https://developers.giphy.com/dashboard/")!)
-            } header: {
-                Text("GIF")
-            } footer: {
-                Text("GIFs are off until you add a key. When on, what you search for is sent to GIPHY (the keyboard needs Allow Full Access). Tap a GIF to copy it, then paste it into your message: iOS doesn't let keyboards insert images directly. Free keys allow about 100 searches an hour.")
-            }
-
-            Section {
-                Toggle("Auto-capitalisation", isOn: $store.settings.autoCapitalization)
-                Toggle("Double-space for full stop", isOn: $store.settings.doubleSpacePeriod)
-                Toggle("Key popups", isOn: $store.settings.keyPopups)
-                Toggle("Hold top row for numbers", isOn: $store.settings.holdForNumbers)
-            } header: {
-                Text("ローマ字 · Typing")
-            } footer: {
-                Text("Hold q for 1, w for 2 … p for 0, without switching to the 123 page. The keys show the numbers in the corner. In English, slide along for accents too.")
-            }
-
-            Section {
-                Toggle("Flick only", isOn: $store.settings.flickOnly)
-                Picker("Flick sensitivity", selection: $store.settings.flickSensitivity) {
-                    Text("Gentle").tag(KeyboardSettings.FlickSensitivity.gentle)
-                    Text("Normal").tag(KeyboardSettings.FlickSensitivity.normal)
-                    Text("Quick").tag(KeyboardSettings.FlickSensitivity.quick)
-                }
-                .pickerStyle(.segmented)
-            } header: {
-                Text("かな · Flick")
-            } footer: {
-                Text("Flick only: tapping あ twice types ああ instead of い. Quick sensitivity needs a shorter slide.")
-            }
-
-            Section {
-                Toggle("Show English meanings", isOn: $store.settings.showMeanings)
-                Toggle("Show romaji readings", isOn: $store.settings.showRomaji)
-                Toggle("Full-width space in Japanese", isOn: $store.settings.fullWidthSpace)
-                Toggle("Space bar moves cursor", isOn: $store.settings.spaceBarCursor)
-                Toggle("Key sounds", isOn: $store.settings.keySounds)
-                Toggle("Haptics", isOn: $store.settings.haptics)
-            } header: {
-                Text("両方 · Both keyboards")
-            } footer: {
-                Text("Meanings appear under kanji suggestions. Romaji readings add the spelling after the kana (猫 ねこ neko), in suggestions and dictionary entries. Hold the space bar and slide to move the cursor. Haptics need Full Access.")
-            }
-
-            Section {
-                NavigationLink {
-                    AIProbeView()
-                } label: {
-                    Label("Apple Intelligence test", systemImage: "sparkles")
-                }
-            } footer: {
-                Text("Checks whether Apple's on-device model can run inside the keyboard, for future grammar checking.")
-            }
-
-            Section {
                 Button("Reset to defaults", role: .destructive) {
                     store.settings = KeyboardSettings()
                 }
             }
         }
         .navigationTitle("設定 · Settings")
+    }
+
+    /// A row like the Settings app's: a white symbol on a coloured rounded square, the page's
+    /// name, and a short summary of what's set.
+    private func page<Destination: View>(_ title: String, icon: String, color: Color, detail: String?,
+                                         @ViewBuilder destination: @escaping () -> Destination) -> some View {
+        NavigationLink {
+            destination()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 29, height: 29)
+                    .background(color, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                Text(title)
+                Spacer()
+                if let detail {
+                    Text(detail).foregroundStyle(.secondary)
+                }
+            }
+        }
     }
 }
 
@@ -223,6 +177,20 @@ private extension SettingsView {
             parts.append("photo")
         }
         return parts.joined(separator: " · ")
+    }
+
+    var modeSummary: String {
+        switch store.settings.startingMode {
+        case .japanese: return "あ"
+        case .english: return "EN"
+        case .dictionary: return "辞"
+        case .lastUsed: return "Last used"
+        }
+    }
+
+    var feelSummary: String {
+        let on = [store.settings.keySounds ? "Sounds" : nil, store.settings.haptics ? "Haptics" : nil].compactMap { $0 }
+        return on.isEmpty ? "Quiet" : on.joined(separator: " · ")
     }
 }
 

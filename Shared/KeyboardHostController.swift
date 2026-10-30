@@ -142,6 +142,7 @@ class KeyboardHostController: UIInputViewController {
             }
             boardView.onModeWheel = { [weak self] slot in self?.select(slot) }
             boardView.onSettingsChange = { [weak self] newSettings in self?.update(newSettings) }
+            boardView.onOpenApp = { [weak self] in self?.openApp() }
             boardView.document = textOutput
         }
         show(openingBoard)
@@ -215,6 +216,26 @@ class KeyboardHostController: UIInputViewController {
         feedback.playsSounds = settings.keySounds
         feedback.playsHaptics = settings.haptics && hasFullAccess
         boardViews.forEach { $0.apply(settings) }
+        updateHeight()
+    }
+
+    /// Opens the RomaKey app at its settings. Keyboards can't call `openURL` themselves, so this
+    /// asks the application object further up the responder chain. Fine for your own builds;
+    /// App Review may not accept it.
+    private func openApp() {
+        guard let url = NSURL(string: "romakey://settings") else { return }
+        let selector = NSSelectorFromString("openURL:options:completionHandler:")
+        var responder: UIResponder? = self
+        while let current = responder {
+            if current is UIApplication, let method = class_getInstanceMethod(type(of: current), selector) {
+                typealias Open = @convention(c) (AnyObject, Selector, NSURL, NSDictionary, (@convention(block) (Bool) -> Void)?) -> Void
+                let open = unsafeBitCast(method_getImplementation(method), to: Open.self)
+                open(current, selector, url, NSDictionary(), nil)
+                return
+            }
+            responder = current.next
+        }
+        contentView.flash("Open the RomaKey app from the Home Screen")
     }
 
     /// A slot picked on either board's mode wheel.
@@ -242,10 +263,14 @@ class KeyboardHostController: UIInputViewController {
             flickEngine.commitComposition()
             contentView.boardWillHide()
         }
+        let changed = newBoard != board
         board = newBoard
         romajiView.isHidden = newBoard != .romaji
         flickView.isHidden = newBoard != .kana
         contentView.reload()
+        if changed {
+            contentView.appear()
+        }
     }
 
     /// The app's Apple Intelligence screen can ask the next keyboard to appear to test the

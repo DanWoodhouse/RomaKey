@@ -68,6 +68,9 @@ final class CandidateBar: UIView {
 
     private let scrollView = UIScrollView()
     private let stack = UIStackView()
+    /// Crossfade when the bar switches between toolbar, suggestions and search.
+    var animates = true
+    private var shownState = -1
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -105,6 +108,14 @@ final class CandidateBar: UIView {
         scrollView.contentOffset = .zero
         // The search field has no natural width to share out by.
         stack.distribution = search == nil ? .fillProportionally : .fill
+        let state = search != nil ? 2 : candidates.isEmpty ? 0 : 1
+        if animates, shownState >= 0, state != shownState {
+            let fade = CATransition()
+            fade.type = .fade
+            fade.duration = 0.16
+            stack.layer.add(fade, forKey: "state")
+        }
+        shownState = state
 
         if let search {
             addSearchField(search)

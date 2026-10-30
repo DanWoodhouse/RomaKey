@@ -28,6 +28,8 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     var onModeWheel: ((ModeWheelSlot) -> Void)?
     /// Settings changed in the quick settings panel. The controller saves and applies them.
     var onSettingsChange: ((KeyboardSettings) -> Void)?
+    /// The quick settings panel's Open RomaKey button.
+    var onOpenApp: (() -> Void)?
     /// The text field being edited, for the AI panel to read and replace text.
     var document: TextOutput?
 
@@ -145,6 +147,7 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
         dimView.isHidden = image == nil
         dimView.alpha = settings.backgroundDim
         candidateBar.theme = theme
+        candidateBar.animates = animates
         settingsDidChange()
         reload()
         setNeedsLayout()
@@ -248,6 +251,7 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
             let quickSettings = QuickSettingsPanel(settings: settings, theme: theme, sharesWithApp: hasFullAccess)
             quickSettings.onChange = { [weak self] newSettings in self?.onSettingsChange?(newSettings) }
             quickSettings.onClose = { [weak self] in self?.closePanel() }
+            quickSettings.onOpenApp = { [weak self] in self?.onOpenApp?() }
             install(quickSettings)
         }
     }
@@ -294,18 +298,81 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     }
 
     private func install(_ newPanel: UIView) {
+        let replacing = panel != nil
         panel?.removeFromSuperview()
         hideEntry()
         keyArea.isHidden = true
         addSubview(newPanel)
         panel = newPanel
         setNeedsLayout()
+        if !replacing {
+            rise(newPanel, by: 12)
+        }
     }
 
     func closePanel() {
-        panel?.removeFromSuperview()
+        guard let closing = panel else { return }
+        closing.removeFromSuperview()
         panel = nil
         keyArea.isHidden = false
+        rise(keyArea, by: 6)
+    }
+
+    // MARK: - Animation
+
+    /// The user's setting, and the system's Reduce Motion.
+    var animates: Bool { settings.animations && !UIAccessibility.isReduceMotionEnabled }
+
+    /// Fades a view in while it settles up into place. Layer animations only, so layout is
+    /// never disturbed.
+    func rise(_ view: UIView, by distance: CGFloat) {
+        guard animates else { return }
+        let slide = CASpringAnimation(keyPath: "transform.translation.y")
+        slide.fromValue = distance
+        slide.toValue = 0
+        slide.damping = 22
+        slide.stiffness = 260
+        slide.duration = slide.settlingDuration
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = 0
+        fade.toValue = 1
+        fade.duration = 0.18
+        view.layer.add(slide, forKey: "rise.slide")
+        view.layer.add(fade, forKey: "rise.fade")
+    }
+
+    /// A gentle breath through the whole keyboard when the mode changes, so the change is felt
+    /// everywhere and not only on the keys whose labels change.
+    func pulseKeys() {
+        guard animates else { return }
+        let scale = CAKeyframeAnimation(keyPath: "sublayerTransform.scale")
+        scale.values = [1, 0.985, 1]
+        scale.keyTimes = [0, 0.3, 1]
+        scale.duration = 0.34
+        scale.timingFunctions = [CAMediaTimingFunction(name: .easeOut), CAMediaTimingFunction(name: .easeInEaseOut)]
+        let dim = CAKeyframeAnimation(keyPath: "opacity")
+        dim.values = [1, 0.88, 1]
+        dim.keyTimes = [0, 0.3, 1]
+        dim.duration = 0.34
+        keyArea.layer.add(scale, forKey: "pulse.scale")
+        keyArea.layer.add(dim, forKey: "pulse.dim")
+    }
+
+    /// The board fades up into place when the mode wheel switches to it.
+    func appear() {
+        guard animates else { return }
+        let scale = CASpringAnimation(keyPath: "transform.scale")
+        scale.fromValue = 0.98
+        scale.toValue = 1
+        scale.damping = 24
+        scale.stiffness = 300
+        scale.duration = scale.settlingDuration
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = 0
+        fade.toValue = 1
+        fade.duration = 0.2
+        keyArea.layer.add(scale, forKey: "appear.scale")
+        layer.add(fade, forKey: "appear.fade")
     }
 
     /// Shows the keys and a search field; typing goes into the field until the search ends.

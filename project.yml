@@ -37,6 +37,10 @@ targets:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: 日本語キーボード
+        # romakey://settings: the keyboard's Open RomaKey button.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.danwoodhouse.JapaneseKeyboard
+            CFBundleURLSchemes: [romakey]
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
