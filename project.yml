@@ -1,0 +1,56 @@
+# Generate the Xcode project with XcodeGen: `brew install xcodegen && xcodegen`
+name: JapaneseKeyboard
+options:
+  bundleIdPrefix: com.danwoodhouse
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.9"
+    TARGETED_DEVICE_FAMILY: "1,2"
+packages:
+  KeyboardCore:
+    path: Packages/KeyboardCore
+targets:
+  JapaneseKeyboard:
+    type: application
+    platform: iOS
+    sources: [App]
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: ローマ字キーボード
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.danwoodhouse.JapaneseKeyboard
+    dependencies:
+      - target: KeyboardExtension
+  KeyboardExtension:
+    type: app-extension
+    platform: iOS
+    sources: [KeyboardExtension]
+    info:
+      path: KeyboardExtension/Info.plist
+      properties:
+        CFBundleDisplayName: ローマ字
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).KeyboardViewController
+          NSExtensionAttributes:
+            PrimaryLanguage: ja-JP
+            IsASCIICapable: false
+            PrefersRightToLeft: false
+            RequestsOpenAccess: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.danwoodhouse.JapaneseKeyboard.Keyboard
+        APPLICATION_EXTENSION_API_ONLY: YES
+    dependencies:
+      - package: KeyboardCore
