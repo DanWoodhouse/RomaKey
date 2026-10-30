@@ -20,7 +20,7 @@ struct ContentView: View {
                     Label("Settings → General → Keyboard → Keyboards", systemImage: "1.circle")
                     Label("Add New Keyboard… → 日本語キーボード → ローマ字 and かな", systemImage: "2.circle")
                     Label("Tap each one and turn on Allow Full Access, so they can use your settings", systemImage: "3.circle")
-                    Label("Use 🌐 to switch between them in any app", systemImage: "4.circle")
+                    Label("Drag from the mode key to switch: ← あ, ↖ EN, ↑ 辞, ↗ かな, → other keyboards", systemImage: "4.circle")
                     Button("Open Settings") {
                         if let url = URL(string: UIApplication.openSettingsURLString) {
                             openURL(url)

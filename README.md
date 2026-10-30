@@ -5,7 +5,7 @@ An iOS app with two Japanese keyboards:
 - **ローマ字**: QWERTY romaji input where **switching between Japanese, English and the dictionary never moves a key**.
 - **かな**: the 12-key flick keyboard (フリック入力) most Japanese people use, laid out like the iPhone's built-in one.
 
-Each appears as its own keyboard in Settings and you switch with 🌐, the same as the system keyboards. Both are the same height and share the candidate bar, so switching between them doesn't make anything jump.
+Both boards live in one keyboard, and the **mode wheel** switches between them (see below). They're the same height and share the candidate bar, so switching doesn't make anything jump. The keyboard is listed twice in Settings, as ローマ字 and かな: the only difference is which board it opens on, so you can hand your phone to someone who types with flicks.
 
 Both keyboards include a Japanese–English dictionary (about 22,000 common words from JMdict). It gives you:
 
@@ -23,7 +23,7 @@ Here, both languages share one layout:
  q  w  e  r  t  y  u  i  o  p
    a  s  d  f  g  h  j  k  l
  ⇧    z  x  c  v  b  n  m    ⌫
-123  🌐  あ/EN/辞  space  ー/-  return
+123  あ/EN/辞      space      ー/-  return
 ```
 
 - The letter rows are standard QWERTY, with the half-key stagger, in both modes.
@@ -33,7 +33,29 @@ Here, both languages share one layout:
 
 This is enforced in code. `KeyboardLayout` has no input-mode parameter at all, and a test checks that every key frame is identical in all three modes.
 
-The language key steps through **あ → EN → 辞**. Long-press it to jump straight to one, or choose which modes it steps through in Settings.
+### Mode wheel
+
+There's no 🌐 key: the mode key does its job, so the space bar is wider (4.5 key widths instead of 3.25).
+
+- **Tap** the mode key to step through **あ → EN → 辞** (choose which in Settings).
+- **Press and drag** to pick from a half wheel above the key. Hold to see the wheel first, or just swipe: a quick swipe picks without waiting.
+
+```
+              辞
+        EN          かな
+     あ                  🌐
+           [mode key]
+```
+
+| Swipe | Picks |
+|---|---|
+| ← left | あ Japanese romaji |
+| ↖ up-left | EN English |
+| ↑ up | 辞 Dictionary |
+| ↗ up-right | かな flick board |
+| → right | 🌐 next keyboard |
+
+The slots never move and never change with the current mode (it's only outlined), so each direction becomes muscle memory. Dragging below the key picks the nearest end. Let go without dragging out of the key to close the wheel.
 
 | Input | Result |
 |---|---|
@@ -50,13 +72,14 @@ The language key steps through **あ → EN → 辞**. Long-press it to jump str
   →    あ    か    さ    ⌫
   ↺    た    な    は   空白
  ABC   ま    や    ら
-  🌐  ゛゜小   わ  、。?!  改行
+ かな  ゛゜小   わ  、。?!  改行
 ```
 
 - **Flick**: press a key and slide. Left, up, right and down give the rest of its row (あ → い う え お). A guide shows where you'll land.
 - **Tap repeatedly** to cycle (あ → い → う …). **→** ends the cycle so you can type the same kana twice (ああ), and **↺** steps back.
 - **゛゜小** turns the last kana into its voiced, semi-voiced or small form (は → ば → ぱ, つ → っ → づ).
 - **ABC** cycles through the alphabet and ☆123 pages. On the alphabet page, **a/A** flips the case of the last letter.
+- **かな** (where 🌐 is on the system keyboard) is the mode key: tap it to go back to the ローマ字 board, or drag for the same mode wheel, with the same directions.
 
 ## Typing and confirming
 
@@ -165,7 +188,7 @@ swift test
 
 ## Enabling the keyboards
 
-Settings → General → Keyboard → Keyboards → Add New Keyboard… → **日本語キーボード**, then turn on **ローマ字** and/or **かな**. Tap each one and turn on **Allow Full Access** so it can use your settings. Switch between them with 🌐 in any app.
+Settings → General → Keyboard → Keyboards → Add New Keyboard… → **日本語キーボード**, then turn on **ローマ字** and/or **かな**. Tap each one and turn on **Allow Full Access** so it can use your settings. Swipe right from the mode key to reach your other keyboards.
 
 ## Next steps
 

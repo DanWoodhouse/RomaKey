@@ -3,20 +3,23 @@ import UIKit
 
 /// The 12-key flick keyboard, laid out like the iPhone's built-in 日本語かな keyboard.
 /// Tap a key for its centre kana (あ), or press and slide left/up/right/down for the rest (いうえお).
+/// The mode key sits where 🌐 is on the system keyboard.
 final class FlickKeyboardView: KeyboardViewBase {
+    /// The mode key was tapped: back to the ローマ字 board.
+    var onModeKeyTap: (() -> Void)?
+
     private let engine: FlickKeyboardEngine
-    private weak var globeTarget: UIInputViewController?
     private let guide = FlickGuideView()
     private var buttons: [FlickKeyButton] = []
     private var builtLayout: FlickLayout?
     private let deleteRepeater = KeyRepeater()
     private var spaceBarCursor: SpaceBarCursor?
+    private var modeWheel: ModeWheelTracker?
     /// The host app's text field; typing goes back here when a search ends.
     private let documentOutput: TextOutput?
 
-    init(engine: FlickKeyboardEngine, globeTarget: UIInputViewController, feedback: KeyFeedback) {
+    init(engine: FlickKeyboardEngine, feedback: KeyFeedback) {
         self.engine = engine
-        self.globeTarget = globeTarget
         documentOutput = engine.output
         super.init(feedback: feedback)
         addSubview(guide)
@@ -27,10 +30,6 @@ final class FlickKeyboardView: KeyboardViewBase {
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    override func update(showsGlobe: Bool) {
-        // The grid always keeps its globe key, so its shape is the same on every phone.
     }
 
     override func settingsDidChange() {
@@ -90,14 +89,13 @@ final class FlickKeyboardView: KeyboardViewBase {
 
     private func configureActions(for button: FlickKeyButton) {
         switch button.kind {
-        case .globe:
-            if let globeTarget {
-                button.addTarget(
-                    globeTarget,
-                    action: #selector(UIInputViewController.handleInputModeList(from:with:)),
-                    for: .allTouchEvents
-                )
-            }
+        case .modeKey:
+            modeWheel = ModeWheelTracker(
+                button: button,
+                host: self,
+                current: { .kana },
+                onTap: { [weak self] in self?.onModeKeyTap?() }
+            )
         case .delete:
             button.addTarget(self, action: #selector(deleteDown), for: .touchDown)
             button.addTarget(self, action: #selector(deleteUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])

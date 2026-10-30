@@ -2,23 +2,22 @@ import KeyboardCore
 import UIKit
 
 /// The romaji QWERTY keyboard. Switching between あ, EN and 辞 only relabels keys; the candidate
-/// bar is there in every mode, so the keyboard's height doesn't change either.
+/// bar is there in every mode, so the keyboard's height doesn't change either. The mode key
+/// opens the mode wheel, which replaces 🌐.
 final class RomajiKeyboardView: KeyboardViewBase {
     private let engine: KeyboardEngine
-    private weak var globeTarget: UIInputViewController?
     private var buttons: [[RomajiKeyButton]] = []
     private var builtLayout: KeyboardLayout?
     private let popup = KeyPopupView()
     private let deleteRepeater = KeyRepeater()
     private var spaceBarCursor: SpaceBarCursor?
-    private var modeMenu: ModeMenuView?
+    private var modeWheel: ModeWheelTracker?
     private var accentPicker: AccentPickerView?
     /// The host app's text field; typing goes back here when a search ends.
     private let documentOutput: TextOutput?
 
-    init(engine: KeyboardEngine, globeTarget: UIInputViewController, feedback: KeyFeedback) {
+    init(engine: KeyboardEngine, feedback: KeyFeedback) {
         self.engine = engine
-        self.globeTarget = globeTarget
         documentOutput = engine.output
         super.init(feedback: feedback)
         addSubview(popup)
@@ -29,10 +28,6 @@ final class RomajiKeyboardView: KeyboardViewBase {
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    override func update(showsGlobe: Bool) {
-        engine.showsGlobe = showsGlobe
     }
 
     override func settingsDidChange() {
@@ -72,7 +67,7 @@ final class RomajiKeyboardView: KeyboardViewBase {
         engine.mode == .english ? "en" : "ja"
     }
 
-    /// Rebuilds the keys if the layout changed (page or globe), otherwise just relabels them.
+    /// Rebuilds the keys if the page changed, otherwise just relabels them.
     override func reload() {
         if engine.layout != builtLayout {
             rebuildKeys()
@@ -111,14 +106,13 @@ final class RomajiKeyboardView: KeyboardViewBase {
 
     private func configureActions(for button: RomajiKeyButton) {
         switch button.kind {
-        case .globe:
-            if let globeTarget {
-                button.addTarget(
-                    globeTarget,
-                    action: #selector(UIInputViewController.handleInputModeList(from:with:)),
-                    for: .allTouchEvents
-                )
-            }
+        case .languageToggle:
+            modeWheel = ModeWheelTracker(
+                button: button,
+                host: self,
+                current: { [weak self] in ModeWheelSlot(self?.engine.mode ?? .japanese) },
+                onTap: { [weak self] in self?.engine.press(.languageToggle) }
+            )
         case .delete:
             button.addTarget(self, action: #selector(deleteDown), for: .touchDown)
             button.addTarget(self, action: #selector(deleteUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
@@ -140,11 +134,6 @@ final class RomajiKeyboardView: KeyboardViewBase {
         if case .character = button.kind {
             let press = UILongPressGestureRecognizer(target: self, action: #selector(characterKeyLongPressed(_:)))
             press.minimumPressDuration = 0.35
-            button.addGestureRecognizer(press)
-        }
-        if button.kind == .languageToggle {
-            let press = UILongPressGestureRecognizer(target: self, action: #selector(languageKeyLongPressed(_:)))
-            press.minimumPressDuration = 0.4
             button.addGestureRecognizer(press)
         }
     }
@@ -240,38 +229,6 @@ final class RomajiKeyboardView: KeyboardViewBase {
             accentPicker = nil
         }
     }
-
-    // MARK: - Mode menu
-
-    @objc private func languageKeyLongPressed(_ gesture: UILongPressGestureRecognizer) {
-        switch gesture.state {
-        case .began:
-            guard let key = gesture.view as? RomajiKeyButton else { return }
-            feedback.keyDown()
-            let menu = ModeMenuView(current: engine.mode, theme: theme)
-            menu.onSelect = { [weak self] mode in
-                self?.engine.setMode(mode)
-                self?.dismissModeMenu()
-            }
-            menu.onDismiss = { [weak self] in self?.dismissModeMenu() }
-            menu.frame = bounds
-            addSubview(menu)
-            menu.layoutPanel(above: key.keycapFrame(in: self))
-            modeMenu = menu
-        case .changed:
-            modeMenu?.highlight(at: gesture.location(in: modeMenu))
-        case .ended:
-            // Slide-and-release picks the highlighted mode; otherwise the menu stays open for a tap.
-            modeMenu?.selectHighlighted()
-        default:
-            break
-        }
-    }
-
-    private func dismissModeMenu() {
-        modeMenu?.removeFromSuperview()
-        modeMenu = nil
-    }
 }
 
 final class RomajiKeyButton: KeyButton {
@@ -290,92 +247,6 @@ final class RomajiKeyButton: KeyButton {
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-}
-
-/// Long-press the language key to jump straight to あ, EN or 辞.
-private final class ModeMenuView: UIView {
-    var onSelect: ((InputMode) -> Void)?
-    var onDismiss: (() -> Void)?
-
-    private let panel = UIStackView()
-    private var options: [(mode: InputMode, view: UILabel)] = []
-    private var highlighted: InputMode?
-    private let theme: KeyboardTheme
-
-    init(current: InputMode, theme: KeyboardTheme) {
-        self.theme = theme
-        super.init(frame: .zero)
-        panel.axis = .horizontal
-        panel.distribution = .fillEqually
-        panel.spacing = 4
-        panel.layoutMargins = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
-        panel.isLayoutMarginsRelativeArrangement = true
-        panel.backgroundColor = theme.panel
-        panel.layer.cornerRadius = 10
-        panel.layer.shadowColor = UIColor.black.cgColor
-        panel.layer.shadowOpacity = 0.3
-        panel.layer.shadowRadius = 4
-        addSubview(panel)
-
-        let names: [InputMode: String] = [.japanese: "あ 日本語", .english: "EN English", .dictionary: "辞 辞書"]
-        for mode in InputMode.allCases {
-            let label = UILabel()
-            label.text = names[mode]
-            label.textAlignment = .center
-            label.font = .systemFont(ofSize: 15, weight: mode == current ? .semibold : .regular)
-            label.layer.cornerRadius = 7
-            label.clipsToBounds = true
-            label.isUserInteractionEnabled = true
-            label.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(optionTapped(_:))))
-            panel.addArrangedSubview(label)
-            options.append((mode, label))
-        }
-        updateColors()
-        addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(backgroundTapped(_:))))
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    func layoutPanel(above key: CGRect) {
-        let width = min(bounds.width - 16, 300)
-        let height: CGFloat = 46
-        let x = min(max(key.midX - width / 2, 8), bounds.width - width - 8)
-        panel.frame = CGRect(x: x, y: max(key.minY - height - 6, 0), width: width, height: height)
-    }
-
-    func highlight(at point: CGPoint) {
-        highlighted = options.first { panel.convert($0.view.frame, to: self).contains(point) }?.mode
-        updateColors()
-    }
-
-    func selectHighlighted() {
-        if let highlighted {
-            onSelect?(highlighted)
-        }
-    }
-
-    private func updateColors() {
-        for option in options {
-            let isOn = option.mode == highlighted
-            option.view.backgroundColor = isOn ? theme.accent : .clear
-            option.view.textColor = isOn ? .white : theme.text
-        }
-    }
-
-    @objc private func optionTapped(_ gesture: UITapGestureRecognizer) {
-        if let mode = options.first(where: { $0.view === gesture.view })?.mode {
-            onSelect?(mode)
-        }
-    }
-
-    @objc private func backgroundTapped(_ gesture: UITapGestureRecognizer) {
-        if !panel.frame.contains(gesture.location(in: self)) {
-            onDismiss?()
-        }
     }
 }
 

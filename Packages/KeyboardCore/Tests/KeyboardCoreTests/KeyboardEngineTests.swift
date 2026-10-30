@@ -4,9 +4,9 @@ import XCTest
 final class KeyboardEngineTests: XCTestCase {
     private var output: RecordingOutput!
 
-    private func makeEngine(mode: InputMode, showsGlobe: Bool = true) -> KeyboardEngine {
+    private func makeEngine(mode: InputMode) -> KeyboardEngine {
         output = RecordingOutput()
-        let engine = KeyboardEngine(mode: mode, showsGlobe: showsGlobe)
+        let engine = KeyboardEngine(mode: mode)
         engine.output = output
         return engine
     }
@@ -20,19 +20,29 @@ final class KeyboardEngineTests: XCTestCase {
     // MARK: - Layout stays put
 
     func testSwitchingLanguageNeverMovesKeys() {
-        for showsGlobe in [true, false] {
-            let engine = makeEngine(mode: .english, showsGlobe: showsGlobe)
-            let english = engine.layout.frames(width: 375, rowHeight: 54)
-            for expected in [InputMode.dictionary, .japanese, .english] {
-                engine.press(.languageToggle)
-                XCTAssertEqual(engine.mode, expected)
-                XCTAssertEqual(engine.layout.frames(width: 375, rowHeight: 54), english)
-            }
+        let engine = makeEngine(mode: .english)
+        let english = engine.layout.frames(width: 375, rowHeight: 54)
+        for expected in [InputMode.dictionary, .japanese, .english] {
+            engine.press(.languageToggle)
+            XCTAssertEqual(engine.mode, expected)
+            XCTAssertEqual(engine.layout.frames(width: 375, rowHeight: 54), english)
+        }
+        for mode in InputMode.allCases {
+            engine.setMode(mode)
+            XCTAssertEqual(engine.layout.frames(width: 375, rowHeight: 54), english)
         }
     }
 
+    func testBottomRowHasNoGlobeAndAWideSpaceBar() {
+        let bottom = KeyboardLayout.layout(for: .letters).rows[3]
+        XCTAssertEqual(bottom.keys.map(\.kind), [.pageToggle, .languageToggle, .space, .longVowel, .returnKey])
+        // 4.5 of the row's 10 units, up from 3.25 when 🌐 had its own key.
+        let space = KeyboardLayout.layout(for: .letters).frames(width: 100, rowHeight: 10)[3][2]
+        XCTAssertEqual(space.width, 45, accuracy: 0.001)
+    }
+
     func testLetterRowsAreStandardQwerty() {
-        let layout = KeyboardLayout.layout(for: .letters, showsGlobe: true)
+        let layout = KeyboardLayout.layout(for: .letters)
         let letters = layout.rows.prefix(3).map { row in
             row.keys.compactMap { key -> String? in
                 if case .character(let character) = key.kind { return character }
@@ -50,12 +60,10 @@ final class KeyboardEngineTests: XCTestCase {
 
     func testEveryRowFillsTheWidth() {
         for page in [KeyboardPage.letters, .numbers, .symbols] {
-            for showsGlobe in [true, false] {
-                let layout = KeyboardLayout.layout(for: page, showsGlobe: showsGlobe)
-                for (row, frames) in zip(layout.rows, layout.frames(width: 100, rowHeight: 10)) {
-                    let used = frames.reduce(0) { $0 + $1.width } + 2 * row.inset * 10
-                    XCTAssertEqual(used, 100, accuracy: 0.001, "\(page) row doesn't fill the width")
-                }
+            let layout = KeyboardLayout.layout(for: page)
+            for (row, frames) in zip(layout.rows, layout.frames(width: 100, rowHeight: 10)) {
+                let used = frames.reduce(0) { $0 + $1.width } + 2 * row.inset * 10
+                XCTAssertEqual(used, 100, accuracy: 0.001, "\(page) row doesn't fill the width")
             }
         }
     }

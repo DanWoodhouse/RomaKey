@@ -104,7 +104,7 @@ struct SettingsView: View {
             } header: {
                 Text("ローマ字 · Language key")
             } footer: {
-                Text("The modes the language key steps through. Long-press the key to jump straight to any mode.")
+                Text("The modes a tap on the mode key steps through. Drag from the key for the mode wheel: ← あ, ↖ EN, ↑ 辞, ↗ かな, → other keyboards.")
             }
 
             Section {

@@ -106,6 +106,18 @@ final class FlickKeyboardEngineTests: XCTestCase {
         XCTAssertEqual(engine.page, .kana)
     }
 
+    func testSetPageCommitsAndReturnsToKana() {
+        engine.press(key("あ"))
+        engine.press(.pageCycle)
+        engine.press(.pageCycle)
+        engine.setPage(.kana)
+        XCTAssertEqual(engine.page, .kana)
+        engine.press(key("か"))
+        engine.setPage(.kana)
+        XCTAssertEqual(output.committed, "あか")
+        XCTAssertFalse(engine.isComposing)
+    }
+
     func testKatakanaCandidate() {
         engine.press(key("か"), direction: .left)
         engine.press(key("ら"), direction: .center)

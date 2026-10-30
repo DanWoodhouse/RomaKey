@@ -19,7 +19,8 @@ public enum KeyKind: Hashable {
     case pageToggle
     /// "#+=" / "123" on the numbers and symbols pages.
     case symbolsToggle
-    case globe
+    /// The mode key: tap to step through the modes, or press and drag for the mode wheel
+    /// (あ, EN, 辞, かな and the next keyboard). It replaces 🌐, so the space bar is wider.
     case languageToggle
     case space
     /// ー in Japanese, - in English. Always present, so nothing moves when switching language.
@@ -69,8 +70,7 @@ public struct KeyboardLayout: Hashable {
 
     public let rows: [KeyRow]
 
-    public static func layout(for page: KeyboardPage, showsGlobe: Bool) -> KeyboardLayout {
-        let bottom = bottomRow(showsGlobe: showsGlobe)
+    public static func layout(for page: KeyboardPage) -> KeyboardLayout {
         switch page {
         case .letters:
             return KeyboardLayout(rows: [
@@ -79,21 +79,21 @@ public struct KeyboardLayout: Hashable {
                 KeyRow([Key(.shift, width: .units(1.5))]
                     + characterKeys("zxcvbnm")
                     + [Key(.delete, width: .units(1.5))]),
-                bottom,
+                bottomRow,
             ])
         case .numbers:
             return KeyboardLayout(rows: [
                 characterRow("1234567890"),
                 characterRow("-/:;()¥&@\""),
                 punctuationRow,
-                bottom,
+                bottomRow,
             ])
         case .symbols:
             return KeyboardLayout(rows: [
                 characterRow("[]{}#%^*+="),
                 characterRow("_\\|~<>$€£•"),
                 punctuationRow,
-                bottom,
+                bottomRow,
             ])
         }
     }
@@ -141,17 +141,12 @@ public struct KeyboardLayout: Hashable {
             + [Key(.delete, width: .units(1.5))]
     )
 
-    private static func bottomRow(showsGlobe: Bool) -> KeyRow {
-        var keys = [Key(.pageToggle, width: .units(1.25))]
-        if showsGlobe {
-            keys.append(Key(.globe, width: .units(1.25)))
-        }
-        keys += [
-            Key(.languageToggle, width: .units(1.25)),
-            Key(.space, width: .flexible),
-            Key(.longVowel, width: .units(1)),
-            Key(.returnKey, width: .units(1.75)),
-        ]
-        return KeyRow(keys)
-    }
+    /// The same on every phone: the next keyboard is on the mode wheel, not a globe key.
+    private static let bottomRow = KeyRow([
+        Key(.pageToggle, width: .units(1.25)),
+        Key(.languageToggle, width: .units(1.25)),
+        Key(.space, width: .flexible),
+        Key(.longVowel, width: .units(1)),
+        Key(.returnKey, width: .units(1.75)),
+    ])
 }

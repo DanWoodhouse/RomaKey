@@ -29,6 +29,15 @@ public final class FlickKeyboardEngine {
     public init() {}
 
     public var layout: FlickLayout { .layout(for: page) }
+
+    /// Switches straight to a page, e.g. back to かな when the board is picked from the mode wheel.
+    public func setPage(_ newPage: FlickPage) {
+        commitComposition()
+        toggle = nil
+        lastDirect = nil
+        page = newPage
+        onChange?()
+    }
     public var isComposing: Bool { !composer.isEmpty }
     public var candidates: [Candidate] {
         composer.candidates(using: dictionary, history: history, emoji: settings.emojiSuggestions ? emojiCatalog : nil)
@@ -73,8 +82,8 @@ public final class FlickKeyboardEngine {
             case .alphabet: page = .numbers
             case .numbers: page = .kana
             }
-        case .globe:
-            break  // Handled by the system's input mode list.
+        case .modeKey:
+            break  // Handled by the keyboard, which switches boards.
         case .modifier:
             if let last = composer.kana.last, let modified = Self.modifierCycle[last] {
                 composer.deleteBackward()
@@ -163,7 +172,7 @@ public final class FlickKeyboardEngine {
             case .alphabet: return .text("☆123")
             case .numbers: return .text("あいう")
             }
-        case .globe: return .systemImage("globe")
+        case .modeKey: return .text("かな")
         case .modifier: return .text("゛゜小")
         case .caseToggle: return .text("a/A")
         case .delete: return .systemImage("delete.left")

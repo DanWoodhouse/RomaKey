@@ -22,6 +22,8 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     var hasFullAccess = false
     /// Saves a newly picked skin tone.
     var onSkinTone: ((Int) -> Void)?
+    /// A slot picked on the mode wheel. The controller switches mode or board.
+    var onModeWheel: ((ModeWheelSlot) -> Void)?
 
     enum SearchTarget {
         case emoji
@@ -88,8 +90,6 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     /// Passes new settings to the engine and keys.
     func settingsDidChange() {}
 
-    func update(showsGlobe: Bool) {}
-
     func textDidChange() {}
 
     /// Inserts text straight into the document (emoji, kaomoji, paste).
@@ -113,6 +113,13 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     }
 
     // MARK: - Shared behaviour
+
+    /// Closes panels, search and the dictionary entry before the other board is shown.
+    func boardWillHide() {
+        closePanel()
+        endSearch()
+        hideEntry()
+    }
 
     func apply(_ settings: KeyboardSettings) {
         self.settings = settings

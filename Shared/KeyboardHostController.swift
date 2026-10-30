@@ -69,58 +69,99 @@ enum EmojiLoader {
     }
 }
 
-/// Hosts a keyboard view and connects it to the text field being edited.
+/// Both boards, the ローマ字 QWERTY and the 12-key かな grid, connected to the text field being
+/// edited. The mode wheel on either board's mode key switches modes and boards. The two
+/// keyboards in Settings are this same keyboard; they only open on different boards.
 class KeyboardHostController: UIInputViewController {
+    enum Board {
+        case romaji
+        case kana
+    }
+
+    /// The board shown each time the keyboard appears. The かな keyboard overrides this.
+    var openingBoard: Board { .romaji }
+
     private(set) lazy var textOutput: TextOutput = ProxyTextOutput(controller: self)
     let feedback = KeyFeedback()
     private(set) var settings = KeyboardSettings()
-    private var contentView: KeyboardViewBase!
+    private let romajiEngine = KeyboardEngine(mode: .japanese)
+    private let flickEngine = FlickKeyboardEngine()
+    private var romajiView: RomajiKeyboardView!
+    private var flickView: FlickKeyboardView!
+    private var board: Board = .romaji
     private var heightConstraint: NSLayoutConstraint?
+
+    private var contentView: KeyboardViewBase {
+        board == .romaji ? romajiView : flickView
+    }
+
+    private var boardViews: [KeyboardViewBase] { [romajiView, flickView] }
 
     /// Settings are shared with the app through an App Group, which needs Full Access.
     /// Without it they fall back to the defaults.
     let sharedDefaults = UserDefaults(suiteName: KeyboardSettings.appGroup)
 
-    /// Subclasses create their engine and view here.
-    func makeContentView() -> KeyboardViewBase {
-        fatalError("Subclasses must override makeContentView()")
-    }
-
     /// Learned words, kanji choices and recent emoji stay in this keyboard's own storage, on the phone.
     let learningStore = UserDefaults.standard
     private(set) lazy var recentEmoji = RecentEmoji(store: learningStore)
 
-    /// Subclasses pass the dictionary to their engine.
-    func dictionaryDidLoad(_ dictionary: JapaneseDictionary?) {}
-
-    /// Subclasses pass the emoji list to their engine.
-    func emojiDidLoad(_ catalog: EmojiCatalog?) {}
-
-    /// Subclasses forget learned words and kanji choices (asked for from the app).
-    func resetLearning() {}
-
     override func viewDidLoad() {
         super.viewDidLoad()
-        contentView = makeContentView()
-        contentView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(contentView)
-        NSLayoutConstraint.activate([
-            contentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            contentView.topAnchor.constraint(equalTo: view.topAnchor),
-            contentView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ])
-        DictionaryLoader.load { [weak self] dictionary in
-            self?.dictionaryDidLoad(dictionary)
-        }
-        contentView.recentEmoji = recentEmoji
-        contentView.onSkinTone = { [weak self] tone in
+        let history = ConversionHistory(store: learningStore)
+        romajiEngine.output = textOutput
+        romajiEngine.history = history
+        romajiEngine.suggester = WordSuggester(checker: SystemSpellChecker(), learned: LearnedWords(store: learningStore))
+        romajiEngine.onModeChange = { [weak self] mode in
             guard let defaults = self?.sharedDefaults else { return }
-            KeyboardSettings.saveSkinTone(tone, to: defaults)
+            KeyboardSettings.saveLastUsedMode(mode, to: defaults)
+        }
+        flickEngine.output = textOutput
+        flickEngine.history = history
+
+        romajiView = RomajiKeyboardView(engine: romajiEngine, feedback: feedback)
+        flickView = FlickKeyboardView(engine: flickEngine, feedback: feedback)
+        flickView.onModeKeyTap = { [weak self] in self?.show(.romaji) }
+        for boardView in boardViews {
+            boardView.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(boardView)
+            NSLayoutConstraint.activate([
+                boardView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                boardView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                boardView.topAnchor.constraint(equalTo: view.topAnchor),
+                boardView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            ])
+            boardView.recentEmoji = recentEmoji
+            boardView.onSkinTone = { [weak self] tone in
+                guard let defaults = self?.sharedDefaults else { return }
+                KeyboardSettings.saveSkinTone(tone, to: defaults)
+            }
+            boardView.onModeWheel = { [weak self] slot in self?.select(slot) }
+        }
+        show(openingBoard)
+
+        DictionaryLoader.load { [weak self] dictionary in
+            self?.romajiEngine.dictionary = dictionary
+            self?.flickEngine.dictionary = dictionary
         }
         EmojiLoader.load { [weak self] catalog in
-            self?.contentView.emojiCatalog = catalog
-            self?.emojiDidLoad(catalog)
+            guard let self else { return }
+            boardViews.forEach { $0.emojiCatalog = catalog }
+            romajiEngine.emojiCatalog = catalog
+            flickEngine.emojiCatalog = catalog
+        }
+        // The user's iOS text replacements (omw → On my way!) and contact names, so names are never "corrected".
+        requestSupplementaryLexicon { [weak self] lexicon in
+            var replacements: [String: String] = [:]
+            var known: Set<String> = []
+            for entry in lexicon.entries {
+                if entry.userInput.caseInsensitiveCompare(entry.documentText) == .orderedSame {
+                    known.insert(entry.documentText.lowercased())
+                } else {
+                    replacements[entry.userInput.lowercased()] = entry.documentText
+                }
+            }
+            self?.romajiEngine.suggester?.textReplacements = replacements
+            self?.romajiEngine.suggester?.knownWords = known
         }
     }
 
@@ -130,17 +171,54 @@ class KeyboardHostController: UIInputViewController {
         settings = sharedDefaults.map(KeyboardSettings.init(defaults:)) ?? KeyboardSettings()
         feedback.playsSounds = settings.keySounds
         feedback.playsHaptics = settings.haptics && hasFullAccess
-        contentView.hasFullAccess = hasFullAccess
         if let resetID = settings.learningResetID, resetID != learningStore.string(forKey: "appliedLearningResetID") {
-            resetLearning()
+            romajiEngine.suggester?.learned.reset()
+            romajiEngine.history?.reset()
             learningStore.set(nil, forKey: "recentEmoji")
             recentEmoji = RecentEmoji(store: learningStore)
-            contentView.recentEmoji = recentEmoji
             learningStore.set(resetID, forKey: "appliedLearningResetID")
         }
-        contentView.apply(settings)
+        for boardView in boardViews {
+            boardView.hasFullAccess = hasFullAccess
+            boardView.recentEmoji = recentEmoji
+            boardView.apply(settings)
+        }
+        romajiEngine.setMode(settings.initialMode)
+        flickEngine.setPage(.kana)
+        show(openingBoard)
         updateHeight()
         runAIProbeIfRequested()
+    }
+
+    /// A slot picked on either board's mode wheel.
+    private func select(_ slot: ModeWheelSlot) {
+        if let mode = slot.inputMode {
+            romajiEngine.setMode(mode)
+            show(.romaji)
+            return
+        }
+        switch slot {
+        case .kana:
+            flickEngine.setPage(.kana)
+            show(.kana)
+        case .nextKeyboard:
+            advanceToNextInputMode()
+        case .japanese, .english, .dictionary:
+            break
+        }
+    }
+
+    /// Both boards are the same height, so switching never moves the text field.
+    private func show(_ newBoard: Board) {
+        if newBoard != board {
+            romajiEngine.commitComposition()
+            flickEngine.commitComposition()
+            contentView.boardWillHide()
+        }
+        board = newBoard
+        romajiView.isHidden = newBoard != .romaji
+        flickView.isHidden = newBoard != .kana
+        contentView.reload()
     }
 
     /// The app's Apple Intelligence screen can ask the next keyboard to appear to test the
@@ -161,9 +239,6 @@ class KeyboardHostController: UIInputViewController {
 
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
-        // Only valid once the view is on screen. Phones with a system globe below the
-        // keyboard return false; this is per device, so it never changes with the language.
-        contentView.update(showsGlobe: needsInputModeSwitchKey)
         updateHeight()
     }
 

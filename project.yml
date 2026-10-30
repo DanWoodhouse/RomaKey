@@ -44,7 +44,8 @@ targets:
       - package: KeyboardCore
       - target: RomajiKeyboard
       - target: KanaKeyboard
-  # Two keyboards, each listed separately in Settings and switched with 🌐.
+  # The same keyboard listed twice in Settings: ローマ字 opens on the QWERTY board, かな on the flick
+  # board. The mode wheel switches boards inside either one.
   RomajiKeyboard:
     templates: [KeyboardExtension]
     sources: [RomajiKeyboard, Shared]
@@ -62,8 +63,8 @@ targets:
             PrimaryLanguage: ja-JP
             IsASCIICapable: false
             PrefersRightToLeft: false
-            # Full Access lets the keyboards read settings from the shared App Group and use
-            # haptics. They make no network requests.
+            # Full Access lets the keyboards read settings from the shared App Group, use
+            # haptics and paste. The only network requests are GIF searches, once a GIPHY key is added.
             RequestsOpenAccess: true
     settings:
       base:

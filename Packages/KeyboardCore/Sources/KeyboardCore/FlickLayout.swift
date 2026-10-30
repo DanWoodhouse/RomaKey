@@ -52,7 +52,9 @@ public enum FlickKeyKind: Hashable {
     case reverseCycle
     /// あいう → ABC → ☆123
     case pageCycle
-    case globe
+    /// Where 🌐 sits on the system's かな keyboard. Tap to go back to the ローマ字 board, or press
+    /// and drag for the same mode wheel as the ローマ字 board.
+    case modeKey
     /// ゛゜小 : cycles the last kana through dakuten, handakuten and small forms.
     case modifier
     /// a/A : flips the case of the last letter.
@@ -81,7 +83,7 @@ public struct FlickLayout: Hashable {
             FlickCell(kind: .advance, column: 0, row: 0, rowSpan: 1),
             FlickCell(kind: .reverseCycle, column: 0, row: 1, rowSpan: 1),
             FlickCell(kind: .pageCycle, column: 0, row: 2, rowSpan: 1),
-            FlickCell(kind: .globe, column: 0, row: 3, rowSpan: 1),
+            FlickCell(kind: .modeKey, column: 0, row: 3, rowSpan: 1),
             FlickCell(kind: .delete, column: 4, row: 0, rowSpan: 1),
             FlickCell(kind: .space, column: 4, row: 1, rowSpan: 1),
             FlickCell(kind: .returnKey, column: 4, row: 2, rowSpan: 2),

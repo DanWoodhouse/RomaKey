@@ -15,11 +15,6 @@ public final class KeyboardEngine {
     /// What's been typed in 辞書 mode, waiting for a word to be picked.
     public private(set) var englishQuery = ""
 
-    /// Whether to show our own globe key. Decided by the system per device, not per language.
-    public var showsGlobe: Bool {
-        didSet { if showsGlobe != oldValue { onChange?() } }
-    }
-
     public var settings = KeyboardSettings()
     /// Loaded in the background; until then there are no kanji or 辞書 results.
     public var dictionary: JapaneseDictionary? {
@@ -48,14 +43,13 @@ public final class KeyboardEngine {
     private var lastAutocorrection: (original: String, corrected: String)?
     private static let doubleTapInterval: TimeInterval = 0.35
 
-    public init(mode: InputMode = .japanese, showsGlobe: Bool = true, now: @escaping () -> Date = Date.init) {
+    public init(mode: InputMode = .japanese, now: @escaping () -> Date = Date.init) {
         self.mode = mode
-        self.showsGlobe = showsGlobe
         self.now = now
     }
 
     public var layout: KeyboardLayout {
-        .layout(for: page, showsGlobe: showsGlobe)
+        .layout(for: page)
     }
 
     public var isComposing: Bool { !composer.isEmpty || !englishQuery.isEmpty }
@@ -117,8 +111,6 @@ public final class KeyboardEngine {
             shift = .off
         case .symbolsToggle:
             page = page == .numbers ? .symbols : .numbers
-        case .globe:
-            break  // Handled by the system's input mode list.
         case .languageToggle:
             setMode(nextMode)
             return
@@ -145,7 +137,7 @@ public final class KeyboardEngine {
         onChange?()
     }
 
-    /// Switches straight to a mode, e.g. from the language key's long-press menu.
+    /// Switches straight to a mode, e.g. from the mode wheel.
     public func setMode(_ newMode: InputMode) {
         commitComposition()
         mode = newMode
@@ -260,8 +252,6 @@ public final class KeyboardEngine {
             return .text(mode == .japanese ? "かな" : "ABC")
         case .symbolsToggle:
             return .text(page == .numbers ? "#+=" : "123")
-        case .globe:
-            return .systemImage("globe")
         case .languageToggle:
             return .text(Self.shortName(of: mode))
         case .space:
