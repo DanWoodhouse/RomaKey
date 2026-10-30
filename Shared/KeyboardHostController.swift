@@ -48,6 +48,27 @@ enum DictionaryLoader {
     }
 }
 
+/// Loads the emoji list once per keyboard process, hiding emoji this iOS can't draw.
+enum EmojiLoader {
+    private static var catalog: EmojiCatalog?
+
+    static func load(_ completion: @escaping (EmojiCatalog?) -> Void) {
+        if let catalog {
+            completion(catalog)
+            return
+        }
+        let parts = UIDevice.current.systemVersion.split(separator: ".").compactMap { Int($0) }
+        let maxVersion = EmojiCatalog.maxSupportedVersion(iOSMajor: parts.first ?? 16, minor: parts.dropFirst().first ?? 0)
+        DispatchQueue.global(qos: .userInitiated).async {
+            let loaded = EmojiCatalog.bundled(maxVersion: maxVersion)
+            DispatchQueue.main.async {
+                catalog = loaded
+                completion(loaded)
+            }
+        }
+    }
+}
+
 /// Hosts a keyboard view and connects it to the text field being edited.
 class KeyboardHostController: UIInputViewController {
     private(set) lazy var textOutput: TextOutput = ProxyTextOutput(controller: self)
@@ -65,8 +86,18 @@ class KeyboardHostController: UIInputViewController {
         fatalError("Subclasses must override makeContentView()")
     }
 
+    /// Learned words, kanji choices and recent emoji stay in this keyboard's own storage, on the phone.
+    let learningStore = UserDefaults.standard
+    private(set) lazy var recentEmoji = RecentEmoji(store: learningStore)
+
     /// Subclasses pass the dictionary to their engine.
     func dictionaryDidLoad(_ dictionary: JapaneseDictionary?) {}
+
+    /// Subclasses pass the emoji list to their engine.
+    func emojiDidLoad(_ catalog: EmojiCatalog?) {}
+
+    /// Subclasses forget learned words and kanji choices (asked for from the app).
+    func resetLearning() {}
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -82,6 +113,15 @@ class KeyboardHostController: UIInputViewController {
         DictionaryLoader.load { [weak self] dictionary in
             self?.dictionaryDidLoad(dictionary)
         }
+        contentView.recentEmoji = recentEmoji
+        contentView.onSkinTone = { [weak self] tone in
+            guard let defaults = self?.sharedDefaults else { return }
+            KeyboardSettings.saveSkinTone(tone, to: defaults)
+        }
+        EmojiLoader.load { [weak self] catalog in
+            self?.contentView.emojiCatalog = catalog
+            self?.emojiDidLoad(catalog)
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -90,6 +130,14 @@ class KeyboardHostController: UIInputViewController {
         settings = sharedDefaults.map(KeyboardSettings.init(defaults:)) ?? KeyboardSettings()
         feedback.playsSounds = settings.keySounds
         feedback.playsHaptics = settings.haptics && hasFullAccess
+        contentView.hasFullAccess = hasFullAccess
+        if let resetID = settings.learningResetID, resetID != learningStore.string(forKey: "appliedLearningResetID") {
+            resetLearning()
+            learningStore.set(nil, forKey: "recentEmoji")
+            recentEmoji = RecentEmoji(store: learningStore)
+            contentView.recentEmoji = recentEmoji
+            learningStore.set(resetID, forKey: "appliedLearningResetID")
+        }
         contentView.apply(settings)
         updateHeight()
         runAIProbeIfRequested()

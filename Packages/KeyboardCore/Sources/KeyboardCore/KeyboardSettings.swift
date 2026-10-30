@@ -66,6 +66,21 @@ public struct KeyboardSettings: Equatable {
     public var theme: Theme = .system
     public var height: Height = .standard
 
+    // Suggestions
+    public var autocorrect = true
+    public var wordSuggestions = true
+    public var emojiSuggestions = true
+
+    // Emoji and GIFs
+    /// 0 = default yellow, 1–5 = light to dark.
+    public var skinTone = 0
+    /// Your own GIPHY API key. Empty turns GIF search off. Needs Full Access.
+    public var giphyAPIKey = ""
+    /// GIPHY content rating: g, pg, pg-13 or r.
+    public var gifRating = "pg"
+    /// The app changes this to ask the keyboards to forget learned words and choices.
+    public var learningResetID: String?
+
     // Custom look
     /// Used when `theme` is `.custom`. The same colours in light and dark mode.
     public var customColors = ThemePalette.colors(for: .ai, dark: false)
@@ -109,6 +124,13 @@ public struct KeyboardSettings: Equatable {
         static let haptics = "haptics"
         static let theme = "theme"
         static let height = "height"
+        static let autocorrect = "autocorrect"
+        static let wordSuggestions = "wordSuggestions"
+        static let emojiSuggestions = "emojiSuggestions"
+        static let skinTone = "skinTone"
+        static let giphyAPIKey = "giphyAPIKey"
+        static let gifRating = "gifRating"
+        static let learningResetID = "learningResetID"
         static let customColors = "customColors"
         static let keyOpacity = "keyOpacity"
         static let backgroundImageID = "backgroundImageID"
@@ -149,6 +171,14 @@ public struct KeyboardSettings: Equatable {
         haptics = bool(Key.haptics, haptics)
         theme = value(Key.theme, theme)
         height = value(Key.height, height)
+        autocorrect = bool(Key.autocorrect, autocorrect)
+        wordSuggestions = bool(Key.wordSuggestions, wordSuggestions)
+        emojiSuggestions = bool(Key.emojiSuggestions, emojiSuggestions)
+        skinTone = min(max(defaults.object(forKey: Key.skinTone) as? Int ?? skinTone, 0), 5)
+        giphyAPIKey = defaults.string(forKey: Key.giphyAPIKey) ?? giphyAPIKey
+        gifRating = ["g", "pg", "pg-13", "r"].contains(defaults.string(forKey: Key.gifRating) ?? "")
+            ? defaults.string(forKey: Key.gifRating)! : gifRating
+        learningResetID = defaults.string(forKey: Key.learningResetID)
         if let saved = defaults.dictionary(forKey: Key.customColors) as? [String: Int] {
             customColors = ThemeColors(dictionary: saved, fallback: customColors)
         }
@@ -175,6 +205,13 @@ public struct KeyboardSettings: Equatable {
         defaults.set(haptics, forKey: Key.haptics)
         defaults.set(theme.rawValue, forKey: Key.theme)
         defaults.set(height.rawValue, forKey: Key.height)
+        defaults.set(autocorrect, forKey: Key.autocorrect)
+        defaults.set(wordSuggestions, forKey: Key.wordSuggestions)
+        defaults.set(emojiSuggestions, forKey: Key.emojiSuggestions)
+        defaults.set(skinTone, forKey: Key.skinTone)
+        defaults.set(giphyAPIKey, forKey: Key.giphyAPIKey)
+        defaults.set(gifRating, forKey: Key.gifRating)
+        defaults.set(learningResetID, forKey: Key.learningResetID)
         defaults.set(customColors.dictionary, forKey: Key.customColors)
         defaults.set(keyOpacity, forKey: Key.keyOpacity)
         defaults.set(backgroundImageID, forKey: Key.backgroundImageID)
@@ -188,6 +225,11 @@ public struct KeyboardSettings: Equatable {
         FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: appGroup)?
             .appendingPathComponent("KeyboardBackground.jpg")
+    }
+
+    /// Saves only the skin tone, which the keyboard changes when you pick a toned emoji.
+    public static func saveSkinTone(_ tone: Int, to defaults: UserDefaults) {
+        defaults.set(tone, forKey: Key.skinTone)
     }
 
     /// Saves only the last-used mode, so the keyboard doesn't overwrite settings changed in the app.

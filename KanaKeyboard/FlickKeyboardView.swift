@@ -11,10 +11,13 @@ final class FlickKeyboardView: KeyboardViewBase {
     private var builtLayout: FlickLayout?
     private let deleteRepeater = KeyRepeater()
     private var spaceBarCursor: SpaceBarCursor?
+    /// The host app's text field; typing goes back here when a search ends.
+    private let documentOutput: TextOutput?
 
     init(engine: FlickKeyboardEngine, globeTarget: UIInputViewController, feedback: KeyFeedback) {
         self.engine = engine
         self.globeTarget = globeTarget
+        documentOutput = engine.output
         super.init(feedback: feedback)
         addSubview(guide)
         engine.onChange = { [weak self] in self?.reload() }
@@ -46,6 +49,21 @@ final class FlickKeyboardView: KeyboardViewBase {
         engine.insertWord(text)
     }
 
+    override func insertDirectly(_ text: String) {
+        engine.insertDirectly(text)
+    }
+
+    override func deleteFromPanel() {
+        engine.press(.delete)
+    }
+
+    override func routeTyping(to output: TextOutput?) {
+        engine.commitComposition()
+        engine.output = output ?? documentOutput
+    }
+
+    override var searchLanguage: String { "ja" }
+
     override func reload() {
         if engine.layout != builtLayout {
             rebuildKeys()
@@ -53,8 +71,7 @@ final class FlickKeyboardView: KeyboardViewBase {
         for button in buttons {
             button.label = engine.label(for: button.kind)
         }
-        candidateBar.showsMeanings = settings.showMeanings
-        candidateBar.candidates = engine.candidates
+        showCandidates(engine.candidates, showsMeanings: settings.showMeanings, placeholder: "")
     }
 
     private func rebuildKeys() {

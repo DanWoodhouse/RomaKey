@@ -35,39 +35,65 @@ extension TextOutput {
 
 /// Something the candidate bar offers. Dictionary words carry their entry, for meanings and details.
 public struct Candidate: Hashable {
+    public enum Kind: Hashable {
+        /// Kana/kanji conversion, or a 辞書 result.
+        case conversion
+        /// An English completion or alternative spelling.
+        case word
+        /// What space will change the English word to.
+        case autocorrection
+        /// Keep the English word exactly as typed.
+        case typed
+        case emoji
+    }
+
     public let text: String
     public let entry: DictionaryEntry?
+    public let kind: Kind
 
-    public init(_ text: String, entry: DictionaryEntry? = nil) {
+    public init(_ text: String, entry: DictionaryEntry? = nil, kind: Kind = .conversion) {
         self.text = text
         self.entry = entry
+        self.kind = kind
     }
 }
 
 extension RomajiComposer {
-    /// Conversion choices for the current composition: the hiragana as typed, dictionary words
-    /// with that reading (kanji), the katakana, then longer words it could be the start of.
-    public func candidates(using dictionary: JapaneseDictionary?) -> [Candidate] {
+    /// Conversion choices for the current composition: words the user picked for this reading
+    /// before, the hiragana as typed, dictionary words with that reading (kanji), the katakana,
+    /// matching emoji, then longer words it could be the start of.
+    public func candidates(
+        using dictionary: JapaneseDictionary?,
+        history: ConversionHistory? = nil,
+        emoji: EmojiCatalog? = nil
+    ) -> [Candidate] {
         guard !isEmpty else { return [] }
         let hiragana = finalizedText
         let katakana = KanaConverter.katakana(from: hiragana)
         let exact = dictionary?.entries(reading: hiragana) ?? []
+        let entry = { (word: String) in exact.first { $0.word == word || $0.kanji == word } }
 
         var result: [Candidate] = []
         var seen: Set<String> = []
-        func add(_ text: String, _ entry: DictionaryEntry?) {
+        func add(_ text: String, _ entry: DictionaryEntry?, kind: Candidate.Kind = .conversion) {
             if seen.insert(text).inserted {
-                result.append(Candidate(text, entry: entry))
+                result.append(Candidate(text, entry: entry, kind: kind))
             }
         }
 
-        add(hiragana, exact.first { $0.word == hiragana })
-        for entry in exact {
-            add(entry.word, entry)
+        for word in history?.choices(for: hiragana) ?? [] {
+            add(word, entry(word))
         }
-        add(katakana, exact.first { $0.word == katakana })
-        for entry in dictionary?.predictions(readingPrefix: hiragana) ?? [] {
-            add(entry.word, entry)
+        add(hiragana, entry(hiragana))
+        for item in exact {
+            add(item.word, item)
+        }
+        add(katakana, entry(katakana))
+        for item in emoji?.suggestions(for: hiragana, limit: 2) ?? [] {
+            add(item.character, nil, kind: .emoji)
+        }
+        for item in dictionary?.predictions(readingPrefix: hiragana) ?? [] {
+            add(item.word, item)
         }
         return result
     }

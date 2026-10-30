@@ -64,6 +64,26 @@ In both keyboards, Japanese text is underlined while you type (marked text). **S
 
 In 辞書 mode the English you type is underlined instead. Space adds a space (for lookups like "thank you"), and **確定** keeps the English as typed.
 
+## Everyday features
+
+Made to be your only keyboard, without moving any key. When you're not typing, the suggestion bar becomes a **toolbar**:
+
+| | |
+|---|---|
+| 😊 **Emoji** | Recents, every category, and search in English or Japanese (ねこ, cat → 🐈). Long-press for skin tones; your choice is remembered. Only emoji your iOS version can draw are shown |
+| (^_^) **顔文字** | Kaomoji by mood: 嬉しい, ありがとう, 悲しい, 驚き… |
+| **GIF** | GIPHY search with your own free API key (Settings → GIF). Tap a GIF to copy it, then paste it; iOS doesn't let keyboards insert images. Off until you add a key, because searches go to GIPHY |
+| 📋 **Paste** | Paste the clipboard (needs Full Access) |
+
+While typing:
+
+- **English suggestions and autocorrect** from Apple's spell checker, your iOS text replacements (omw → On my way!) and words you use. Press delete straight after an autocorrection to undo it; the keyboard then learns the word. Contact names are never "corrected".
+- **Emoji suggestions:** type cat or ねこ and 🐈 is offered.
+- **Learned kanji:** the word you picked last time for a reading comes first (きかい → 機会, if that's what you use).
+- **Accents:** hold a letter (EN and 辞 modes) for é, ü, ñ…
+
+Learned words and choices stay on your phone, in each keyboard's own storage. Settings → **Forget learned words** clears them.
+
 ## Quality of life
 
 - **Space-bar trackpad**: hold the space bar, then slide to move the cursor.
@@ -100,6 +120,8 @@ Shared/                          UI shared by both keyboards
   KeyboardHostController.swift   UIInputViewController base: settings, dictionary loading, text proxy
   KeyboardViewBase.swift         Candidate bar + key area + dictionary entry panel
   KeyButton.swift                Keys, popups, delete repeat, space-bar trackpad, haptics
+  EmojiPanel.swift, GIFPanel.swift  Panels shown in place of the keys
+  SystemSpellChecker.swift       UITextChecker, and the search field typing goes into
   CandidateBar.swift, DictionaryEntryView.swift, KeyboardTheme.swift
 RomajiKeyboard/                  ローマ字 keyboard extension (with the long-press mode menu)
 KanaKeyboard/                    かな flick keyboard extension
@@ -113,8 +135,13 @@ Packages/KeyboardCore/           UI-free logic, unit-tested with `swift test`
   ThemeColors.swift              Preset palettes and custom colours
   RomajiComposer.swift           romaji → ひらがな, ひらがな ↔ カタカナ
   RomajiTable.swift              The romaji table
+  Emoji.swift, Kaomoji.swift     Emoji search and ranking, kaomoji, accented letters
+  WordSuggester.swift            English suggestions and autocorrect (spell checker behind a protocol)
+  Learning.swift                 Learned words, kanji choices, recent emoji
+  Resources/emoji.tsv            Emoji with English and Japanese keywords (Emojibase, MIT)
   Resources/dictionary.tsv       ~22,000 common JMdict entries, most frequent first
 tools/build_dictionary.py        Rebuilds dictionary.tsv from JMdict
+tools/build_emoji.py             Rebuilds emoji.tsv from Emojibase
 ```
 
 ## Building
@@ -142,6 +169,9 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 
 ## Next steps
 
+- Swipe (glide) typing
+- Next-word prediction (there's no system API for it; it would need an on-device model)
+- Clipboard history
 - Full kanji conversion: whole phrases and verb forms (食べた, 食べます), not just dictionary words
 - Learn from what you pick, so your choices move up the candidate list
 - Reset the composition when the user moves the cursor mid-composition
@@ -152,3 +182,5 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 ## Dictionary licence
 
 The dictionary is built from [JMdict](https://www.edrdg.org/jmdict/j_jmdict.html), the property of the [Electronic Dictionary Research and Development Group](https://www.edrdg.org/), and is used in conformance with the Group's [licence](https://www.edrdg.org/edrdg/licence.html) (Creative Commons Attribution-ShareAlike 3.0). `Packages/KeyboardCore/Sources/KeyboardCore/Resources/dictionary.tsv` is a derived file and is under the same licence; a copy of the licence is next to it. The data came from the `jamdict-data` package (JMdict 1.08, 2020 snapshot).
+
+Emoji names and keywords come from [Emojibase](https://emojibase.dev) (MIT licence, copy next to `emoji.tsv`). GIF search is powered by GIPHY.

@@ -26,6 +26,14 @@ public final class KeyboardEngine {
         didSet { onChange?() }
     }
 
+    /// Words picked for each reading before, so they come first.
+    public var history: ConversionHistory?
+    public var emojiCatalog: EmojiCatalog? {
+        didSet { onChange?() }
+    }
+    /// English suggestions and autocorrect.
+    public var suggester: WordSuggester?
+
     public weak var output: TextOutput?
     public var onChange: (() -> Void)?
     /// For remembering the last-used mode.
@@ -36,6 +44,8 @@ public final class KeyboardEngine {
     /// Shift was turned on by auto-capitalisation rather than by the user.
     private var shiftIsAutomatic = false
     private var lastKeyWasSpace = false
+    /// The last autocorrection, so pressing delete straight after it can undo it.
+    private var lastAutocorrection: (original: String, corrected: String)?
     private static let doubleTapInterval: TimeInterval = 0.35
 
     public init(mode: InputMode = .japanese, showsGlobe: Bool = true, now: @escaping () -> Date = Date.init) {
@@ -51,15 +61,46 @@ public final class KeyboardEngine {
     public var isComposing: Bool { !composer.isEmpty || !englishQuery.isEmpty }
 
     public var candidates: [Candidate] {
-        if mode == .dictionary {
+        switch mode {
+        case .dictionary:
             return dictionary?.search(english: englishQuery).map { Candidate($0.word, entry: $0) } ?? []
+        case .japanese:
+            return composer.candidates(using: dictionary, history: history, emoji: settings.emojiSuggestions ? emojiCatalog : nil)
+        case .english:
+            return englishCandidates
         }
-        return composer.candidates(using: dictionary)
+    }
+
+    /// For the word being typed: keep-as-typed and the autocorrection (when autocorrect would
+    /// change it), completions, then emoji.
+    private var englishCandidates: [Candidate] {
+        guard page == .letters || page == .numbers, let before = output?.textBeforeCursor else { return [] }
+        let word = WordSuggester.currentWord(in: before)
+        guard !word.isEmpty else { return [] }
+        var result: [Candidate] = []
+        if settings.wordSuggestions, let suggestions = suggester?.suggestions(for: word) {
+            if let correction = suggestions.autocorrection {
+                if settings.autocorrect {
+                    result.append(Candidate(word, kind: .typed))
+                    result.append(Candidate(correction, kind: .autocorrection))
+                } else {
+                    result.append(Candidate(correction, kind: .word))
+                }
+            }
+            result += suggestions.alternatives.map { Candidate($0, kind: .word) }
+        }
+        if settings.emojiSuggestions {
+            result += (emojiCatalog?.suggestions(for: word, limit: 2) ?? [])
+                .map { Candidate($0.withSkinTone(settings.skinTone), kind: .emoji) }
+        }
+        return result
     }
 
     public func press(_ kind: KeyKind) {
         let previousKeyWasSpace = lastKeyWasSpace
         lastKeyWasSpace = kind == .space
+        let autocorrectionToUndo = lastAutocorrection
+        lastAutocorrection = nil
 
         switch kind {
         case .character(let character):
@@ -67,6 +108,9 @@ public final class KeyboardEngine {
         case .shift:
             toggleShift()
         case .delete:
+            if let autocorrectionToUndo, undoAutocorrection(autocorrectionToUndo) {
+                break
+            }
             deleteBackward()
         case .pageToggle:
             page = page == .letters ? .numbers : .letters
@@ -114,7 +158,37 @@ public final class KeyboardEngine {
     }
 
     public func selectCandidate(_ candidate: Candidate) {
-        commit(candidate.text)
+        lastAutocorrection = nil
+        if mode == .english && !isComposing {
+            let word = WordSuggester.currentWord(in: output?.textBeforeCursor ?? "")
+            switch candidate.kind {
+            case .typed:
+                suggester?.learned.learn(word)
+                output?.insertText(" ")
+            case .word, .autocorrection:
+                replaceCurrentWord(word, with: candidate.text)
+                output?.insertText(" ")
+            case .emoji:
+                // After the word, like other keyboards: "pizza 🍕".
+                output?.insertText(word.isEmpty ? candidate.text : " " + candidate.text)
+            case .conversion:
+                output?.insertText(candidate.text)
+            }
+        } else {
+            if mode == .japanese && candidate.kind == .conversion {
+                history?.record(reading: composer.finalizedText, word: candidate.text)
+            }
+            commit(candidate.text)
+        }
+        updateAutoCapitalization()
+        onChange?()
+    }
+
+    /// Inserts text straight into the document (emoji panel, kaomoji, paste), confirming any composition first.
+    public func insertDirectly(_ text: String) {
+        lastAutocorrection = nil
+        commitComposition()
+        output?.insertText(text)
         updateAutoCapitalization()
         onChange?()
     }
@@ -224,6 +298,9 @@ public final class KeyboardEngine {
         let text = isShifted ? character.uppercased() : character
         switch mode {
         case .english:
+            if ".,!?;:".contains(text) {
+                finishEnglishWord()
+            }
             output?.insertText(text)
         case .japanese:
             if isShifted {
@@ -256,6 +333,9 @@ public final class KeyboardEngine {
         if page != .letters {
             page = .letters
         }
+        if mode == .english {
+            finishEnglishWord()
+        }
         if mode == .english && settings.doubleSpacePeriod && afterSpace,
            let before = output?.textBeforeCursor, before.hasSuffix(" "),
            let previous = before.dropLast().last, previous.isLetter || previous.isNumber {
@@ -265,6 +345,36 @@ public final class KeyboardEngine {
             return
         }
         output?.insertText(mode == .japanese && settings.fullWidthSpace ? "　" : " ")
+    }
+
+    /// At the end of an English word: autocorrect it, or remember it as a word the user uses.
+    private func finishEnglishWord() {
+        let word = WordSuggester.currentWord(in: output?.textBeforeCursor ?? "")
+        guard !word.isEmpty else { return }
+        if settings.autocorrect, let correction = suggester?.correction(for: word), correction != word {
+            replaceCurrentWord(word, with: correction)
+            lastAutocorrection = (word, correction)
+        } else {
+            suggester?.learned.learn(word)
+        }
+    }
+
+    /// Delete straight after an autocorrection puts back what was typed, and remembers it.
+    private func undoAutocorrection(_ change: (original: String, corrected: String)) -> Bool {
+        guard let before = output?.textBeforeCursor, before.hasSuffix(change.corrected + " ") else { return false }
+        for _ in 0...change.corrected.count {
+            output?.deleteBackward()
+        }
+        output?.insertText(change.original)
+        suggester?.learned.learn(change.original)
+        return true
+    }
+
+    private func replaceCurrentWord(_ word: String, with replacement: String) {
+        for _ in 0..<word.count {
+            output?.deleteBackward()
+        }
+        output?.insertText(replacement)
     }
 
     private func appendToQuery(_ text: String) {

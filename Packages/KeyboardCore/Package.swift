@@ -14,6 +14,9 @@ let package = Package(
                 // Common words from JMdict (CC BY-SA, EDRDG). Rebuild with tools/build_dictionary.py.
                 .copy("Resources/dictionary.tsv"),
                 .copy("Resources/JMdict-LICENSE.md"),
+                // Emoji names and keywords from Emojibase (MIT). Rebuild with tools/build_emoji.py.
+                .copy("Resources/emoji.tsv"),
+                .copy("Resources/emojibase-LICENSE"),
             ]
         ),
         .testTarget(name: "KeyboardCoreTests", dependencies: ["KeyboardCore"]),

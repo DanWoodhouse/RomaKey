@@ -79,6 +79,12 @@ final class KeyboardSettingsTests: XCTestCase {
         settings.backgroundImageID = "photo-1"
         settings.backgroundDim = 0.5
         settings.backgroundBlur = true
+        settings.autocorrect = false
+        settings.emojiSuggestions = false
+        settings.skinTone = 3
+        settings.giphyAPIKey = "abc123"
+        settings.gifRating = "g"
+        settings.learningResetID = "reset-1"
         settings.save(to: defaults)
         XCTAssertEqual(KeyboardSettings(defaults: defaults), settings)
 

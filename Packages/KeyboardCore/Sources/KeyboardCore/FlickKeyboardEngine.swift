@@ -12,6 +12,12 @@ public final class FlickKeyboardEngine {
         didSet { onChange?() }
     }
 
+    /// Words picked for each reading before, so they come first.
+    public var history: ConversionHistory?
+    public var emojiCatalog: EmojiCatalog? {
+        didSet { onChange?() }
+    }
+
     public weak var output: TextOutput?
     public var onChange: (() -> Void)?
 
@@ -24,7 +30,9 @@ public final class FlickKeyboardEngine {
 
     public var layout: FlickLayout { .layout(for: page) }
     public var isComposing: Bool { !composer.isEmpty }
-    public var candidates: [Candidate] { composer.candidates(using: dictionary) }
+    public var candidates: [Candidate] {
+        composer.candidates(using: dictionary, history: history, emoji: settings.emojiSuggestions ? emojiCatalog : nil)
+    }
 
     public func press(_ kind: FlickKeyKind, direction: FlickDirection = .center) {
         // Anything other than another tap on the same key ends the tap cycle.
@@ -108,6 +116,9 @@ public final class FlickKeyboardEngine {
     }
 
     public func selectCandidate(_ candidate: Candidate) {
+        if candidate.kind == .conversion {
+            history?.record(reading: composer.finalizedText, word: candidate.text)
+        }
         output?.commit(candidate.text)
         composer.reset()
         toggle = nil
@@ -117,6 +128,14 @@ public final class FlickKeyboardEngine {
     /// Inserts a specific form of a dictionary word (kanji, hiragana or katakana).
     public func insertWord(_ text: String) {
         selectCandidate(Candidate(text))
+    }
+
+    /// Inserts text straight into the document (emoji panel, kaomoji, paste), confirming any composition first.
+    public func insertDirectly(_ text: String) {
+        commitComposition()
+        toggle = nil
+        output?.insertText(text)
+        onChange?()
     }
 
     /// Space-bar trackpad: moves the cursor, confirming any composition first.

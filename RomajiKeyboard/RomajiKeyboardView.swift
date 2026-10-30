@@ -12,10 +12,14 @@ final class RomajiKeyboardView: KeyboardViewBase {
     private let deleteRepeater = KeyRepeater()
     private var spaceBarCursor: SpaceBarCursor?
     private var modeMenu: ModeMenuView?
+    private var accentPicker: AccentPickerView?
+    /// The host app's text field; typing goes back here when a search ends.
+    private let documentOutput: TextOutput?
 
     init(engine: KeyboardEngine, globeTarget: UIInputViewController, feedback: KeyFeedback) {
         self.engine = engine
         self.globeTarget = globeTarget
+        documentOutput = engine.output
         super.init(feedback: feedback)
         addSubview(popup)
         engine.onChange = { [weak self] in self?.reload() }
@@ -51,6 +55,23 @@ final class RomajiKeyboardView: KeyboardViewBase {
         engine.insertWord(text)
     }
 
+    override func insertDirectly(_ text: String) {
+        engine.insertDirectly(text)
+    }
+
+    override func deleteFromPanel() {
+        engine.press(.delete)
+    }
+
+    override func routeTyping(to output: TextOutput?) {
+        engine.commitComposition()
+        engine.output = output ?? documentOutput
+    }
+
+    override var searchLanguage: String {
+        engine.mode == .english ? "en" : "ja"
+    }
+
     /// Rebuilds the keys if the layout changed (page or globe), otherwise just relabels them.
     override func reload() {
         if engine.layout != builtLayout {
@@ -59,9 +80,11 @@ final class RomajiKeyboardView: KeyboardViewBase {
         for button in buttons.joined() {
             button.label = engine.label(for: button.kind)
         }
-        candidateBar.showsMeanings = settings.showMeanings || engine.mode == .dictionary
-        candidateBar.placeholder = placeholder
-        candidateBar.candidates = engine.candidates
+        showCandidates(
+            engine.candidates,
+            showsMeanings: settings.showMeanings || engine.mode == .dictionary,
+            placeholder: placeholder
+        )
     }
 
     private var placeholder: String {
@@ -113,6 +136,11 @@ final class RomajiKeyboardView: KeyboardViewBase {
             )
             cursor.isEnabled = settings.spaceBarCursor
             spaceBarCursor = cursor
+        }
+        if case .character = button.kind {
+            let press = UILongPressGestureRecognizer(target: self, action: #selector(characterKeyLongPressed(_:)))
+            press.minimumPressDuration = 0.35
+            button.addGestureRecognizer(press)
         }
         if button.kind == .languageToggle {
             let press = UILongPressGestureRecognizer(target: self, action: #selector(languageKeyLongPressed(_:)))
@@ -177,6 +205,40 @@ final class RomajiKeyboardView: KeyboardViewBase {
 
     @objc private func deleteUp() {
         deleteRepeater.stop()
+    }
+
+    // MARK: - Accents
+
+    /// Hold a letter for é, ü, ñ… then slide to one and let go. English and 辞書 only: Japanese
+    /// romaji has no accents.
+    @objc private func characterKeyLongPressed(_ gesture: UILongPressGestureRecognizer) {
+        switch gesture.state {
+        case .began:
+            popup.hide()
+            guard engine.mode != .japanese, engine.page == .letters,
+                  let key = gesture.view as? RomajiKeyButton, case .text(let letter) = key.label else { return }
+            let options = Accents.alternatives(for: letter)
+            guard !options.isEmpty else {
+                // No accents: behave like a normal (slow) tap.
+                engine.press(key.kind)
+                return
+            }
+            let picker = AccentPickerView(options: options, theme: theme)
+            picker.place(above: key.keycapFrame(in: self), in: bounds)
+            addSubview(picker)
+            accentPicker = picker
+        case .changed:
+            accentPicker?.highlight(atX: gesture.location(in: accentPicker).x)
+        case .ended:
+            if let choice = accentPicker?.selected {
+                // The engine applies shift, so pass the lowercase letter.
+                engine.press(.character(choice.lowercased()))
+            }
+            fallthrough
+        default:
+            accentPicker?.removeFromSuperview()
+            accentPicker = nil
+        }
     }
 
     // MARK: - Mode menu
@@ -313,6 +375,66 @@ private final class ModeMenuView: UIView {
     @objc private func backgroundTapped(_ gesture: UITapGestureRecognizer) {
         if !panel.frame.contains(gesture.location(in: self)) {
             onDismiss?()
+        }
+    }
+}
+
+/// The row of accented letters shown while a letter key is held.
+private final class AccentPickerView: UIView {
+    private let options: [String]
+    private var labels: [UILabel] = []
+    private let theme: KeyboardTheme
+    private(set) var selected: String?
+
+    init(options: [String], theme: KeyboardTheme) {
+        self.options = options
+        self.theme = theme
+        super.init(frame: .zero)
+        isUserInteractionEnabled = false
+        backgroundColor = theme.panel
+        layer.cornerRadius = 8
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOpacity = 0.35
+        layer.shadowRadius = 3
+        for option in options {
+            let label = UILabel()
+            label.text = option
+            label.textAlignment = .center
+            label.font = .systemFont(ofSize: 24)
+            label.layer.cornerRadius = 6
+            label.clipsToBounds = true
+            addSubview(label)
+            labels.append(label)
+        }
+        highlight(index: 0)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func place(above key: CGRect, in bounds: CGRect) {
+        let cell = max(key.width, 34)
+        let width = cell * CGFloat(options.count) + 8
+        let x = min(max(key.minX - 4, bounds.minX + 2), bounds.maxX - width - 2)
+        frame = CGRect(x: x, y: max(key.minY - 52, bounds.minY), width: width, height: 48)
+        for (index, label) in labels.enumerated() {
+            label.frame = CGRect(x: 4 + CGFloat(index) * cell, y: 4, width: cell, height: 40)
+        }
+    }
+
+    func highlight(atX x: CGFloat) {
+        guard let first = labels.first else { return }
+        highlight(index: Int((x - first.frame.minX) / first.frame.width))
+    }
+
+    private func highlight(index: Int) {
+        let index = min(max(index, 0), options.count - 1)
+        selected = options[index]
+        for (position, label) in labels.enumerated() {
+            label.backgroundColor = position == index ? theme.accent : .clear
+            label.textColor = position == index ? .white : theme.text
         }
     }
 }

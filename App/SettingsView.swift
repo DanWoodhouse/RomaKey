@@ -107,6 +107,36 @@ struct SettingsView: View {
                 Text("The modes the language key steps through. Long-press the key to jump straight to any mode.")
             }
 
+            Section {
+                Toggle("Autocorrect", isOn: $store.settings.autocorrect)
+                Toggle("Word suggestions", isOn: $store.settings.wordSuggestions)
+                Toggle("Emoji suggestions", isOn: $store.settings.emojiSuggestions)
+                Button("Forget learned words and kanji choices", role: .destructive) {
+                    store.settings.learningResetID = UUID().uuidString
+                }
+            } header: {
+                Text("候補 · Suggestions")
+            } footer: {
+                Text("English suggestions and autocorrect use Apple's built-in spell checker, your text replacements and words you type often. Press delete straight after an autocorrection to undo it. The keyboard also remembers which kanji you pick for each reading. All of this stays on your phone.")
+            }
+
+            Section {
+                SecureField("GIPHY API key", text: $store.settings.giphyAPIKey)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                Picker("Content rating", selection: $store.settings.gifRating) {
+                    Text("G").tag("g")
+                    Text("PG").tag("pg")
+                    Text("PG-13").tag("pg-13")
+                    Text("R").tag("r")
+                }
+                Link("Get a free key at developers.giphy.com", destination: URL(string: "https://developers.giphy.com/dashboard/")!)
+            } header: {
+                Text("GIF")
+            } footer: {
+                Text("GIFs are off until you add a key. When on, what you search for is sent to GIPHY (the keyboard needs Allow Full Access). Tap a GIF to copy it, then paste it into your message: iOS doesn't let keyboards insert images directly. Free keys allow about 100 searches an hour.")
+            }
+
             Section("ローマ字 · Typing") {
                 Toggle("Auto-capitalisation", isOn: $store.settings.autoCapitalization)
                 Toggle("Double-space for full stop", isOn: $store.settings.doubleSpacePeriod)
