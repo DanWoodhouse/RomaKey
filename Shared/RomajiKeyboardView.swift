@@ -72,8 +72,12 @@ final class RomajiKeyboardView: KeyboardViewBase {
         if engine.layout != builtLayout {
             rebuildKeys()
         }
+        let showsNumbers = settings.holdForNumbers && engine.page == .letters
         for button in buttons.joined() {
             button.label = engine.label(for: button.kind)
+            if case .character(let letter) = button.kind {
+                button.hint = showsNumbers ? KeyboardLayout.heldNumber(for: letter) : nil
+            }
         }
         showCandidates(
             engine.candidates,
@@ -196,19 +200,26 @@ final class RomajiKeyboardView: KeyboardViewBase {
         deleteRepeater.stop()
     }
 
-    // MARK: - Accents
+    // MARK: - Held letters
 
-    /// Hold a letter for é, ü, ñ… then slide to one and let go. English and 辞書 only: Japanese
-    /// romaji has no accents.
+    /// Hold a letter for its number (q → 1, with hold-for-numbers on) and, in English and 辞書,
+    /// accents (é, ü, ñ…), then slide to one and let go. Japanese romaji has no accents.
     @objc private func characterKeyLongPressed(_ gesture: UILongPressGestureRecognizer) {
         switch gesture.state {
         case .began:
             popup.hide()
-            guard engine.mode != .japanese, engine.page == .letters,
-                  let key = gesture.view as? RomajiKeyButton, case .text(let letter) = key.label else { return }
-            let options = Accents.alternatives(for: letter)
+            guard let key = gesture.view as? RomajiKeyButton else { return }
+            var options: [String] = []
+            if engine.page == .letters, case .text(let letter) = key.label {
+                if settings.holdForNumbers, let number = KeyboardLayout.heldNumber(for: letter) {
+                    options.append(number)
+                }
+                if engine.mode != .japanese {
+                    options += Accents.alternatives(for: letter)
+                }
+            }
             guard !options.isEmpty else {
-                // No accents: behave like a normal (slow) tap.
+                // Nothing to pick: behave like a normal (slow) tap.
                 engine.press(key.kind)
                 return
             }

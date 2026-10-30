@@ -33,6 +33,11 @@ final class CandidateBar: UIView {
         didSet { if showsMeanings != oldValue { rebuild() } }
     }
 
+    /// Add romaji after the reading (ねこ neko).
+    var showsRomaji = false {
+        didSet { if showsRomaji != oldValue { rebuild() } }
+    }
+
     var candidates: [Candidate] = [] {
         didSet { if candidates != oldValue { rebuild() } }
     }
@@ -104,7 +109,7 @@ final class CandidateBar: UIView {
         }
 
         for candidate in candidates {
-            let cell = CandidateCell(candidate: candidate, showsMeaning: showsMeanings, theme: theme)
+            let cell = CandidateCell(candidate: candidate, showsMeaning: showsMeanings, showsRomaji: showsRomaji, theme: theme)
             cell.addAction(UIAction { [weak self] _ in self?.onSelect?(candidate) }, for: .touchUpInside)
             if candidate.entry != nil {
                 let press = UILongPressGestureRecognizer(target: self, action: #selector(longPressed(_:)))
@@ -196,7 +201,7 @@ private final class CandidateCell: UIControl {
     private let theme: KeyboardTheme
     private let stack = UIStackView()
 
-    init(candidate: Candidate, showsMeaning: Bool, theme: KeyboardTheme) {
+    init(candidate: Candidate, showsMeaning: Bool, showsRomaji: Bool, theme: KeyboardTheme) {
         self.candidate = candidate
         self.theme = theme
         super.init(frame: .zero)
@@ -222,9 +227,16 @@ private final class CandidateCell: UIControl {
             font = .systemFont(ofSize: 18)
         }
         let word = NSMutableAttributedString(string: text, attributes: [.font: font, .foregroundColor: theme.text])
-        if showsMeaning, let reading = candidate.entry?.reading, reading != candidate.text {
+        if showsMeaning, let reading = candidate.entry?.reading {
+            var parts: [String] = []
+            if reading != candidate.text {
+                parts.append(reading)
+            }
+            if showsRomaji {
+                parts.append(KanaConverter.romaji(from: reading))
+            }
             word.append(NSAttributedString(
-                string: " " + reading,
+                string: parts.isEmpty ? "" : " " + parts.joined(separator: " "),
                 attributes: [.font: UIFont.systemFont(ofSize: 11), .foregroundColor: theme.secondaryText]
             ))
         }

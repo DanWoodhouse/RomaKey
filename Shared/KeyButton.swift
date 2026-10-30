@@ -16,11 +16,20 @@ class KeyButton: UIControl {
         didSet { applyColors() }
     }
 
+    /// A small label in the top corner, e.g. the number a held letter types.
+    var hint: String? {
+        didSet {
+            hintLabel.text = hint
+            hintLabel.isHidden = hint == nil
+        }
+    }
+
     /// Function keys (shift, delete, …) are drawn darker than character keys.
     let isSpecial: Bool
     private let keycap = UIView()
     private let titleLabel = UILabel()
     private let iconView = UIImageView()
+    private let hintLabel = UILabel()
 
     init(isSpecial: Bool) {
         self.isSpecial = isSpecial
@@ -42,6 +51,11 @@ class KeyButton: UIControl {
         iconView.contentMode = .center
         keycap.addSubview(iconView)
 
+        hintLabel.font = .systemFont(ofSize: 10, weight: .medium)
+        hintLabel.textAlignment = .right
+        hintLabel.isHidden = true
+        keycap.addSubview(hintLabel)
+
         applyColors()
         applyLabel()
     }
@@ -61,6 +75,7 @@ class KeyButton: UIControl {
         keycap.frame = keycapFrame.insetBy(dx: 3, dy: 5)
         titleLabel.frame = keycap.bounds.insetBy(dx: 2, dy: 0)
         iconView.frame = keycap.bounds
+        hintLabel.frame = CGRect(x: 0, y: 2, width: keycap.bounds.width - 4, height: 12)
     }
 
     /// The visible key, in `view`'s coordinates (for popups and guides).
@@ -94,6 +109,7 @@ class KeyButton: UIControl {
         }
         titleLabel.textColor = theme.text
         iconView.tintColor = theme.text
+        hintLabel.textColor = theme.secondaryText
     }
 }
 

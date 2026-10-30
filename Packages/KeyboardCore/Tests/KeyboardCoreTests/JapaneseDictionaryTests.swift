@@ -85,6 +85,9 @@ final class KeyboardSettingsTests: XCTestCase {
         settings.giphyAPIKey = "abc123"
         settings.gifRating = "g"
         settings.learningResetID = "reset-1"
+        settings.holdForNumbers = false
+        settings.leftHandedWheel = true
+        settings.showRomaji = true
         settings.save(to: defaults)
         XCTAssertEqual(KeyboardSettings(defaults: defaults), settings)
 

@@ -40,7 +40,8 @@ final class ModeWheelTracker: NSObject {
 
     @objc private func touchMoved(_ sender: KeyButton, forEvent event: UIEvent) {
         guard let host, let start, let point = event.touches(for: sender)?.first?.location(in: host) else { return }
-        let slot = ModeWheel.slot(dx: Double(point.x - start.x), dy: Double(point.y - start.y))
+        let slot = ModeWheel.slot(dx: Double(point.x - start.x), dy: Double(point.y - start.y),
+                                  leftHanded: host.settings.leftHandedWheel)
         if slot != nil {
             showWheel()
         }
@@ -71,7 +72,7 @@ final class ModeWheelTracker: NSObject {
     private func showWheel() {
         holdTimer?.invalidate()
         guard wheel == nil, let host, let start else { return }
-        let view = ModeWheelView(current: current(), theme: host.theme)
+        let view = ModeWheelView(current: current(), theme: host.theme, leftHanded: host.settings.leftHandedWheel)
         view.frame = host.bounds
         host.addSubview(view)
         view.layout(around: start)
@@ -94,14 +95,16 @@ final class ModeWheelTracker: NSObject {
 final class ModeWheelView: UIView {
     private let current: ModeWheelSlot
     private let theme: KeyboardTheme
+    private let leftHanded: Bool
     private let disc = CAShapeLayer()
     private var slotLabels: [ModeWheelSlot: UILabel] = [:]
     private let nameLabel = UILabel()
     private static let slotSize: CGFloat = 46
 
-    init(current: ModeWheelSlot, theme: KeyboardTheme) {
+    init(current: ModeWheelSlot, theme: KeyboardTheme, leftHanded: Bool) {
         self.current = current
         self.theme = theme
+        self.leftHanded = leftHanded
         super.init(frame: .zero)
         isUserInteractionEnabled = false
 
@@ -156,7 +159,7 @@ final class ModeWheelView: UIView {
 
         let slotRadius = radius - Self.slotSize / 2 - 6
         for (slot, label) in slotLabels {
-            let angle = CGFloat(ModeWheel.angle(of: slot))
+            let angle = CGFloat(ModeWheel.angle(of: slot, leftHanded: leftHanded))
             label.frame = CGRect(
                 x: centre.x + cos(angle) * slotRadius - Self.slotSize / 2,
                 y: centre.y - sin(angle) * slotRadius - Self.slotSize / 2,

@@ -108,6 +108,7 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     func showCandidates(_ candidates: [Candidate], showsMeanings: Bool, placeholder: String) {
         guard searchTarget == nil else { return }
         candidateBar.showsMeanings = showsMeanings
+        candidateBar.showsRomaji = settings.showRomaji
         candidateBar.placeholder = placeholder
         candidateBar.candidates = candidates
     }
@@ -296,7 +297,7 @@ class KeyboardViewBase: UIView, UIInputViewAudioFeedback {
     func showEntry(for candidate: Candidate) {
         guard let entry = candidate.entry else { return }
         hideEntry()
-        let view = DictionaryEntryView(entry: entry, theme: theme)
+        let view = DictionaryEntryView(entry: entry, theme: theme, showsRomaji: settings.showRomaji)
         view.onInsert = { [weak self] text in
             self?.feedback.keyDown()
             self?.hideEntry()

@@ -93,7 +93,7 @@ Made to be your only keyboard, without moving any key. When you're not typing, t
 
 | | |
 |---|---|
-| 😊 **Emoji** | Recents, every category, and search in English or Japanese (ねこ, cat → 🐈). Long-press for skin tones; your choice is remembered. Only emoji your iOS version can draw are shown |
+| 😊 **Emoji** | Recents and every category in one continuous scroll (the tabs jump to a section and follow along as you scroll), and search in English or Japanese (ねこ, cat → 🐈). Long-press for skin tones; your choice is remembered. Only emoji your iOS version can draw are shown |
 | (^_^) **顔文字** | Kaomoji by mood: 嬉しい, ありがとう, 悲しい, 驚き… |
 | **GIF** | GIPHY search with your own free API key (Settings → GIF). Tap a GIF to copy it, then paste it; iOS doesn't let keyboards insert images. Off until you add a key, because searches go to GIPHY |
 | 📋 **Paste** | Paste the clipboard (needs Full Access) |
@@ -127,12 +127,14 @@ The app's **設定 · Settings** screen has the following. Theme, colours, photo
 | Background photo | Any photo from your library, with darken, blur and key opacity (so it shows through the keys) |
 | Height | Compact, Standard, Tall |
 | Start in | あ, EN, 辞, or the last mode used |
-| Language key | Which of あ / EN / 辞 it steps through (at least two) |
-| Typing | Auto-capitalisation, double-space full stop, key popups |
+| Mode key | Which of あ / EN / 辞 a tap steps through (at least two); left-handed (mirrored) mode wheel |
+| Typing | Auto-capitalisation, double-space full stop, key popups, hold top row for numbers (q → 1 … p → 0) |
+| Suggestions | Autocorrect, word suggestions, emoji suggestions; forget learned words and kanji choices |
+| GIF | Your GIPHY API key and content rating |
 | Flick | Flick only (no tap cycling), sensitivity: gentle / normal / quick |
-| Both | English meanings under suggestions, full-width space, space-bar cursor, key sounds, haptics |
+| Both | English meanings under suggestions, romaji readings (猫 ねこ neko), full-width space, space-bar cursor, key sounds, haptics |
 
-Settings are stored in an App Group shared by the app and both keyboards. The app scales the photo down to 1400 px and saves it there as a JPEG; the keyboards load an even smaller copy, to stay within a keyboard's tight memory limit. iOS only lets a keyboard use that shared storage, and haptics, with **Allow Full Access** turned on. Without it the keyboards still work, using the default settings. The keyboards contain no networking code.
+Settings are stored in an App Group shared by the app and both keyboards. The app scales the photo down to 1400 px and saves it there as a JPEG; the keyboards load an even smaller copy, to stay within a keyboard's tight memory limit. iOS only lets a keyboard use that shared storage, and haptics, with **Allow Full Access** turned on. Without it the keyboards still work, using the default settings. The only network requests are GIF searches, once you add a GIPHY key.
 
 ## Project structure
 

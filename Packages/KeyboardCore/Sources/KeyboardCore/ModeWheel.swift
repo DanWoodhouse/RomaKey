@@ -52,29 +52,36 @@ public enum ModeWheelSlot: CaseIterable, Hashable {
 /// Press and drag from the mode key to pick a slot from a half wheel above it. The slots never
 /// move, and never change with the current mode, so each one is always the same direction from
 /// the key: straight up is 辞, up-right is かな, and so on. A quick swipe works without waiting
-/// for the wheel to appear.
+/// for the wheel to appear. The left-handed setting mirrors it.
 public enum ModeWheel {
+    /// Left to right.
     public static let slots = ModeWheelSlot.allCases
+
+    /// Left to right, mirrored for the left hand (🌐 on the left, あ on the right).
+    public static func order(leftHanded: Bool) -> [ModeWheelSlot] {
+        leftHanded ? slots.reversed() : slots
+    }
 
     /// How far the finger must move before a slot is picked. Less than this is a tap.
     public static let threshold = 22.0
 
     /// The direction of a slot's centre, in radians: π is straight left, π/2 straight up and
     /// 0 straight right. The half circle is split into equal sectors.
-    public static func angle(of slot: ModeWheelSlot) -> Double {
-        let index = Double(slots.firstIndex(of: slot)!)
+    public static func angle(of slot: ModeWheelSlot, leftHanded: Bool = false) -> Double {
+        let index = Double(order(leftHanded: leftHanded).firstIndex(of: slot)!)
         return Double.pi - sector * (index + 0.5)
     }
 
     /// The slot a drag points at, from the finger's movement since it touched the key
     /// (screen coordinates: `dy` grows downwards). Nil for a tap.
-    public static func slot(dx: Double, dy: Double, threshold: Double = threshold) -> ModeWheelSlot? {
+    public static func slot(dx: Double, dy: Double, leftHanded: Bool = false, threshold: Double = threshold) -> ModeWheelSlot? {
         guard dx * dx + dy * dy >= threshold * threshold else { return nil }
         var angle = atan2(-dy, dx)
         // Below the key: the nearest end of the wheel.
         if angle < 0 {
             angle = dx < 0 ? Double.pi : 0
         }
+        let slots = order(leftHanded: leftHanded)
         let index = min(Int((Double.pi - angle) / sector), slots.count - 1)
         return slots[index]
     }

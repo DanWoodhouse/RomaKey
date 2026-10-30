@@ -70,7 +70,7 @@ struct SettingsView: View {
         Form {
             Section {
                 Label {
-                    Text("Turn on **Allow Full Access** for the keyboards so they can read these settings. They have no network code: nothing you type leaves your phone.")
+                    Text("Turn on **Allow Full Access** for the keyboards so they can read these settings. Nothing you type leaves your phone; the only network use is GIF search, once you add a GIPHY key.")
                 } icon: {
                     Image(systemName: "lock.shield")
                 }
@@ -101,10 +101,11 @@ struct SettingsView: View {
                 Toggle("あ Japanese", isOn: store.languageKeyIncludes(.japanese))
                 Toggle("EN English", isOn: store.languageKeyIncludes(.english))
                 Toggle("辞 Dictionary", isOn: store.languageKeyIncludes(.dictionary))
+                Toggle("Left-handed mode wheel", isOn: $store.settings.leftHandedWheel)
             } header: {
                 Text("ローマ字 · Language key")
             } footer: {
-                Text("The modes a tap on the mode key steps through. Drag from the key for the mode wheel: ← あ, ↖ EN, ↑ 辞, ↗ かな, → other keyboards.")
+                Text("The modes a tap on the mode key steps through. Drag from the key for the mode wheel: ← あ, ↖ EN, ↑ 辞, ↗ かな, → other keyboards. Left-handed mirrors it: → あ, ← other keyboards.")
             }
 
             Section {
@@ -137,10 +138,15 @@ struct SettingsView: View {
                 Text("GIFs are off until you add a key. When on, what you search for is sent to GIPHY (the keyboard needs Allow Full Access). Tap a GIF to copy it, then paste it into your message: iOS doesn't let keyboards insert images directly. Free keys allow about 100 searches an hour.")
             }
 
-            Section("ローマ字 · Typing") {
+            Section {
                 Toggle("Auto-capitalisation", isOn: $store.settings.autoCapitalization)
                 Toggle("Double-space for full stop", isOn: $store.settings.doubleSpacePeriod)
                 Toggle("Key popups", isOn: $store.settings.keyPopups)
+                Toggle("Hold top row for numbers", isOn: $store.settings.holdForNumbers)
+            } header: {
+                Text("ローマ字 · Typing")
+            } footer: {
+                Text("Hold q for 1, w for 2 … p for 0, without switching to the 123 page. The keys show the numbers in the corner. In English, slide along for accents too.")
             }
 
             Section {
@@ -159,6 +165,7 @@ struct SettingsView: View {
 
             Section {
                 Toggle("Show English meanings", isOn: $store.settings.showMeanings)
+                Toggle("Show romaji readings", isOn: $store.settings.showRomaji)
                 Toggle("Full-width space in Japanese", isOn: $store.settings.fullWidthSpace)
                 Toggle("Space bar moves cursor", isOn: $store.settings.spaceBarCursor)
                 Toggle("Key sounds", isOn: $store.settings.keySounds)
@@ -166,7 +173,7 @@ struct SettingsView: View {
             } header: {
                 Text("両方 · Both keyboards")
             } footer: {
-                Text("Meanings appear under kanji suggestions. Hold the space bar and slide to move the cursor. Haptics need Full Access.")
+                Text("Meanings appear under kanji suggestions. Romaji readings add the spelling after the kana (猫 ねこ neko), in suggestions and dictionary entries. Hold the space bar and slide to move the cursor. Haptics need Full Access.")
             }
 
             Section {

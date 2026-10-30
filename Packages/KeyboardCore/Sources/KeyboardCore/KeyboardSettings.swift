@@ -50,6 +50,10 @@ public struct KeyboardSettings: Equatable {
     public var autoCapitalization = true
     public var doubleSpacePeriod = true
     public var keyPopups = true
+    /// Hold q–p on the letters page for 1–0. The keys show the numbers as small hints.
+    public var holdForNumbers = true
+    /// Mirrors the mode wheel (→ あ … ← 🌐) for typing with the left thumb.
+    public var leftHandedWheel = false
 
     // かな keyboard
     /// Turns off tap-to-cycle, so tapping あ twice types ああ.
@@ -58,6 +62,8 @@ public struct KeyboardSettings: Equatable {
 
     // Both
     public var showMeanings = true
+    /// Romaji after kana readings in suggestions and dictionary entries (ねこ neko), for learners.
+    public var showRomaji = false
     public var fullWidthSpace = false
     public var spaceBarCursor = true
     public var keySounds = true
@@ -115,6 +121,9 @@ public struct KeyboardSettings: Equatable {
         static let autoCapitalization = "autoCapitalization"
         static let doubleSpacePeriod = "doubleSpacePeriod"
         static let keyPopups = "keyPopups"
+        static let holdForNumbers = "holdForNumbers"
+        static let leftHandedWheel = "leftHandedWheel"
+        static let showRomaji = "showRomaji"
         static let flickOnly = "flickOnly"
         static let flickSensitivity = "flickSensitivity"
         static let showMeanings = "showMeanings"
@@ -162,6 +171,9 @@ public struct KeyboardSettings: Equatable {
         autoCapitalization = bool(Key.autoCapitalization, autoCapitalization)
         doubleSpacePeriod = bool(Key.doubleSpacePeriod, doubleSpacePeriod)
         keyPopups = bool(Key.keyPopups, keyPopups)
+        holdForNumbers = bool(Key.holdForNumbers, holdForNumbers)
+        leftHandedWheel = bool(Key.leftHandedWheel, leftHandedWheel)
+        showRomaji = bool(Key.showRomaji, showRomaji)
         flickOnly = bool(Key.flickOnly, flickOnly)
         flickSensitivity = value(Key.flickSensitivity, flickSensitivity)
         showMeanings = bool(Key.showMeanings, showMeanings)
@@ -196,6 +208,9 @@ public struct KeyboardSettings: Equatable {
         defaults.set(autoCapitalization, forKey: Key.autoCapitalization)
         defaults.set(doubleSpacePeriod, forKey: Key.doubleSpacePeriod)
         defaults.set(keyPopups, forKey: Key.keyPopups)
+        defaults.set(holdForNumbers, forKey: Key.holdForNumbers)
+        defaults.set(leftHandedWheel, forKey: Key.leftHandedWheel)
+        defaults.set(showRomaji, forKey: Key.showRomaji)
         defaults.set(flickOnly, forKey: Key.flickOnly)
         defaults.set(flickSensitivity.rawValue, forKey: Key.flickSensitivity)
         defaults.set(showMeanings, forKey: Key.showMeanings)

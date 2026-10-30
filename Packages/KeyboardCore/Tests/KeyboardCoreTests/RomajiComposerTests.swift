@@ -66,4 +66,15 @@ final class RomajiComposerTests: XCTestCase {
         XCTAssertEqual(KanaConverter.katakana(from: "らーめん"), "ラーメン")
         XCTAssertEqual(KanaConverter.katakana(from: "ゔぁいおりん"), "ヴァイオリン")
     }
+
+    func testKanaToRomaji() {
+        let cases = [
+            "ねこ": "neko", "がっこう": "gakkou", "きっぷ": "kippu", "しゃしん": "shashin",
+            "きんえん": "kin'en", "ほんや": "hon'ya", "コーヒー": "koohii", "まっちゃ": "matcha",
+            "ちょっと": "chotto", "ファン": "fan", "こんにちは": "konnichiha", "猫": "猫",
+        ]
+        for (kana, romaji) in cases {
+            XCTAssertEqual(KanaConverter.romaji(from: kana), romaji, kana)
+        }
+    }
 }

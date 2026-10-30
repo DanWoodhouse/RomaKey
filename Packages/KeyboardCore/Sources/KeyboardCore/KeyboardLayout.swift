@@ -98,6 +98,12 @@ public struct KeyboardLayout: Hashable {
         }
     }
 
+    /// The number a top-row letter types when held (q → 1 … p → 0), for the hold-for-numbers setting.
+    public static func heldNumber(for letter: String) -> String? {
+        guard let index = Array("qwertyuiop").firstIndex(where: { String($0) == letter.lowercased() }) else { return nil }
+        return String(Array("1234567890")[index])
+    }
+
     /// Lays the rows out in a `width`-wide area, top to bottom.
     public func frames(width: Double, rowHeight: Double) -> [[KeyFrame]] {
         let unit = width / Self.unitsPerRow

@@ -33,6 +33,17 @@ final class ModeWheelTests: XCTestCase {
         }
     }
 
+    func testLeftHandedMirrorsTheWheel() {
+        XCTAssertEqual(ModeWheel.order(leftHanded: true), [.nextKeyboard, .kana, .dictionary, .english, .japanese])
+        XCTAssertEqual(ModeWheel.slot(dx: -60, dy: 0, leftHanded: true), .nextKeyboard)
+        XCTAssertEqual(ModeWheel.slot(dx: 0, dy: -60, leftHanded: true), .dictionary)
+        XCTAssertEqual(ModeWheel.slot(dx: 60, dy: 0, leftHanded: true), .japanese)
+        for slot in ModeWheel.slots {
+            let angle = ModeWheel.angle(of: slot, leftHanded: true)
+            XCTAssertEqual(ModeWheel.slot(dx: cos(angle) * 50, dy: -sin(angle) * 50, leftHanded: true), slot)
+        }
+    }
+
     /// The wheel doesn't depend on the current mode, so a direction always means the same slot.
     func testSlotsMapToModes() {
         for mode in InputMode.allCases {

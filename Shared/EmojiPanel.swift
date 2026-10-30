@@ -3,6 +3,8 @@ import UIKit
 
 /// Emoji and 顔文字, shown in place of the keys. Tabs along the bottom, like the system keyboard:
 /// ABC (back to typing), search, recents, the emoji groups, 顔文字 and delete.
+/// Recents and every emoji group are one continuous list: scroll straight through them, or tap a
+/// tab to jump to its section. The highlighted tab follows the scrolling. 顔文字 is its own list.
 /// Long-press an emoji with skin tones to pick one; the choice is remembered for all emoji.
 final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     enum Tab: Hashable {
@@ -23,8 +25,11 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
     private let theme: KeyboardTheme
     private var skinTone: Int
     private var tab: Tab
-    /// For the current tab: one section per 顔文字 category, otherwise a single section.
+    /// Recents then each emoji group, or each 顔文字 category.
     private var sections: [(title: String?, items: [String])] = []
+    /// The tab each section belongs to, for highlighting while scrolling.
+    private var sectionTabs: [Tab] = []
+    private var showingKaomoji = false
     /// Emoji by character, for skin tones.
     private var emojiByCharacter: [String: Emoji] = [:]
 
@@ -43,6 +48,7 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
         self.skinTone = skinTone
         self.tab = tab
         let layout = UICollectionViewFlowLayout()
+        layout.sectionHeadersPinToVisibleBounds = true
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 0
         collection = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -73,10 +79,21 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        collection.frame = CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height - Self.barHeight)
+        let frame = CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height - Self.barHeight)
+        let resized = collection.frame != frame
+        collection.frame = frame
         bar.frame = CGRect(x: 4, y: bounds.height - Self.barHeight, width: bounds.width - 8, height: Self.barHeight)
-        collection.collectionViewLayout.invalidateLayout()
+        if resized {
+            collection.collectionViewLayout.invalidateLayout()
+            // The first layout: now the sections have positions, go to the tab it opened on.
+            if pendingScroll {
+                pendingScroll = false
+                scroll(to: tab, animated: false)
+            }
+        }
     }
+
+    private var pendingScroll = true
 
     // MARK: - Tabs
 
@@ -123,21 +140,79 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
     }
 
     private func select(_ tab: Tab) {
+        let wantsKaomoji = tab == .kaomoji
+        if wantsKaomoji != showingKaomoji || sections.isEmpty {
+            showingKaomoji = wantsKaomoji
+            loadSections()
+            collection.reloadData()
+            collection.layoutIfNeeded()
+        }
+        highlight(tab)
+        scroll(to: tab, animated: false)
+    }
+
+    private func loadSections() {
+        if showingKaomoji {
+            sections = Kaomoji.categories.map { (title: Optional($0.name), items: $0.faces) }
+            sectionTabs = sections.map { _ in .kaomoji }
+            return
+        }
+        let recent = recents?.items ?? []
+        sections = [("よく使う · Recent", recent.isEmpty ? ["😊", "👍", "🙏", "😂", "❤️", "🎉"] : recent)]
+        sectionTabs = [.recent]
+        for group in EmojiGroup.allCases {
+            sections.append((group.name, catalog?.emoji(in: group).map(\.character) ?? []))
+            sectionTabs.append(.group(group))
+        }
+    }
+
+    private func highlight(_ tab: Tab) {
         self.tab = tab
         for (key, button) in tabButtons {
             button.backgroundColor = key == tab ? theme.pressedKey : .clear
         }
-        switch tab {
-        case .recent:
-            let recent = recents?.items ?? []
-            sections = [("よく使う · Recent", recent.isEmpty ? ["😊", "👍", "🙏", "😂", "❤️", "🎉"] : recent)]
-        case .group(let group):
-            sections = [(nil, catalog?.emoji(in: group).map(\.character) ?? [])]
-        case .kaomoji:
-            sections = Kaomoji.categories.map { (title: Optional($0.name), items: $0.faces) }
+    }
+
+    /// Puts the tab's section heading at the top, or as near as the end of the list allows.
+    private func scroll(to tab: Tab, animated: Bool) {
+        guard let section = sectionTabs.firstIndex(of: tab), collection.bounds.height > 0 else { return }
+        isJumping = true
+        let maxOffset = max(collection.contentSize.height - collection.bounds.height, 0)
+        let y = min(max(top(of: section) ?? 0, 0), maxOffset)
+        collection.setContentOffset(CGPoint(x: 0, y: y), animated: animated)
+        isJumping = false
+    }
+
+    /// Where a section's heading starts. Measured from its first item, because pinned headings
+    /// report where they're drawn rather than where the section begins.
+    private func top(of section: Int) -> CGFloat? {
+        guard !sections[section].items.isEmpty,
+              let first = collection.collectionViewLayout.layoutAttributesForItem(at: IndexPath(item: 0, section: section))
+        else { return nil }
+        return first.frame.minY - Self.headerHeight
+    }
+
+    private static let headerHeight: CGFloat = 22
+
+    /// Set while jumping to a tab, so the tab that was tapped stays highlighted even if its
+    /// section is too short to reach the top.
+    private var isJumping = false
+
+    /// The highlighted tab follows the section at the top of the list.
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard !showingKaomoji, !isJumping, scrollView.isTracking || scrollView.isDecelerating else { return }
+        let top = scrollView.contentOffset.y + 1
+        var current = 0
+        for section in sections.indices {
+            guard let sectionTop = self.top(of: section), sectionTop <= top else { break }
+            current = section
         }
-        collection.reloadData()
-        collection.setContentOffset(.zero, animated: false)
+        if scrollView.contentOffset.y >= scrollView.contentSize.height - scrollView.bounds.height - 1 {
+            current = sections.count - 1
+        }
+        if sectionTabs[current] != tab {
+            highlight(sectionTabs[current])
+        }
     }
 
     private func display(_ item: String) -> String {
@@ -156,7 +231,7 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! EmojiCell
-        cell.configure(text: display(sections[indexPath.section].items[indexPath.item]), isKaomoji: tab == .kaomoji, theme: theme)
+        cell.configure(text: display(sections[indexPath.section].items[indexPath.item]), isKaomoji: showingKaomoji, theme: theme)
         return cell
     }
 
@@ -165,17 +240,19 @@ final class EmojiPanel: UIView, UICollectionViewDataSource, UICollectionViewDele
         let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "header", for: indexPath) as! SectionHeader
         header.label.text = sections[indexPath.section].title
         header.label.textColor = theme.secondaryText
+        // Headings stay pinned at the top while their section scrolls under them.
+        header.backgroundColor = theme.background.withAlphaComponent(0.92)
         return header
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
                         referenceSizeForHeaderInSection section: Int) -> CGSize {
-        sections[section].title == nil ? .zero : CGSize(width: collectionView.bounds.width, height: 22)
+        sections[section].title == nil ? .zero : CGSize(width: collectionView.bounds.width, height: Self.headerHeight)
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
-        if tab == .kaomoji {
+        if showingKaomoji {
             let text = sections[indexPath.section].items[indexPath.item] as NSString
             let width = text.size(withAttributes: [.font: UIFont.systemFont(ofSize: 16)]).width + 24
             return CGSize(width: min(ceil(width), collectionView.bounds.width), height: 40)

@@ -41,6 +41,12 @@ final class KeyboardEngineTests: XCTestCase {
         XCTAssertEqual(space.width, 45, accuracy: 0.001)
     }
 
+    func testHeldNumbersFollowTheTopRow() {
+        XCTAssertEqual("qwertyuiop".map { KeyboardLayout.heldNumber(for: String($0)) ?? "" }.joined(), "1234567890")
+        XCTAssertEqual(KeyboardLayout.heldNumber(for: "P"), "0")
+        XCTAssertNil(KeyboardLayout.heldNumber(for: "a"))
+    }
+
     func testLetterRowsAreStandardQwerty() {
         let layout = KeyboardLayout.layout(for: .letters)
         let letters = layout.rows.prefix(3).map { row in

@@ -7,7 +7,7 @@ final class DictionaryEntryView: UIView {
     var onInsert: ((String) -> Void)?
     var onClose: (() -> Void)?
 
-    init(entry: DictionaryEntry, theme: KeyboardTheme) {
+    init(entry: DictionaryEntry, theme: KeyboardTheme, showsRomaji: Bool) {
         super.init(frame: .zero)
         backgroundColor = theme.panel
         layer.cornerRadius = 10
@@ -18,7 +18,8 @@ final class DictionaryEntryView: UIView {
         word.textColor = theme.text
 
         let reading = UILabel()
-        reading.text = [entry.reading, entry.partOfSpeech].filter { !$0.isEmpty }.joined(separator: "  ·  ")
+        let romaji = showsRomaji ? KanaConverter.romaji(from: entry.reading) : ""
+        reading.text = [entry.reading, romaji, entry.partOfSpeech].filter { !$0.isEmpty }.joined(separator: "  ·  ")
         reading.font = .systemFont(ofSize: 14)
         reading.textColor = theme.secondaryText
 

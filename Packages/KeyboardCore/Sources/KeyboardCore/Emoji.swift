@@ -11,6 +11,21 @@ public enum EmojiGroup: Int, CaseIterable {
     case symbols = 8
     case flags = 9
 
+    /// The section heading in the emoji panel.
+    public var name: String {
+        switch self {
+        case .smileys: return "スマイリー · Smileys"
+        case .people: return "人 · People"
+        case .animals: return "動物と自然 · Animals & nature"
+        case .food: return "食べ物 · Food & drink"
+        case .travel: return "旅行と場所 · Travel & places"
+        case .activities: return "アクティビティ · Activities"
+        case .objects: return "物 · Objects"
+        case .symbols: return "記号 · Symbols"
+        case .flags: return "旗 · Flags"
+        }
+    }
+
     /// The tab icon.
     public var icon: String {
         switch self {
