@@ -139,7 +139,7 @@ public final class EmojiCatalog {
     ]
 
     public static func bundled(maxVersion: Double = .infinity) -> EmojiCatalog? {
-        guard let url = Bundle.module.url(forResource: "emoji", withExtension: "tsv"),
+        guard let url = CoreResources.url("emoji", "tsv"),
               let tsv = try? String(contentsOf: url, encoding: .utf8) else { return nil }
         return EmojiCatalog(tsv: tsv, maxVersion: maxVersion)
     }

@@ -208,7 +208,7 @@ enum AIAssistant {
     }
 
     private static func options(maximumTokens: Int) -> GenerationOptions {
-        GenerationOptions(sampling: .greedy, maximumResponseTokens: maximumTokens)
+        GenerationOptions(samplingMode: .greedy, maximumResponseTokens: maximumTokens)
     }
 
     private static func grammarResponse(_ input: String) async throws -> GrammarResponse {

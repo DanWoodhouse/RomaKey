@@ -32,7 +32,7 @@ public final class NextWordPredictor {
 
     /// Loads the bundled English pairs. About 300 KB, so call it off the main thread.
     public static func bundled(store: KeyValueStore) -> NextWordPredictor {
-        let tsv = Bundle.module.url(forResource: "bigrams", withExtension: "tsv")
+        let tsv = CoreResources.url("bigrams", "tsv")
             .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
         return NextWordPredictor(tsv: tsv, store: store)
     }

@@ -153,9 +153,9 @@ class KeyboardHostController: UIInputViewController {
             self?.flickEngine.dictionary = dictionary
         }
         let store = learningStore
-        DispatchQueue.global(qos: .utility).async {
+        DispatchQueue.global(qos: .utility).async { [weak self] in
             let predictor = NextWordPredictor.bundled(store: store)
-            DispatchQueue.main.async { [weak self] in
+            DispatchQueue.main.async {
                 self?.romajiEngine.predictor = predictor
                 self?.flickEngine.predictor = predictor
             }

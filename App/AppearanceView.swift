@@ -88,9 +88,10 @@ struct AppearanceView: View {
             }
 
             Section {
+                // Read here: the picker's label is built off the main actor.
+                let photoTitle = store.backgroundImage == nil ? "Choose a photo" : "Choose a different photo"
                 PhotosPicker(selection: $photo, matching: .images) {
-                    Label(store.backgroundImage == nil ? "Choose a photo" : "Choose a different photo",
-                          systemImage: "photo")
+                    Label(photoTitle, systemImage: "photo")
                 }
                 if store.backgroundImage != nil {
                     Button("Remove photo", role: .destructive) {

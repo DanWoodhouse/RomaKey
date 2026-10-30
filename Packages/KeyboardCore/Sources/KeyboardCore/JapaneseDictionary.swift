@@ -44,10 +44,16 @@ public final class JapaneseDictionary {
         let weight: UInt8
     }
 
-    /// Whole glosses ("eat", "thank you"), normalised. Sorted by key.
-    private let glosses: [IndexItem]
-    /// Single words from the glosses. Sorted by key.
-    private let words: [IndexItem]
+    private struct EnglishIndex {
+        /// Whole glosses ("eat", "thank you"), normalised. Sorted by key.
+        var glosses: [IndexItem] = []
+        /// Single words from the glosses. Sorted by key.
+        var words: [IndexItem] = []
+    }
+
+    /// English → Japanese search needs two large indexes, so they're built on the first 辞
+    /// search rather than at launch: keyboards get only about 50 MB, and あ mode never needs them.
+    private lazy var english: EnglishIndex = Self.englishIndex(for: entries)
     /// Readings in hiragana. Sorted by key.
     private let readings: [IndexItem]
     /// The stems of words that conjugate (食べ, 書, 勉強), in hiragana. Sorted by key.
@@ -59,8 +65,6 @@ public final class JapaneseDictionary {
     /// kanji, reading, usually-kana (0/1), part of speech, senses, and (optionally) conjugation.
     public init(tsv: String) {
         var entries: [DictionaryEntry] = []
-        var glosses: [IndexItem] = []
-        var words: [IndexItem] = []
         var readings: [IndexItem] = []
         var stems: [IndexItem] = []
         var emptyStemEntries: [Int] = []
@@ -86,30 +90,39 @@ public final class JapaneseDictionary {
                     stems.append(IndexItem(key: stem, entry: index, weight: 0))
                 }
             }
+        }
 
+        readings.sort { $0.key < $1.key }
+        stems.sort { $0.key < $1.key }
+        self.entries = entries
+        self.readings = readings
+        self.stems = stems
+        self.emptyStemEntries = emptyStemEntries
+    }
+
+    private static func englishIndex(for entries: [DictionaryEntry]) -> EnglishIndex {
+        var index = EnglishIndex()
+        for (position, entry) in entries.enumerated() {
+            let entryIndex = Int32(position)
             for (senseIndex, sense) in entry.senses.enumerated() {
                 for (glossIndex, gloss) in sense.enumerated() {
-                    let normalized = Self.normalize(gloss)
+                    let normalized = normalize(gloss)
                     guard !normalized.isEmpty else { continue }
                     var weight: UInt8 = senseIndex == 0 ? (glossIndex == 0 ? 0 : 1) : 2
                     // Capitalised glosses are usually names or zodiac signs ("the Dog"), so rank them lower.
-                    if Self.withoutArticle(gloss.trimmingCharacters(in: .whitespaces)).first?.isUppercase == true {
+                    if withoutArticle(gloss.trimmingCharacters(in: .whitespaces)).first?.isUppercase == true {
                         weight += 1
                     }
-                    glosses.append(IndexItem(key: normalized, entry: index, weight: weight))
-                    for word in Set(Self.words(in: normalized)) {
-                        words.append(IndexItem(key: word, entry: index, weight: weight))
+                    index.glosses.append(IndexItem(key: normalized, entry: entryIndex, weight: weight))
+                    for word in Set(words(in: normalized)) {
+                        index.words.append(IndexItem(key: word, entry: entryIndex, weight: weight))
                     }
                 }
             }
         }
-
-        self.entries = entries
-        self.glosses = glosses.sorted { $0.key < $1.key }
-        self.words = words.sorted { $0.key < $1.key }
-        self.readings = readings.sorted { $0.key < $1.key }
-        self.stems = stems.sorted { $0.key < $1.key }
-        self.emptyStemEntries = emptyStemEntries
+        index.glosses.sort { $0.key < $1.key }
+        index.words.sort { $0.key < $1.key }
+        return index
     }
 
     /// Indexes of the words read exactly `key` (hiragana), most common first.
@@ -124,7 +137,7 @@ public final class JapaneseDictionary {
 
     /// The dictionary bundled with the keyboard. Takes a moment to build, so call it off the main thread.
     public static func bundled() -> JapaneseDictionary? {
-        guard let url = Bundle.module.url(forResource: "dictionary", withExtension: "tsv"),
+        guard let url = CoreResources.url("dictionary", "tsv"),
               let tsv = try? String(contentsOf: url, encoding: .utf8) else { return nil }
         return JapaneseDictionary(tsv: tsv)
     }
@@ -145,6 +158,7 @@ public final class JapaneseDictionary {
             }
         }
 
+        let glosses = english.glosses, words = english.words
         add(Self.items(in: glosses, equalTo: normalized), matchClass: 0)
         if isSingleWord {
             add(Self.items(in: words, equalTo: normalized), matchClass: 1)
