@@ -218,6 +218,9 @@ public struct KeyboardSettings: Equatable {
     /// Written by the keyboard, for `StartingMode.lastUsed`.
     public var lastUsedMode: InputMode = .japanese
 
+    /// Words the person taught the keyboard (単語登録 · My words), for kanji conversion.
+    public var userWords: [UserWord] = []
+
     public init() {}
 
     /// The colours above, used in light mode (and in dark mode too, unless `separateDarkLook`).
@@ -319,6 +322,7 @@ public struct KeyboardSettings: Equatable {
         static let keySpacing = "keySpacing"
         static let accentReturnKey = "accentReturnKey"
         static let lastUsedMode = "lastUsedMode"
+        static let userWords = "userWords"
     }
 
     /// Reads saved settings, using the default for anything missing or unreadable.
@@ -407,12 +411,15 @@ public struct KeyboardSettings: Equatable {
         keySpacing = value(Key.keySpacing, keySpacing)
         accentReturnKey = bool(Key.accentReturnKey, accentReturnKey)
         lastUsedMode = value(Key.lastUsedMode, lastUsedMode)
+        userWords = (defaults.array(forKey: Key.userWords) as? [[String]] ?? [])
+            .compactMap { $0.count == 2 ? UserWord(reading: $0[0], word: $0[1]) : nil }
     }
 
     /// Saves everything the user edits in the app.
     public func save(to defaults: UserDefaults) {
         defaults.set(startingMode.rawValue, forKey: Key.startingMode)
         defaults.set(languageKeyModes.map(\.rawValue), forKey: Key.languageKeyModes)
+        defaults.set(userWords.map { [$0.reading, $0.word] }, forKey: Key.userWords)
         defaults.set(autoCapitalization, forKey: Key.autoCapitalization)
         defaults.set(doubleSpacePeriod, forKey: Key.doubleSpacePeriod)
         defaults.set(keyPopups, forKey: Key.keyPopups)
@@ -487,5 +494,55 @@ public struct KeyboardSettings: Equatable {
     /// Saves only the last-used mode, so the keyboard doesn't overwrite settings changed in the app.
     public static func saveLastUsedMode(_ mode: InputMode, to defaults: UserDefaults) {
         defaults.set(mode.rawValue, forKey: Key.lastUsedMode)
+    }
+}
+
+/// A word the person taught the keyboard (単語登録): its reading in hiragana and how it's written.
+public struct UserWord: Equatable, Hashable {
+    public var reading: String
+    public var word: String
+
+    public init(reading: String, word: String) {
+        self.reading = reading
+        self.word = word
+    }
+
+    /// A reading typed in hiragana, katakana or romaji (kakuninzumi), as hiragana; nil if it
+    /// isn't one.
+    public static func normalizedReading(_ text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !trimmed.isEmpty else { return nil }
+        var kana = trimmed
+        if trimmed.allSatisfy({ ($0.isASCII && $0.isLetter) || $0 == "-" || $0 == "'" }) {
+            var composer = RomajiComposer()
+            for character in trimmed {
+                composer.input(character)
+            }
+            kana = composer.finalizedText
+        }
+        let hiragana = KanaConverter.hiragana(from: kana)
+        let isKana = hiragana.unicodeScalars.allSatisfy {
+            (0x3041...0x3096).contains($0.value) || (0x309D...0x309E).contains($0.value) || $0.value == 0x30FC
+        }
+        return isKana ? hiragana : nil
+    }
+
+    /// Reading → words, for `JapaneseDictionary.userWords`: the person's own words, then iOS text
+    /// replacements whose shortcut is in kana (the iPhone's own way to add a Japanese word).
+    public static func table(_ words: [UserWord], replacements: [(shortcut: String, phrase: String)] = []) -> [String: [String]] {
+        var table: [String: [String]] = [:]
+        func add(_ reading: String?, _ word: String) {
+            let word = word.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let reading, !word.isEmpty, table[reading]?.contains(word) != true else { return }
+            table[reading, default: []].append(word)
+        }
+        for word in words {
+            add(normalizedReading(word.reading), word.word)
+        }
+        // Only kana shortcuts: "omw" → "On my way!" is for English.
+        for replacement in replacements where !replacement.shortcut.contains(where: \.isASCII) {
+            add(normalizedReading(replacement.shortcut), replacement.phrase)
+        }
+        return table
     }
 }

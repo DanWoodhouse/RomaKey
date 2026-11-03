@@ -145,3 +145,65 @@ final class ConversionTests: XCTestCase {
         XCTAssertEqual(engine.candidates[1].text, "を食べます")
     }
 }
+
+/// Words the bundled dictionary lacked, the person's own words, and phrases learned in parts.
+final class OwnWordsTests: XCTestCase {
+    func testSuffixesWithASoundChangeConvert() throws {
+        let bundled = try XCTUnwrap(JapaneseDictionary.bundled())
+        let converter = KanaKanjiConverter(dictionary: bundled)
+        // 済み reads ずみ after a noun: both readings are in the dictionary now.
+        XCTAssertEqual(converter.convert("かくにんずみ").first?.text, "確認済み")
+        XCTAssertTrue(bundled.entries(reading: "すみ").contains { $0.word == "済み" })
+        XCTAssertTrue(bundled.entries(reading: "じゅう").contains { $0.word == "中" })
+    }
+
+    func testAGodanStemWorksAsANoun() {
+        let dictionary = JapaneseDictionary(tsv: "読む\tよむ\t0\tverb\tto read\tv5m\n町\tまち\t0\tnoun\ttown\t\n待つ\tまつ\t0\tverb\tto wait\tv5t")
+        let converter = KanaKanjiConverter(dictionary: dictionary)
+        XCTAssertTrue(converter.convert("よみ").map(\.text).contains("読み"))
+        // A real noun with the same reading still comes first.
+        XCTAssertEqual(converter.convert("まち").first?.text, "町")
+    }
+
+    func testOwnWordsComeFirstAndWorkInsidePhrases() {
+        let dictionary = JapaneseDictionary(tsv: "行く\tいく\t0\tverb\tto go\tv5k-s")
+        dictionary.userWords = UserWord.table([UserWord(reading: "らーめんや", word: "ラーメン屋")])
+        var composer = RomajiComposer()
+        for character in "ra-menya" { composer.input(character) }
+        XCTAssertEqual(composer.candidates(using: dictionary).first?.text, "ラーメン屋")
+        XCTAssertEqual(KanaKanjiConverter(dictionary: dictionary).convert("らーめんやにいく").first?.text, "ラーメン屋に行く")
+    }
+
+    func testReadingsCanBeTypedInRomajiOrKatakana() {
+        XCTAssertEqual(UserWord.normalizedReading("kakuninzumi"), "かくにんずみ")
+        XCTAssertEqual(UserWord.normalizedReading("カクニン"), "かくにん")
+        XCTAssertNil(UserWord.normalizedReading("確認"))
+        XCTAssertNil(UserWord.normalizedReading(" "))
+    }
+
+    func testOnlyKanaTextReplacementsBecomeWords() {
+        let table = UserWord.table([], replacements: [("omw", "On my way!"), ("かくにんずみ", "確認済み")])
+        XCTAssertEqual(table, ["かくにんずみ": ["確認済み"]])
+    }
+
+    func testAPhraseConvertedInPartsIsRememberedWhole() {
+        let history = ConversionHistory(store: MemoryStore())
+        history.recordPart(reading: "かくにん", word: "確認")
+        history.finishPhrase(reading: "ずみ", word: "済み")
+        XCTAssertEqual(history.choices(for: "かくにんずみ"), ["確認済み"])
+        XCTAssertEqual(history.choices(for: "かくにん"), ["確認"])
+
+        // A phrase given up on isn't glued onto the next one.
+        history.recordPart(reading: "はし", word: "箸")
+        history.abandonPhrase()
+        history.finishPhrase(reading: "ほん", word: "本")
+        XCTAssertTrue(history.choices(for: "はしほん").isEmpty)
+    }
+
+    func testLearnedPhrasesWorkInsideLongerReadings() {
+        let dictionary = JapaneseDictionary(tsv: "です\tです\t1\texpression\tis\t")
+        let history = ConversionHistory(store: MemoryStore())
+        history.record(reading: "かくにんずみ", word: "確認済み")
+        XCTAssertEqual(KanaKanjiConverter(dictionary: dictionary, history: history).convert("かくにんずみです").first?.text, "確認済みです")
+    }
+}

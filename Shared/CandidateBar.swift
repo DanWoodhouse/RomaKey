@@ -175,7 +175,9 @@ final class CandidateBar: UIView {
             addToolbarButton(.emoji)
             addToolbarButton(.ai)
         }
-        for (index, candidate) in candidates.enumerated() {
+        // The bar is rebuilt on every key press, so it stops at the first few dozen: a reading
+        // like かい has far more, and nobody scrolls that far.
+        for (index, candidate) in candidates.prefix(Self.maximumCells).enumerated() {
             let cell = CandidateCell(candidate: candidate, showsMeaning: showsMeanings, showsRomaji: showsRomaji,
                                      showsDivider: index > 0, theme: theme)
             cell.addAction(UIAction { [weak self] _ in self?.onSelect?(candidate) }, for: .touchUpInside)
@@ -186,6 +188,8 @@ final class CandidateBar: UIView {
             stack.addArrangedSubview(cell)
         }
     }
+
+    private static let maximumCells = 24
 
     private func label(_ text: String) -> UILabel {
         let label = UILabel()

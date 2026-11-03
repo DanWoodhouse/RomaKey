@@ -68,7 +68,7 @@ public struct Candidate: Hashable {
 
 extension RomajiComposer {
     /// Conversion choices for the current composition: words the user picked for this reading
-    /// before, the hiragana as typed, whole-phrase conversions (今日はいい天気, 食べました),
+    /// before, their own words (My words), the hiragana as typed, whole-phrase conversions (今日はいい天気, 食べました),
     /// dictionary words with that reading, the katakana, matching emoji, the first word of a
     /// phrase on its own, then longer words it could be the start of.
     public func candidates(
@@ -91,6 +91,9 @@ extension RomajiComposer {
         }
 
         for word in history?.choices(for: hiragana) ?? [] {
+            add(word, entry(word))
+        }
+        for word in dictionary?.userWords[hiragana] ?? [] {
             add(word, entry(word))
         }
         add(hiragana, entry(hiragana))

@@ -582,9 +582,14 @@ final class GIFPanel: UIView, UICollectionViewDataSource, UICollectionViewDelega
 enum GIFData {
     private static let cache: NSCache<NSURL, NSData> = {
         let cache = NSCache<NSURL, NSData>()
-        cache.totalCostLimit = 12 * 1024 * 1024
+        // Keyboards have little memory to spare: about a screenful of small GIFs.
+        cache.totalCostLimit = 6 * 1024 * 1024
         return cache
     }()
+
+    static func removeAll() {
+        cache.removeAllObjects()
+    }
 
     static func cached(_ url: URL) -> Data? {
         cache.object(forKey: url as NSURL) as Data?

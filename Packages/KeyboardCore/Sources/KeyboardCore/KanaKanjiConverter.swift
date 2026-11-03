@@ -68,6 +68,8 @@ enum Conjugation {
         var forms: [String] = []
         if let row = godan[code] {
             forms += [row.u, row.e + "ば", row.o + "う"]
+            // The bare stem, used as a noun (済む → 済み, 読む → 読み): see `bareStem`.
+            forms.append(row.i)
             forms += polite.map { row.i + $0 }
             if code != "v5r-i" {  // ある's negative is ない, a word of its own
                 forms += negative.map { row.a + $0 }
@@ -101,6 +103,11 @@ enum Conjugation {
         case "vs-i", "vk": return 2
         default: return 1
         }
+    }
+
+    /// The ending that makes a godan verb's stem a noun on its own (済み, 読み, 書き).
+    static func isBareStem(_ ending: String, code: String) -> Bool {
+        godan[code]?.i == ending
     }
 
     /// The stem in hiragana, or nil if the word doesn't conjugate.
@@ -168,6 +175,12 @@ public struct KanaKanjiConverter {
         static let startParticle = 3000
         static let particlePair = 500
         static let learned = 2000
+        /// A godan verb's stem as a noun (済み): less likely than a real noun with that reading
+        /// (待ち, 町), so live conversion still trusts the noun.
+        static let bareStem = 900
+        /// A word the person added, or a phrase they converted before: as likely as a very
+        /// common word.
+        static let userWord = 2600
         static let everyday = 600
         /// Alternatives costing more than this over the best are odd splits (ね子 for ねこ).
         static let margin = 2500
@@ -247,18 +260,22 @@ public struct KanaKanjiConverter {
                     if edge.isFunction && from.edge?.isFunction == true {
                         cost += Cost.particlePair
                     }
+                    // Most paths can't beat the ones already kept here: skip them before
+                    // building their text. (A kept path with the same text costs no more.)
+                    if nodes[edge.end].count >= keep, let worst = nodes[edge.end].last, cost >= worst.cost {
+                        continue
+                    }
                     let text = from.text + edge.text
-                    var list = nodes[edge.end]
-                    if let same = list.firstIndex(where: { $0.text == text }) {
-                        if list[same].cost <= cost { continue }
-                        list.remove(at: same)
+                    if let same = nodes[edge.end].firstIndex(where: { $0.text == text }) {
+                        if nodes[edge.end][same].cost <= cost { continue }
+                        nodes[edge.end].remove(at: same)
                     }
-                    list.append(Node(cost: cost, text: text, edge: edge, previous: from))
-                    list.sort { $0.cost < $1.cost }
-                    if list.count > keep {
-                        list.removeLast()
+                    let node = Node(cost: cost, text: text, edge: edge, previous: from)
+                    let position = nodes[edge.end].firstIndex { $0.cost > cost } ?? nodes[edge.end].count
+                    nodes[edge.end].insert(node, at: position)
+                    if nodes[edge.end].count > keep {
+                        nodes[edge.end].removeLast()
                     }
-                    nodes[edge.end] = list
                 }
             }
         }
@@ -365,16 +382,29 @@ public struct KanaKanjiConverter {
             let stem = String(kana[start..<stemEnd])
             for ending in Conjugation.endings(for: entry.conjugation) where rest.hasPrefix(ending) {
                 let reading = stem + ending
+                let extra = Conjugation.isBareStem(ending, code: entry.conjugation) ? Cost.bareStem : Cost.inflected
                 add(stemEnd + ending.count, Conjugation.written(entry, ending: ending, reading: reading), reading,
-                    wordCost(index) + Cost.inflected, entry)
+                    wordCost(index) + extra, entry)
+            }
+        }
+
+        // The person's own words and phrases they converted before, inside longer readings too
+        // (without the learned discount on top: they're already cheap).
+        let longestOwn = min(max(dictionary.longestUserReading, history == nil ? 0 : 16), kana.count - start)
+        if longestOwn >= 2 {
+            for length in 2...longestOwn {
+                let piece = String(kana[start..<start + length])
+                for word in (dictionary.userWords[piece] ?? []) + (history?.choices(for: piece) ?? []) where word != piece {
+                    result.append(Edge(end: start + length, text: word, reading: piece, cost: Cost.userWord, entry: nil))
+                }
             }
         }
 
         let longest = min(dictionary.longestKey, kana.count - start)
-        guard longest > 0 else { return [] }
+        guard longest > 0 else { return result }
         for length in 1...longest {
             let piece = String(kana[start..<start + length])
-            for index in dictionary.entryIndexes(reading: piece).sorted() {
+            for index in dictionary.entryIndexes(reading: piece) {
                 let entry = dictionary.entries[index]
                 add(start + length, entry.word, piece, wordCost(index) + (length == 1 ? Cost.singleKana : 0), entry)
             }

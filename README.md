@@ -7,11 +7,12 @@ An iOS app with two Japanese keyboards:
 
 Both boards live in one keyboard, and the **mode wheel** switches between them (see below). They're the same height and share the candidate bar, so switching doesn't make anything jump. The keyboard is listed twice in Settings, as ローマ字 and かな: the only difference is which board it opens on, so you can hand your phone to someone who types with flicks.
 
-Both keyboards include a Japanese–English dictionary (about 22,000 common words from JMdict). It gives you:
+Both keyboards include a Japanese–English dictionary (about 24,000 common words and readings from JMdict, including suffixes like 済み and 中, whose reading changes after a noun: 確認済み, 日本中). It gives you:
 
 - **辞書 mode** (ローマ字 keyboard): type English and the candidate bar shows the Japanese words like dictionary entries, with word, reading and meaning. Tap one to insert it.
 - **Kanji suggestions** while typing Japanese: ねこ → 猫, with the English meaning underneath.
 - **Full entries**: long-press any suggestion to see every meaning, with buttons to insert it as kanji, hiragana or katakana.
+- **単語登録 · My words** (RomaKey → Suggestions): add a word the dictionary lacks, with its reading in hiragana, katakana or romaji. iOS Text Replacements with a hiragana shortcut count too. A phrase you convert a word at a time (確認 | 済み) is remembered whole, and both work inside longer sentences.
 
 ## ローマ字 keyboard
 
@@ -181,7 +182,7 @@ Packages/KeyboardCore/           UI-free logic, unit-tested with `swift test`
   ModeWheel.swift                The mode wheel's slots and swipe directions
   Learning.swift                 Learned words, kanji choices, recent emoji
   Resources/emoji.tsv            Emoji with English and Japanese keywords (Emojibase, MIT)
-  Resources/dictionary.tsv       ~22,000 common JMdict entries, most frequent first
+  Resources/dictionary.tsv       ~24,000 common JMdict entries and readings, most frequent first
   Resources/bigrams.tsv          Likely next words for ~14,500 English words
 tools/build_dictionary.py        Rebuilds dictionary.tsv from JMdict
 tools/build_emoji.py             Rebuilds emoji.tsv from Emojibase

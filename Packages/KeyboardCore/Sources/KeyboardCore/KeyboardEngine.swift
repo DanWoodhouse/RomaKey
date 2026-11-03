@@ -254,7 +254,7 @@ public final class KeyboardEngine {
         }
         if let part = candidate.part, isComposing {
             // The first word of a phrase: the rest stays, to convert next.
-            history?.record(reading: part, word: candidate.text)
+            history?.recordPart(reading: part, word: candidate.text)
             output?.commit(candidate.text)
             composer.removeFirst(part)
             showComposition()
@@ -285,7 +285,7 @@ public final class KeyboardEngine {
             }
         } else {
             if mode == .japanese && candidate.kind == .conversion {
-                history?.record(reading: composer.finalizedText, word: candidate.text)
+                history?.finishPhrase(reading: composer.finalizedText, word: candidate.text)
             }
             if candidate.kind == .prediction {
                 japaneseContext.compositionStarted(textBefore: output?.textBeforeCursor)
@@ -440,6 +440,7 @@ public final class KeyboardEngine {
         case .japanese:
             if composer.isEmpty {
                 japaneseContext.compositionStarted(textBefore: output?.textBeforeCursor)
+                history?.abandonPhrase()
             }
             if isShifted {
                 composer.inputLiteral(text)
@@ -571,6 +572,7 @@ public final class KeyboardEngine {
     }
 
     private func commit(_ text: String) {
+        history?.abandonPhrase()
         if mode == .japanese {
             japaneseContext.committed(text, predictor: predictor)
         }

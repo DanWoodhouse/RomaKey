@@ -419,6 +419,10 @@ select, .btn { font: 13px var(--font-body); color: var(--ink); background: var(-
 input[type="file"] { display: none; }
 input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); flex: none; }
 .help { margin: 0; font-size: 12px; color: var(--muted); }
+.uwlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.uwlist li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
+.uwlist li small { color: var(--muted); margin-left: 6px; }
+.uwlist button { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; padding: 2px 6px; }
 .notes { display: grid; gap: 14px; }
 .checks { display: grid; gap: 6px; }
 .checks h3 { margin: 0; font: 500 11px var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
@@ -577,6 +581,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <p class="help">Press delete straight after an autocorrection to undo it. On iPhone, suggestions use Apple's spell checker; this preview uses the 25,000 most common English words.</p>
       </div>
       <div class="group">
+        <h3>単語登録 · My words</h3>
+        <div class="row"><label for="uw-reading">Reading</label><input type="text" id="uw-reading" placeholder="かくにんずみ or kakuninzumi" autocomplete="off" spellcheck="false"></div>
+        <div class="row"><label for="uw-word">Word</label><input type="text" id="uw-word" placeholder="確認済み" autocomplete="off" spellcheck="false"></div>
+        <div class="btns"><button class="btn" type="button" id="uw-add">Add</button></div>
+        <ul class="uwlist" id="uw-list"></ul>
+        <p class="help">Words the keyboard doesn't know: type the reading and it comes first, and it's used inside longer phrases too. Phrases you convert a word at a time are remembered whole as well. On iPhone, iOS Text Replacements with a hiragana shortcut work too.</p>
+      </div>
+      <div class="group">
         <h3>✨ AI</h3>
         <div class="row"><span>Answered by</span><span class="seg" id="seg-aiProvider"></span></div>
         <p class="help">Apple Intelligence (the default) runs on the iPhone, so it only answers there. Claude answers here too, with the same instructions; in the app it uses your own API key and needs Full Access.</p>
@@ -697,6 +709,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="p10"><span>Type in あ, tap 確定: the blue underline goes straight away. Hold delete with nothing left: the haptics stop. The keyboard's top corners are rounded and the bar and rows are a little taller.</span></label>
         <label class="check"><input type="checkbox" data-check="p11"><span>✨ with Apple: Grammar and です/ます on Japanese text either answer or say Apple's safety filter stopped it (with the reason underneath, and an <em>Ask Claude instead</em> button).</span></label>
         <label class="check"><input type="checkbox" data-check="p12"><span>RomaKey → Look: turn on <em>Different look in dark mode</em>, pick a light theme for light apps and 墨 (or your own colours) for dark ones. Open a light app and a dark app: the keyboard matches the frame iOS draws around it.</span></label>
+        <label class="check"><input type="checkbox" data-check="p13"><span>Type <em>kakuninzumi</em>: 確認済み comes first. RomaKey → Suggestions → My words: add a word, then type its reading. Convert a phrase a word at a time once: next time it comes up whole.</span></label>
         <label class="check"><input type="checkbox" data-check="p4"><span>Your iOS text replacements (omw) and contact names in suggestions; English uses Apple's spell checker.</span></label>
         <label class="check"><input type="checkbox" data-check="p6"><span>Dictation: iOS doesn't let keyboards use the microphone, so use the system 🎤 below the keyboard. It works while RomaKey is showing.</span></label>
         <label class="check"><input type="checkbox" data-check="p5"><span>Haptics, key sounds, and the Apple Intelligence test in the app.</span></label>
@@ -723,7 +736,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     emojiSuggestions: true, skinTone: 0, startingMode: "japanese", autocorrect: true, wordSuggestions: true,
     keySounds: true, haptics: false, predictiveText: true, aiProvider: "apple",
     backgroundOpacity: 1, backgroundGradient: false, gradientColor: "#8ec5fc", gradientDirection: "down",
-    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, klipyAPIKey: "", gifRating: "pg", gifInsertsLink: true, separateDarkLook: false, darkTheme: "sumi", keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, liveConversion: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
+    keyCornerRadius: 5, keyShadows: true, keyOutlines: false, keySpacing: "standard", accentReturnKey: false, keyFont: "system", textSize: "standard", boldKeys: false, klipyAPIKey: "", gifRating: "pg", gifInsertsLink: true, separateDarkLook: false, darkTheme: "sumi", userWords: [], keySecondaries: true, swipeUpSecondaries: true, dictionaryTypesDirectly: false, liveConversion: true, disabledSecondaryKeys: [], animations: true, leftHandedWheel: false, showRomaji: false,
   };
   let settings = { ...DEFAULTS };
   try { Object.assign(settings, JSON.parse(localStorage.getItem("kb-settings") || "{}")); } catch (_) {}
@@ -810,7 +823,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     const g = GODAN[conj];
     if (g) {
       const [a, i, u, e, o, te, voice] = g;
-      f.push(u, e + "ば", o + "う");
+      f.push(u, e + "ば", o + "う", i);  // i: the bare stem as a noun (済む → 済み, 読む → 読み)
       for (const x of POLITE) f.push(i + x);
       if (conj !== "v5r-i") for (const x of NEGATIVE) f.push(a + x);  // ある's negative is ない, its own word
       for (const x of DERIVED) f.push(a + "れ" + x, a + "せ" + x, e + x);
@@ -848,10 +861,22 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     "しか", "だけ", "ばかり", "くらい", "ぐらい", "ほど", "こそ", "でも", "には", "では", "とは", "にも", "との", "への", "ください", "ましょう"]);
   // Costs: lower is likelier. A word costs less the more common it is; anything not in the
   // dictionary stays as kana at a high cost per character.
-  const COST = { unknown: 6000, function: 1200, inflected: 300, single: 2000, startParticle: 3000, particlePair: 500, learned: 2000, everyday: 600, margin: 2500 };
+  // bareStem: a godan stem as a noun (済み), less likely than a real noun read the same (待ち vs 町).
+  // userWord: My words and phrases converted before, as likely as a very common word.
+  const COST = { unknown: 6000, function: 1200, inflected: 300, single: 2000, startParticle: 3000, particlePair: 500, learned: 2000, everyday: 600, margin: 2500,
+    bareStem: 900, userWord: 2600 };
   // Everyday words that written text (where the frequencies come from) undersells: 昨日 over 機能.
   const EVERYDAY = new Set(["昨日", "何時", "今朝", "今晩", "今夜", "明後日", "一昨日"]);
   const wordCost = (i) => 2500 + Math.round(500 * Math.log10(i + 10)) - (EVERYDAY.has(entries[i].kanji) ? COST.everyday : 0);
+  // My words (KeyboardSettings.userWords, UserWord.table): reading → words, rebuilt when they change.
+  let userWordTable = null;
+  function userWords() {
+    if (!userWordTable) {
+      userWordTable = {};
+      for (const [r, w] of settings.userWords || []) (userWordTable[r] = userWordTable[r] || []).push(w);
+    }
+    return userWordTable;
+  }
   function edgesAt(a, p) {
     const out = [], max = Math.min(16, a.length - p);
     const add = (end, text, reading, cost, entry, fn) => out.push({ end, text, reading, cost: cost + (learnedFor(reading, text) ? -COST.learned : 0), entry, fn });
@@ -859,9 +884,16 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       const e = entries[i], rest = a.slice(q, q + 12).join("");
       for (const f of endings(e.conj)) if (rest.startsWith(f)) {
         const reading = a.slice(p, q).join("") + f;
-        add(q + chars(f).length, inflected(e, f, reading), reading, wordCost(i) + COST.inflected, e);
+        const bare = GODAN[e.conj] && GODAN[e.conj][1] === f;
+        add(q + chars(f).length, inflected(e, f, reading), reading, wordCost(i) + (bare ? COST.bareStem : COST.inflected), e);
       }
     };
+    // The person's own words and phrases they converted before, inside longer readings too
+    // (no extra learned discount: they're already cheap).
+    for (let L = 2; L <= max; L++) {
+      const s = a.slice(p, p + L).join("");
+      for (const w of [...(userWords()[s] || []), ...(history[s] || [])]) if (w !== s) out.push({ end: p + L, text: w, reading: s, cost: COST.userWord, entry: null });
+    }
     for (let L = 1; L <= max; L++) {
       const s = a.slice(p, p + L).join("");
       for (const [, i] of equal(readIdx, s)) add(p + L, entries[i].word, s, wordCost(i) + (L === 1 ? COST.single : 0), entries[i]);
@@ -886,11 +918,14 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         let cost = from.cost + edge.cost;
         if (edge.fn && p === 0 && edge.end < n) cost += COST.startParticle;
         if (edge.fn && from.edge && from.edge.fn) cost += COST.particlePair;
-        const text = from.text + edge.text, list = nodes[edge.end];
+        const list = nodes[edge.end];
+        // Most paths can't beat the ones already kept here: skip them before building their text.
+        if (list.length >= KEEP && cost >= list[list.length - 1].cost) continue;
+        const text = from.text + edge.text;
         const same = list.findIndex((x) => x.text === text);
         if (same >= 0) { if (list[same].cost <= cost) continue; list.splice(same, 1); }
-        list.push({ cost, text, edge, prev: from });
-        list.sort((x, y) => x.cost - y.cost);
+        const at = list.findIndex((x) => x.cost > cost);
+        list.splice(at < 0 ? list.length : at, 0, { cost, text, edge, prev: from });
         if (list.length > KEEP) list.pop();
       }
     }
@@ -1021,6 +1056,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   let recents = load("kb-recent", []), history = load("kb-history", {});
   const isSingleEmoji = (t) => { try { return [...new Intl.Segmenter().segment(t)].length === 1; } catch (_) { return chars(t).length <= 2; } };
   const useRecent = (t) => { recents = [t, ...recents.filter((x) => x !== t)].slice(0, 32); keep("kb-recent", recents); };
+  // A phrase converted a word at a time (確認 | 済み) is remembered whole too (Learning.swift).
+  let phrase = null;
   const recordChoice = (reading, word) => {
     // Kana is remembered too, so a word you keep in kana isn't converted automatically.
     if (!reading) return;
@@ -1048,6 +1085,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       const h = this.finalized, k = katakana(h), exact = byReading(h), out = [], seen = new Set();
       const add = (text, entry, kind = "conversion") => { if (!seen.has(text)) { seen.add(text); out.push({ text, entry, kind }); } };
       for (const w of history[h] || []) add(w, exact.find((e) => e.word === w || e.kanji === w));
+      for (const w of userWords()[h] || []) add(w, exact.find((e) => e.word === w || e.kanji === w));
       add(h, exact.find((e) => e.word === h));
       // Whole phrases and conjugated words (今日はいい天気, 食べました): first when the reading
       // isn't a single dictionary word, after the dictionary's own words when it is.
@@ -1220,7 +1258,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   const jaContext = () => ({
     last: null, previousForComposition: null,
     previous() { return this.last && out.textBeforeCursor.endsWith(this.last) ? this.last : null; },
-    started() { this.previousForComposition = this.previous(); },
+    started() { this.previousForComposition = this.previous(); phrase = null; },
     committed(t) { if (this.previousForComposition) learnNext(this.previousForComposition, t); this.previousForComposition = null; this.last = t; },
   });
   function jaPredictions(ctx) {
@@ -1697,7 +1735,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         candsEl.appendChild(lead);
       }
     }
-    for (const c of list) {
+    // The bar is rebuilt on every key press, so it stops at the first few dozen (CandidateBar.swift).
+    for (const c of list.slice(0, 24)) {
       const b = document.createElement("button");
       b.type = "button"; b.className = "cand" + (c.kind === "emoji" ? " emoji" : c.kind === "autocorrection" ? " auto" : "");
       const w = document.createElement("span"); w.className = "w"; w.textContent = c.kind === "typed" ? "“" + c.text + "”" : c.text;
@@ -1771,8 +1810,17 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       return;
     }
     const composer = active.composer;
-    if (c.part) { recordChoice(c.part, c.text); active.selectPart(c.text, c.part); return; }
-    if (c.kind === "conversion" && !(active === romaji && romaji.mode === "dictionary")) recordChoice(composer.finalized, c.text);
+    if (c.part) {
+      recordChoice(c.part, c.text);
+      phrase = { reading: (phrase ? phrase.reading : "") + c.part, words: (phrase ? phrase.words : "") + c.text };
+      active.selectPart(c.text, c.part);
+      return;
+    }
+    if (c.kind === "conversion" && !(active === romaji && romaji.mode === "dictionary")) {
+      recordChoice(composer.finalized, c.text);
+      if (phrase) recordChoice(phrase.reading + composer.finalized, phrase.words + c.text);
+    }
+    phrase = null;
     if (c.kind === "prediction") active.ja.started();
     active.select(c.text);
   }
@@ -2840,6 +2888,37 @@ Text: よろしくおねがいします
   segmented("seg-gifRating", "gifRating", [["g", "G"], ["pg", "PG"], ["pg-13", "PG-13"], ["r", "R"]]);
   const SEGMENTS = [["seg-height", "height"], ["seg-sensitivity", "flickSensitivity"], ["seg-startingMode", "startingMode"], ["seg-skinTone", "skinTone"], ["seg-gifRating", "gifRating"], ["seg-keyFont", "keyFont"], ["seg-textSize", "textSize"], ["seg-aiProvider", "aiProvider"], ["seg-gradientDirection", "gradientDirection"], ["seg-keySpacing", "keySpacing"]];
   $("klipy-key").addEventListener("input", (e) => { settings.klipyAPIKey = e.target.value.trim(); saveSettings(); });
+  // My words: a reading in hiragana, katakana or romaji (UserWord.normalizedReading), and the word.
+  function normalizeReading(text) {
+    const t = text.trim().toLowerCase();
+    if (!t) return null;
+    let kana = t;
+    if (/^[a-z'-]+$/.test(t)) { const c = new Composer(); for (const ch of t) c.input(ch); kana = c.finalized; }
+    const h = hiragana(kana);
+    return /^[\u3041-\u3096\u309dー\u309e]+$/.test(h) ? h : null;
+  }
+  function renderUserWords() {
+    const list = $("uw-list");
+    list.textContent = "";
+    for (const [i, [reading, word]] of (settings.userWords || []).entries()) {
+      const li = document.createElement("li");
+      const label = document.createElement("span"); label.textContent = word;
+      const small = document.createElement("small"); small.textContent = reading; label.appendChild(small);
+      const x = document.createElement("button"); x.type = "button"; x.textContent = "✕"; x.setAttribute("aria-label", "Remove " + word);
+      x.addEventListener("click", () => { settings.userWords = settings.userWords.filter((_, j) => j !== i); userWordsChanged(); });
+      li.append(label, x);
+      list.appendChild(li);
+    }
+  }
+  function userWordsChanged() { userWordTable = null; liveCache = [null, null]; saveSettings(); renderUserWords(); render(); }
+  $("uw-add").addEventListener("click", () => {
+    const reading = normalizeReading($("uw-reading").value), word = $("uw-word").value.trim();
+    if (!reading || !word) { flash(reading ? "Type the word too" : "Type the reading in hiragana, katakana or romaji"); return; }
+    if (!(settings.userWords || []).some(([r, w]) => r === reading && w === word)) settings.userWords = [[reading, word], ...(settings.userWords || [])];
+    $("uw-reading").value = ""; $("uw-word").value = "";
+    userWordsChanged();
+  });
+  renderUserWords();
   $("forget").addEventListener("click", () => {
     learned = {}; history = {}; recents = [];
     keep("kb-learned", learned); keep("kb-history", history); keep("kb-recent", recents);

@@ -163,6 +163,16 @@ struct SuggestionSettingsView: View {
             }
 
             Section {
+                NavigationLink {
+                    MyWordsView(store: store)
+                } label: {
+                    LabeledContent("単語登録 · My words", value: store.settings.userWords.isEmpty ? "" : "\(store.settings.userWords.count)")
+                }
+            } footer: {
+                Text("Teach the keyboard a word or phrase it doesn't know, like 確認済み. Phrases you convert a word at a time are remembered whole too.")
+            }
+
+            Section {
                 Toggle("Show English meanings", isOn: $store.settings.showMeanings)
                 Toggle("Show romaji readings", isOn: $store.settings.showRomaji)
             } header: {
@@ -180,6 +190,82 @@ struct SuggestionSettingsView: View {
             }
         }
         .navigationTitle("候補 · Suggestions")
+    }
+}
+
+/// 単語登録: readings and how they're written, used first when converting to kanji.
+struct MyWordsView: View {
+    @ObservedObject var store: SettingsStore
+    @State private var reading = ""
+    @State private var word = ""
+    @FocusState private var focus: Field?
+
+    private enum Field {
+        case reading, word
+    }
+
+    /// What the reading field becomes, shown under it: romaji turns into hiragana.
+    private var normalized: String? { UserWord.normalizedReading(reading) }
+
+    private var canAdd: Bool {
+        normalized != nil && !word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                TextField("Reading: かくにんずみ or kakuninzumi", text: $reading)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .focused($focus, equals: .reading)
+                    .submitLabel(.next)
+                    .onSubmit { focus = .word }
+                if let normalized, normalized != reading {
+                    Text(normalized).foregroundStyle(.secondary)
+                } else if !reading.isEmpty && normalized == nil {
+                    Text("Type the reading in hiragana, katakana or romaji.").foregroundStyle(.red)
+                }
+                TextField("Word: 確認済み", text: $word)
+                    .focused($focus, equals: .word)
+                    .submitLabel(.done)
+                    .onSubmit(add)
+                Button("Add", action: add)
+                    .disabled(!canAdd)
+            } header: {
+                Text("追加 · Add a word")
+            } footer: {
+                Text("Type the reading, then the word as it should be written. When you type the reading, the word comes first, and it's used inside longer phrases too.")
+            }
+
+            if !store.settings.userWords.isEmpty {
+                Section("登録済み · Your words") {
+                    ForEach(store.settings.userWords, id: \.self) { item in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.word)
+                            Text(item.reading).font(.footnote).foregroundStyle(.secondary)
+                        }
+                    }
+                    .onDelete { store.settings.userWords.remove(atOffsets: $0) }
+                }
+            }
+
+            Section {
+            } footer: {
+                Text("Words you add in iOS Settings → General → Keyboard → Text Replacement with a hiragana shortcut work here too, the iPhone's own way of adding Japanese words.")
+            }
+        }
+        .navigationTitle("単語登録 · My words")
+    }
+
+    private func add() {
+        guard canAdd, let normalized else { return }
+        let entry = UserWord(reading: normalized, word: word.trimmingCharacters(in: .whitespacesAndNewlines))
+        if !store.settings.userWords.contains(entry) {
+            store.settings.userWords.insert(entry, at: 0)
+        }
+        reading = ""
+        word = ""
+        focus = .reading
     }
 }
 

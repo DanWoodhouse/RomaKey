@@ -173,7 +173,7 @@ public final class FlickKeyboardEngine {
     public func selectCandidate(_ candidate: Candidate) {
         if let part = candidate.part, isComposing {
             // The first word of a phrase: the rest stays, to convert next.
-            history?.record(reading: part, word: candidate.text)
+            history?.recordPart(reading: part, word: candidate.text)
             output?.commit(candidate.text)
             composer.removeFirst(part)
             toggle = nil
@@ -182,7 +182,9 @@ public final class FlickKeyboardEngine {
             return
         }
         if candidate.kind == .conversion {
-            history?.record(reading: composer.finalizedText, word: candidate.text)
+            history?.finishPhrase(reading: composer.finalizedText, word: candidate.text)
+        } else {
+            history?.abandonPhrase()
         }
         if candidate.kind == .prediction {
             predictionContext.compositionStarted(textBefore: output?.textBeforeCursor)
@@ -235,6 +237,7 @@ public final class FlickKeyboardEngine {
 
     public func commitComposition() {
         guard isComposing else { return }
+        history?.abandonPhrase()
         let text = committedText
         predictionContext.committed(text, predictor: predictor)
         output?.commit(text)
@@ -265,6 +268,7 @@ public final class FlickKeyboardEngine {
         if page == .kana {
             if composer.isEmpty {
                 predictionContext.compositionStarted(textBefore: output?.textBeforeCursor)
+                history?.abandonPhrase()
             }
             composer.inputLiteral(text)
             showComposition()

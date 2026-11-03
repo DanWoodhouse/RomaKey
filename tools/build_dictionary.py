@@ -1,7 +1,9 @@
 """Builds the keyboard's dictionary from JMdict (via the jamdict-data SQLite file).
 
-Keeps the entries JMdict marks as common (news1, ichi1, spec1, spec2, gai1), ordered by
-frequency, and writes one tab-separated line per entry:
+Keeps the entries JMdict marks as common (news1, ichi1, spec1, spec2, gai1), plus the ones with
+only a newspaper-frequency tag (nf01-nf48) that are common in everyday text or are prefixes and
+suffixes (済み, which joins nouns: 確認済み). Ordered by frequency, one tab-separated line per
+entry and reading:
 
     kanji  reading  usually-kana(0/1)  part-of-speech  senses  conjugation
 
@@ -9,6 +11,9 @@ Senses are separated by " | ", glosses within a sense by "; ". The conjugation c
 the word inflects, for kanji conversion of forms like 食べた (see Conjugation.swift): v1
 (ichidan), v5u … v5r (godan, by ending), v5k-s (行く), v5r-i (ある), v5aru (いらっしゃる), vk
 (来る), vs (a noun that takes する), vs-i (ends in する), adj-i, adj-ix (いい/良い), or empty.
+
+A word's other readings get lines of their own when JMdict marks them common, or when the word is
+a prefix or suffix, whose reading often changes after another word (済み: すみ, ずみ).
 """
 import gzip
 import sqlite3
@@ -16,6 +21,9 @@ import sys
 from collections import defaultdict
 
 COMMON = {"news1", "ichi1", "spec1", "spec2", "gai1"}
+# Words with only a newspaper-frequency tag are kept if wordfreq sees them at least this often.
+EVERYDAY = 1e-6
+AFFIXES = ("suffix", "prefix", "noun, used as a suffix", "noun, used as a prefix")
 MAX_SENSES = 3
 MAX_GLOSSES = 4
 
@@ -113,16 +121,26 @@ def main(db_path, out_path, wordfreq_path=None):
     tags = defaultdict(set)
     for idseq, tag in c.execute("SELECT k.idseq, p.text FROM Kanji k JOIN KJP p ON p.kid = k.ID"):
         tags[idseq].add(tag)
-    for idseq, tag in c.execute("SELECT k.idseq, p.text FROM Kana k JOIN KNP p ON p.kid = k.ID"):
+    reading_tags = defaultdict(set)
+    for idseq, text, tag in c.execute("SELECT k.idseq, k.text, p.text FROM Kana k JOIN KNP p ON p.kid = k.ID"):
         tags[idseq].add(tag)
-    common = [i for i, t in tags.items() if t & COMMON]
+        reading_tags[(idseq, text)].add(tag)
 
     kanji = defaultdict(list)
     for idseq, text in c.execute("SELECT idseq, text FROM Kanji ORDER BY ID"):
         kanji[idseq].append(text)
     kana = defaultdict(list)
-    for idseq, text in c.execute("SELECT idseq, text FROM Kana ORDER BY ID"):
+    # Readings that don't go with the first kanji spelling: nokanji, restricted to another
+    # spelling, or marked irregular or obsolete.
+    restricted = defaultdict(set)
+    for kid, text in c.execute("SELECT kid, text FROM KNR"):
+        restricted[kid].add(text)
+    odd = {kid for (kid,) in c.execute("SELECT DISTINCT kid FROM KNI")}
+    other_readings = defaultdict(list)
+    for kid, idseq, text, nokanji in c.execute("SELECT ID, idseq, text, nokanji FROM Kana ORDER BY ID"):
         kana[idseq].append(text)
+        if len(kana[idseq]) > 1 and not nokanji and kid not in odd:
+            other_readings[idseq].append((text, restricted[kid]))
     senses = defaultdict(list)
     for sid, idseq in c.execute("SELECT ID, idseq FROM Sense ORDER BY ID"):
         senses[idseq].append(sid)
@@ -135,6 +153,19 @@ def main(db_path, out_path, wordfreq_path=None):
     misc = defaultdict(list)
     for sid, text in c.execute("SELECT sid, text FROM misc"):
         misc[sid].append(text)
+
+    def is_affix(idseq):
+        return any(p.startswith(AFFIXES) for s in senses[idseq] for p in pos[s])
+
+    def tagged(tag_set):
+        return bool(tag_set & COMMON) or "news2" in tag_set or any(t.startswith("nf") for t in tag_set)
+
+    def everyday(idseq):
+        forms = kanji[idseq][:1] or kana[idseq][:1]
+        return any(freq.get(form, 0) >= EVERYDAY for form in forms)
+
+    common = [i for i, t in tags.items()
+              if t & COMMON or (any(x.startswith("nf") for x in t) and (is_affix(i) or everyday(i)))]
 
     rows = []
     for idseq in common:
@@ -159,7 +190,15 @@ def main(db_path, out_path, wordfreq_path=None):
         # Most frequent in everyday text first (wordfreq); JMdict's rank breaks ties and orders
         # the words wordfreq doesn't know.
         common_use = frequency(freq, fields[0], fields[1], fields[2] == "1", fields[5])
-        rows.append((-common_use, rank(tags[idseq]), idseq, "\t".join(fields)))
+        rows.append((-common_use, rank(tags[idseq]), idseq, 0, "\t".join(fields)))
+        # Other readings of the same spelling, just after the main one.
+        if fields[0]:
+            affix = is_affix(idseq)
+            for number, (reading, only) in enumerate(other_readings[idseq], start=1):
+                if only and fields[0] not in only:
+                    continue
+                if affix or tagged(reading_tags[(idseq, reading)]):
+                    rows.append((-common_use, rank(tags[idseq]), idseq, number, "\t".join([fields[0], reading] + fields[2:])))
 
     rows.sort()
     with open(out_path, "w", encoding="utf-8") as f:

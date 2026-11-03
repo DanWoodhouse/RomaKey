@@ -48,6 +48,28 @@ enum DictionaryLoader {
     }
 }
 
+/// Loads the English word pairs once per keyboard process, like the dictionary: the keyboard's
+/// view controller is made again each time it appears, but the process often stays.
+enum PredictorLoader {
+    private static var predictor: NextWordPredictor?
+
+    /// Calls back on the main thread.
+    static func load(store: KeyValueStore, _ completion: @escaping (NextWordPredictor) -> Void) {
+        if let predictor {
+            completion(predictor)
+            return
+        }
+        DispatchQueue.global(qos: .utility).async {
+            let loaded = NextWordPredictor.bundled(store: store)
+            DispatchQueue.main.async {
+                let shared = predictor ?? loaded
+                predictor = shared
+                completion(shared)
+            }
+        }
+    }
+}
+
 /// Loads the emoji list once per keyboard process, hiding emoji this iOS can't draw.
 enum EmojiLoader {
     private static var catalog: EmojiCatalog?
@@ -151,38 +173,62 @@ class KeyboardHostController: UIInputViewController {
         }
         show(openingBoard)
 
+        // The dictionary, then word pairs, then emoji, one at a time: each briefly needs extra
+        // memory while it's read, and a keyboard is stopped if it uses too much at once.
         DictionaryLoader.load { [weak self] dictionary in
-            self?.romajiEngine.dictionary = dictionary
-            self?.flickEngine.dictionary = dictionary
-        }
-        let store = learningStore
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            let predictor = NextWordPredictor.bundled(store: store)
-            DispatchQueue.main.async {
-                self?.romajiEngine.predictor = predictor
-                self?.flickEngine.predictor = predictor
-            }
-        }
-        EmojiLoader.load { [weak self] catalog in
             guard let self else { return }
-            boardViews.forEach { $0.emojiCatalog = catalog }
-            romajiEngine.emojiCatalog = catalog
-            flickEngine.emojiCatalog = catalog
+            romajiEngine.dictionary = dictionary
+            flickEngine.dictionary = dictionary
+            updateUserWords()
+            loadPredictor()
         }
-        // The user's iOS text replacements (omw → On my way!) and contact names, so names are never "corrected".
+        // The user's iOS text replacements (omw → On my way!) and contact names, so names are never
+        // "corrected". Replacements with a kana shortcut are Japanese words they added (My words).
         requestSupplementaryLexicon { [weak self] lexicon in
             var replacements: [String: String] = [:]
+            var kana: [(shortcut: String, phrase: String)] = []
             var known: Set<String> = []
             for entry in lexicon.entries {
                 if entry.userInput.caseInsensitiveCompare(entry.documentText) == .orderedSame {
                     known.insert(entry.documentText.lowercased())
-                } else {
+                } else if entry.userInput.contains(where: \.isASCII) {
                     replacements[entry.userInput.lowercased()] = entry.documentText
+                } else {
+                    kana.append((entry.userInput, entry.documentText))
                 }
             }
-            self?.romajiEngine.suggester?.textReplacements = replacements
-            self?.romajiEngine.suggester?.knownWords = known
+            DispatchQueue.main.async {
+                guard let self else { return }
+                romajiEngine.suggester?.textReplacements = replacements
+                romajiEngine.suggester?.knownWords = known
+                kanaReplacements = kana
+                updateUserWords()
+            }
         }
+    }
+
+    private func loadPredictor() {
+        PredictorLoader.load(store: learningStore) { [weak self] predictor in
+            guard let self else { return }
+            romajiEngine.predictor = predictor
+            flickEngine.predictor = predictor
+            EmojiLoader.load { [weak self] catalog in
+                guard let self else { return }
+                boardViews.forEach { $0.emojiCatalog = catalog }
+                romajiEngine.emojiCatalog = catalog
+                flickEngine.emojiCatalog = catalog
+            }
+        }
+    }
+
+    /// iOS text replacements whose shortcut is in kana.
+    private var kanaReplacements: [(shortcut: String, phrase: String)] = []
+
+    /// My words and kana text replacements, for kanji conversion.
+    private func updateUserWords() {
+        let table = UserWord.table(settings.userWords, replacements: kanaReplacements)
+        guard let dictionary = romajiEngine.dictionary, dictionary.userWords != table else { return }
+        dictionary.userWords = table
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -207,6 +253,7 @@ class KeyboardHostController: UIInputViewController {
         }
         romajiEngine.setMode(settings.initialMode)
         flickEngine.setPage(.kana)
+        updateUserWords()
         show(openingBoard)
         updateHeight()
         runAIProbeIfRequested()
@@ -290,6 +337,14 @@ class KeyboardHostController: UIInputViewController {
             try? await Task.sleep(nanoseconds: 8_000_000_000)
             self?.contentView.candidateBar.status = nil
         }
+    }
+
+    /// Keyboards are stopped if they use too much memory, so let go of anything that can be
+    /// worked out or downloaded again.
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        GIFData.removeAll()
+        romajiEngine.dictionary?.removeCaches()
     }
 
     override func viewWillLayoutSubviews() {

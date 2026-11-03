@@ -110,6 +110,21 @@ public final class JapaneseDictionary {
     /// Recent conversions by reading, shared by live conversion and the candidate bar.
     var conversionCache: [String: [KanaKanjiConverter.Conversion]] = [:]
 
+    /// The person's own words, reading (hiragana) → words: RomaKey's My words and iOS text
+    /// replacements whose shortcut is in kana. Offered first, and used inside longer phrases.
+    public var userWords: [String: [String]] = [:] {
+        didSet {
+            conversionCache = [:]
+            longestUserReading = userWords.keys.map(\.count).max() ?? 0
+        }
+    }
+    private(set) var longestUserReading = 0
+
+    /// Frees what can be worked out again, when the keyboard is low on memory.
+    public func removeCaches() {
+        conversionCache = [:]
+    }
+
     /// Parses the tab-separated format written by `tools/build_dictionary.py`:
     /// kanji, reading, usually-kana (0/1), part of speech, senses, and (optionally) conjugation.
     public init(tsv: String) {
@@ -236,8 +251,8 @@ public final class JapaneseDictionary {
 
     /// Words read exactly as `reading` (hiragana or katakana), most common first.
     public func entries(reading: String) -> [DictionaryEntry] {
-        let key = KanaConverter.hiragana(from: reading)
-        return Self.items(in: readings, equalTo: key).map(\.entry).sorted().map { entries[Int($0)] }
+        // The table lists each reading's entries in dictionary order: most common first.
+        readingTable[KanaConverter.hiragana(from: reading)]?.map { entries[Int($0)] } ?? []
     }
 
     /// Longer words whose reading starts with `prefix`, most common first.

@@ -119,6 +119,33 @@ public final class ConversionHistory {
         choices[reading] ?? []
     }
 
+    // A phrase converted a word at a time (確認 | 済み) is remembered whole too, so next time it
+    // comes up in one go, even if the dictionary doesn't have it.
+    private var phraseReading = ""
+    private var phraseWords = ""
+
+    /// The first word or words of a phrase, picked with the rest still to convert.
+    public func recordPart(reading: String, word: String) {
+        record(reading: reading, word: word)
+        phraseReading += reading
+        phraseWords += word
+    }
+
+    /// The last word of a phrase: remembers it, and the whole phrase if it came in parts.
+    public func finishPhrase(reading: String, word: String) {
+        record(reading: reading, word: word)
+        if !phraseReading.isEmpty {
+            record(reading: phraseReading + reading, word: phraseWords + word)
+        }
+        abandonPhrase()
+    }
+
+    /// The phrase was confirmed some other way, or a new one started.
+    public func abandonPhrase() {
+        phraseReading = ""
+        phraseWords = ""
+    }
+
     public func reset() {
         revision += 1
         choices = [:]
