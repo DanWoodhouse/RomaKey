@@ -197,7 +197,7 @@ class KeyboardHostController: UIInputViewController {
                     kana.append((entry.userInput, entry.documentText))
                 }
             }
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 romajiEngine.suggester?.textReplacements = replacements
                 romajiEngine.suggester?.knownWords = known
