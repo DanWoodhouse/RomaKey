@@ -113,6 +113,10 @@ extension RomajiComposer {
             add(item.word, item)
         }
         addPhrases()
+        // Rarer words read exactly this way (背徳).
+        for word in dictionary?.extended?.words(reading: hiragana) ?? [] {
+            add(word.text, word.entry)
+        }
         add(katakana, entry(katakana))
         for item in emoji?.suggestions(for: hiragana, limit: 2) ?? [] {
             add(item.character, nil, kind: .emoji)

@@ -181,6 +181,11 @@ public struct KanaKanjiConverter {
         /// A word the person added, or a phrase they converted before: as likely as a very
         /// common word.
         static let userWord = 2600
+        /// A word from the extended lexicon (背徳), plus `rareBand` for each band less common:
+        /// it loses to two common words read the same way (about 6800 and up), but beats odd
+        /// splits (はい + 得) and kana nobody converts.
+        static let rare = 6400
+        static let rareBand = 120
         static let everyday = 600
         /// Alternatives costing more than this over the best are odd splits (ね子 for ねこ).
         static let margin = 2500
@@ -396,6 +401,21 @@ public struct KanaKanjiConverter {
                 let piece = String(kana[start..<start + length])
                 for word in (dictionary.userWords[piece] ?? []) + (history?.choices(for: piece) ?? []) where word != piece {
                     result.append(Edge(end: start + length, text: word, reading: piece, cost: Cost.userWord, entry: nil))
+                }
+            }
+        }
+
+        // Rarer words, two kana or more, stopping as soon as no longer reading starts here.
+        if let extended = dictionary.extended {
+            let longestRare = min(extended.longestReading, 16, kana.count - start)
+            if longestRare >= 2 {
+                for length in 2...longestRare {
+                    let piece = String(kana[start..<start + length])
+                    let (words, continues) = extended.lookup(piece)
+                    for word in words {
+                        add(start + length, word.text, piece, Cost.rare + Cost.rareBand * word.band, word.entry)
+                    }
+                    if !continues { break }
                 }
             }
         }

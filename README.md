@@ -7,7 +7,7 @@ An iOS app with two Japanese keyboards:
 
 Both boards live in one keyboard, and the **mode wheel** switches between them (see below). They're the same height and share the candidate bar, so switching doesn't make anything jump. The keyboard is listed twice in Settings, as ローマ字 and かな: the only difference is which board it opens on, so you can hand your phone to someone who types with flicks.
 
-Both keyboards include a Japanese–English dictionary (about 24,000 common words and readings from JMdict, including suffixes like 済み and 中, whose reading changes after a noun: 確認済み, 日本中). It gives you:
+Both keyboards include a Japanese–English dictionary (about 24,000 common words and readings from JMdict, including suffixes like 済み and 中, whose reading changes after a noun: 確認済み, 日本中), plus about 120,000 rarer JMdict words for kanji conversion (背徳, 背徳感). The rarer words are in a file the keyboard memory-maps rather than loads, so they don't use up its small memory allowance. It gives you:
 
 - **辞書 mode** (ローマ字 keyboard): type English and the candidate bar shows the Japanese words like dictionary entries, with word, reading and meaning. Tap one to insert it.
 - **Kanji suggestions** while typing Japanese: ねこ → 猫, with the English meaning underneath.
@@ -183,6 +183,7 @@ Packages/KeyboardCore/           UI-free logic, unit-tested with `swift test`
   Learning.swift                 Learned words, kanji choices, recent emoji
   Resources/emoji.tsv            Emoji with English and Japanese keywords (Emojibase, MIT)
   Resources/dictionary.tsv       ~24,000 common JMdict entries and readings, most frequent first
+  Resources/lexicon.bin          ~120,000 rarer JMdict words for conversion, memory-mapped (ExtendedLexicon.swift)
   Resources/bigrams.tsv          Likely next words for ~14,500 English words
 tools/build_dictionary.py        Rebuilds dictionary.tsv from JMdict
 tools/build_emoji.py             Rebuilds emoji.tsv from Emojibase
@@ -232,4 +233,4 @@ Settings → General → Keyboard → Keyboards → Add New Keyboard… → **�
 
 The dictionary is built from [JMdict](https://www.edrdg.org/jmdict/j_jmdict.html), the property of the [Electronic Dictionary Research and Development Group](https://www.edrdg.org/), and is used in conformance with the Group's [licence](https://www.edrdg.org/edrdg/licence.html) (Creative Commons Attribution-ShareAlike 3.0). `Packages/KeyboardCore/Sources/KeyboardCore/Resources/dictionary.tsv` is a derived file and is under the same licence; a copy of the licence is next to it. The data came from the `jamdict-data` package (JMdict 1.08, 2020 snapshot).
 
-Emoji names and keywords come from [Emojibase](https://emojibase.dev) (MIT licence, copy next to `emoji.tsv`). Dictionary entries are ranked by how often they're used, from [wordfreq](https://github.com/rspeer/wordfreq)'s Japanese data (CC BY-SA 4.0); rebuild with `tools/build_dictionary.py jamdict.db dictionary.tsv large_ja.msgpack.gz`. English word pairs for predictive text come from [SymSpell](https://github.com/wolfgarbe/SymSpell)'s bigram list (MIT), built from [Google Books Ngrams](https://books.google.com/ngrams) (CC BY 3.0); rebuild with `tools/build_bigrams.py`. GIF search is powered by KLIPY.
+Emoji names and keywords come from [Emojibase](https://emojibase.dev) (MIT licence, copy next to `emoji.tsv`). Dictionary entries are ranked by how often they're used, from [wordfreq](https://github.com/rspeer/wordfreq)'s Japanese data (CC BY-SA 4.0); rebuild both with `tools/build_dictionary.py jamdict.db dictionary.tsv large_ja.msgpack.gz lexicon.bin`. English word pairs for predictive text come from [SymSpell](https://github.com/wolfgarbe/SymSpell)'s bigram list (MIT), built from [Google Books Ngrams](https://books.google.com/ngrams) (CC BY 3.0); rebuild with `tools/build_bigrams.py`. GIF search is powered by KLIPY.

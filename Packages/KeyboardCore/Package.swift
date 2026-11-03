@@ -13,6 +13,8 @@ let package = Package(
             resources: [
                 // Common words from JMdict (CC BY-SA, EDRDG). Rebuild with tools/build_dictionary.py.
                 .copy("Resources/dictionary.tsv"),
+                // The rest of JMdict, for kanji conversion; memory-mapped. Built by the same tool.
+                .copy("Resources/lexicon.bin"),
                 .copy("Resources/JMdict-LICENSE.md"),
                 // Emoji names and keywords from Emojibase (MIT). Rebuild with tools/build_emoji.py.
                 .copy("Resources/emoji.tsv"),

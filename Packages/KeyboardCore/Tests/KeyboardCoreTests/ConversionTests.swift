@@ -207,3 +207,51 @@ final class OwnWordsTests: XCTestCase {
         XCTAssertEqual(KanaKanjiConverter(dictionary: dictionary, history: history).convert("かくにんずみです").first?.text, "確認済みです")
     }
 }
+
+/// The memory-mapped lexicon of rarer words (ExtendedLexicon).
+final class ExtendedLexiconTests: XCTestCase {
+    /// A lexicon file in the format `tools/build_dictionary.py` writes.
+    private func lexicon(_ lines: [(String, [String])]) -> ExtendedLexicon? {
+        let sorted = lines.sorted { Array($0.0.utf8).lexicographicallyPrecedes(Array($1.0.utf8)) }
+        var text = Data()
+        var offsets: [UInt32] = []
+        for (reading, words) in sorted {
+            offsets.append(UInt32(text.count))
+            let parts = [reading] + words.map { "\($0)\u{1F}0\u{1F}noun\u{1F}meaning" }
+            text.append(Data((parts.joined(separator: "\t") + "\n").utf8))
+        }
+        var data = Data("RKLX".utf8)
+        for number in [UInt32(1), UInt32(sorted.count), UInt32(sorted.map(\.0.count).max() ?? 0)] + offsets {
+            withUnsafeBytes(of: number.littleEndian) { data.append(contentsOf: $0) }
+        }
+        data.append(text)
+        return ExtendedLexicon(data: data)
+    }
+
+    func testFindsReadingsAndKnowsWhenToStopLooking() throws {
+        let lexicon = try XCTUnwrap(lexicon([("はいとく", ["背徳"]), ("はいとくかん", ["背徳感"]), ("かん", ["棺"])]))
+        XCTAssertEqual(lexicon.longestReading, 6)
+        XCTAssertEqual(lexicon.lookup("はいとく").words.map(\.text), ["背徳"])
+        XCTAssertTrue(lexicon.lookup("はいとく").continues)  // はいとくかん starts with it
+        XCTAssertFalse(lexicon.lookup("はいとくかん").continues)
+        XCTAssertTrue(lexicon.lookup("はい").words.isEmpty)
+        XCTAssertTrue(lexicon.lookup("はい").continues)
+        XCTAssertFalse(lexicon.lookup("ほ").continues)
+        XCTAssertEqual(lexicon.lookup("かん").words.first?.entry.shortMeaning, "meaning")
+        XCTAssertTrue(lexicon.lookup("ん").words.isEmpty)
+    }
+
+    func testRejectsOtherFiles() {
+        XCTAssertNil(ExtendedLexicon(data: Data("not a lexicon".utf8)))
+    }
+
+    func testRareWordsConvertWithoutBeatingCommonOnes() throws {
+        let dictionary = try XCTUnwrap(JapaneseDictionary.bundled())
+        dictionary.extended = try XCTUnwrap(ExtendedLexicon.bundled())
+        let converter = KanaKanjiConverter(dictionary: dictionary)
+        XCTAssertEqual(converter.convert("はいとく").first?.text, "背徳")
+        XCTAssertEqual(converter.convert("はいとくかん").first?.text, "背徳感")
+        XCTAssertEqual(converter.convert("きょうはいいてんきですね").first?.text, "今日はいい天気ですね")
+        XCTAssertEqual(converter.convert("かいしゃにいきます").first?.text, "会社に行きます")
+    }
+}

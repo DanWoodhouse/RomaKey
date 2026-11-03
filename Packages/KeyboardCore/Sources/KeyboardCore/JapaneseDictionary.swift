@@ -120,6 +120,11 @@ public final class JapaneseDictionary {
     }
     private(set) var longestUserReading = 0
 
+    /// The rarer words, for conversion (背徳). Set once it's mapped.
+    public var extended: ExtendedLexicon? {
+        didSet { conversionCache = [:] }
+    }
+
     /// Frees what can be worked out again, when the keyboard is low on memory.
     public func removeCaches() {
         conversionCache = [:]

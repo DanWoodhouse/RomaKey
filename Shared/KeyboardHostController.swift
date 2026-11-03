@@ -37,6 +37,8 @@ enum DictionaryLoader {
         isLoading = true
         DispatchQueue.global(qos: .userInitiated).async {
             let loaded = JapaneseDictionary.bundled()
+            // Mapped, not read: it costs almost nothing until a lookup touches it.
+            loaded?.extended = ExtendedLexicon.bundled()
             DispatchQueue.main.async {
                 dictionary = loaded
                 isLoading = false

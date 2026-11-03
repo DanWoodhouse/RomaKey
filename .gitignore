@@ -10,3 +10,6 @@ xcuserdata/
 DerivedData/
 .build/
 .swiftpm/
+
+# Python
+__pycache__/

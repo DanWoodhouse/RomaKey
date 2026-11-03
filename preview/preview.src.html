@@ -709,7 +709,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
         <label class="check"><input type="checkbox" data-check="p10"><span>Type in あ, tap 確定: the blue underline goes straight away. Hold delete with nothing left: the haptics stop. The keyboard's top corners are rounded and the bar and rows are a little taller.</span></label>
         <label class="check"><input type="checkbox" data-check="p11"><span>✨ with Apple: Grammar and です/ます on Japanese text either answer or say Apple's safety filter stopped it (with the reason underneath, and an <em>Ask Claude instead</em> button).</span></label>
         <label class="check"><input type="checkbox" data-check="p12"><span>RomaKey → Look: turn on <em>Different look in dark mode</em>, pick a light theme for light apps and 墨 (or your own colours) for dark ones. Open a light app and a dark app: the keyboard matches the frame iOS draws around it.</span></label>
-        <label class="check"><input type="checkbox" data-check="p13"><span>Type <em>kakuninzumi</em>: 確認済み comes first. RomaKey → Suggestions → My words: add a word, then type its reading. Convert a phrase a word at a time once: next time it comes up whole.</span></label>
+        <label class="check"><input type="checkbox" data-check="p13"><span>Type <em>kakuninzumi</em>: 確認済み comes first; <em>haitokukan</em>: 背徳感 (rarer words come from the extended lexicon). RomaKey → Suggestions → My words: add a word, then type its reading. Convert a phrase a word at a time once: next time it comes up whole.</span></label>
         <label class="check"><input type="checkbox" data-check="p4"><span>Your iOS text replacements (omw) and contact names in suggestions; English uses Apple's spell checker.</span></label>
         <label class="check"><input type="checkbox" data-check="p6"><span>Dictation: iOS doesn't let keyboards use the microphone, so use the system 🎤 below the keyboard. It works while RomaKey is showing.</span></label>
         <label class="check"><input type="checkbox" data-check="p5"><span>Haptics, key sounds, and the Apple Intelligence test in the app.</span></label>
@@ -749,6 +749,21 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
 
   // ---- Dictionary (JapaneseDictionary.swift) ------------------------------------
   const TSV = __DICT__;
+  // The extended lexicon (ExtendedLexicon.swift), slimmed for the web: reading, then each word
+  // with its band (0 most common … 8). Parsed after the page loads, so typing never waits on it.
+  const LEXICON = __LEXICON__;
+  let rare = null;
+  function rareWords(reading) {
+    if (!rare) {
+      rare = new Map();
+      for (const line of LEXICON.split("\n")) {
+        const [r, ...words] = line.split("\t");
+        rare.set(r, words.map((w) => ({ text: w.slice(0, -1), band: +w.slice(-1) })));
+      }
+    }
+    return rare.get(reading) || [];
+  }
+  setTimeout(() => rareWords(""), 0);
   const katakana = (s) => chars(s).map((c) => { const p = c.codePointAt(0); return (p >= 0x3041 && p <= 0x3096) || p === 0x309d || p === 0x309e ? String.fromCodePoint(p + 0x60) : c; }).join("");
   const hiragana = (s) => chars(s).map((c) => { const p = c.codePointAt(0); return (p >= 0x30a1 && p <= 0x30f6) || p === 0x30fd || p === 0x30fe ? String.fromCodePoint(p - 0x60) : c; }).join("");
   const withoutArticle = (t) => { for (const a of ["to ", "a ", "an ", "the "]) if (t.toLowerCase().startsWith(a)) return t.slice(a.length); return t; };
@@ -864,7 +879,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
   // bareStem: a godan stem as a noun (済み), less likely than a real noun read the same (待ち vs 町).
   // userWord: My words and phrases converted before, as likely as a very common word.
   const COST = { unknown: 6000, function: 1200, inflected: 300, single: 2000, startParticle: 3000, particlePair: 500, learned: 2000, everyday: 600, margin: 2500,
-    bareStem: 900, userWord: 2600 };
+    bareStem: 900, userWord: 2600, rare: 6400, rareBand: 120 };
   // Everyday words that written text (where the frequencies come from) undersells: 昨日 over 機能.
   const EVERYDAY = new Set(["昨日", "何時", "今朝", "今晩", "今夜", "明後日", "一昨日"]);
   const wordCost = (i) => 2500 + Math.round(500 * Math.log10(i + 10)) - (EVERYDAY.has(entries[i].kanji) ? COST.everyday : 0);
@@ -893,6 +908,8 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
     for (let L = 2; L <= max; L++) {
       const s = a.slice(p, p + L).join("");
       for (const w of [...(userWords()[s] || []), ...(history[s] || [])]) if (w !== s) out.push({ end: p + L, text: w, reading: s, cost: COST.userWord, entry: null });
+      // Rarer words from the extended lexicon (背徳).
+      for (const w of rareWords(s)) add(p + L, w.text, s, COST.rare + COST.rareBand * w.band, null);
     }
     for (let L = 1; L <= max; L++) {
       const s = a.slice(p, p + L).join("");
@@ -1093,6 +1110,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ai); fle
       if (!exact.length) for (const c of phrases) add(c.text, single(c));
       for (const e of exact) add(e.word, e);
       for (const c of phrases) add(c.text, single(c));
+      for (const w of rareWords(h)) add(w.text, null);
       add(k, exact.find((e) => e.word === k));
       if (settings.emojiSuggestions) for (const e of emojiSuggestions(h, 2)) add(toned(e), null, "emoji");
       // The first word only, leaving the rest to convert next (箸 | をたべる).

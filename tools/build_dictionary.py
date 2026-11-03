@@ -14,9 +14,18 @@ the word inflects, for kanji conversion of forms like 食べた (see Conjugation
 
 A word's other readings get lines of their own when JMdict marks them common, or when the word is
 a prefix or suffix, whose reading often changes after another word (済み: すみ, ずみ).
+
+With a fourth argument, also writes the extended lexicon: every other JMdict word with a kanji
+spelling (背徳, 背徳感), for kanji conversion only. The keyboard memory-maps it rather than loading
+it (see ExtendedLexicon.swift). Layout, little-endian: "RKLX", version, line count, the longest
+reading in characters (UInt32 each), then one UInt32 offset per line into the text that follows.
+Each line is a reading in hiragana, then for each word a tab and word␟band␟part of speech␟meaning,
+most common first. Lines are sorted by the reading's UTF-8 bytes, for binary search. The band
+(0-8) is how common the word is in everyday text: 0 is the most common.
 """
 import gzip
 import sqlite3
+import struct
 import sys
 from collections import defaultdict
 
@@ -115,7 +124,38 @@ def frequency(freq, kanji, reading, usually_kana, code):
     return max(freq.get(form, 0) for form in forms)
 
 
-def main(db_path, out_path, wordfreq_path=None):
+def hiragana(text):
+    return "".join(chr(ord(ch) - 0x60) if 0x30A1 <= ord(ch) <= 0x30F6 else ch for ch in text)
+
+
+def band(word_frequency, tagged):
+    """0 (common in everyday text) to 8 (unknown to wordfreq and to JMdict's frequency tags)."""
+    for number, threshold in enumerate([1e-6, 5e-7, 2e-7, 1e-7, 5e-8, 2e-8]):
+        if word_frequency >= threshold:
+            return number
+    return 6 if word_frequency > 0 else 7 if tagged else 8
+
+
+def write_lexicon(path, lines):
+    """lines: reading → [(band, word, part of speech, meaning)]."""
+    order = sorted(lines, key=lambda reading: reading.encode("utf-8"))
+    text = bytearray()
+    offsets = []
+    for reading in order:
+        offsets.append(len(text))
+        words = sorted(set(lines[reading]))
+        parts = [reading] + ["\x1f".join([word, str(number), part, meaning]) for number, word, part, meaning in words]
+        text += ("\t".join(parts) + "\n").encode("utf-8")
+    longest = max(len(reading) for reading in order)
+    with open(path, "wb") as f:
+        f.write(b"RKLX" + struct.pack("<III", 1, len(order), longest))
+        f.write(struct.pack(f"<{len(offsets)}I", *offsets))
+        f.write(text)
+    words = sum(len(set(v)) for v in lines.values())
+    print(f"lexicon: {words} words, {len(order)} readings, {(16 + 4 * len(offsets) + len(text)) / 1e6:.1f} MB", file=sys.stderr)
+
+
+def main(db_path, out_path, wordfreq_path=None, lexicon_path=None):
     freq = load_wordfreq(wordfreq_path) if wordfreq_path else {}
     c = sqlite3.connect(db_path)
     tags = defaultdict(set)
@@ -206,7 +246,35 @@ def main(db_path, out_path, wordfreq_path=None):
             f.write(line + "\n")
     print(f"{len(rows)} entries", file=sys.stderr)
 
+    if not lexicon_path:
+        return
+    # Everything else with a kanji spelling, for conversion: the first spelling with each of its
+    # readings (as hiragana, two kana or more), unless the word is usually written in kana, is
+    # archaic or obsolete, is a set phrase the converter builds from its words anyway (良い天気
+    # would beat いい天気), or the main dictionary has that spelling already: it has the readings
+    # that are common (良い is よい; いい stays in kana).
+    in_main = {line.split("\t")[0] for *_, line in rows}
+    lines = defaultdict(list)
+    for idseq, spellings in list(kanji.items()):
+        sense_ids = [s for s in senses[idseq] if glosses[s]]
+        if not spellings or not sense_ids or not kana[idseq]:
+            continue
+        first = sense_ids[0]
+        if any("usually written using kana" in m or m.startswith(("archaism", "obsolete")) for m in misc[first]):
+            continue
+        word = spellings[0]
+        readings = [kana[idseq][0]] + [r for r, only in other_readings[idseq] if not only or word in only]
+        meaning = "; ".join(glosses[first][:2])[:60]
+        part = short_pos(pos[first])
+        if part == "expression" or any(ch in word + meaning + part for ch in "\t\n\x1f"):
+            continue
+        number = band(freq.get(word, 0), bool(tags[idseq]))
+        for reading in dict.fromkeys(hiragana(r) for r in readings):
+            if len(reading) >= 2 and word not in in_main:
+                lines[reading].append((number, word, part, meaning))
+    write_lexicon(lexicon_path, lines)
+
 
 if __name__ == "__main__":
-    # python3 tools/build_dictionary.py jamdict.db dictionary.tsv [wordfreq/data/large_ja.msgpack.gz]
-    main(*sys.argv[1:4])
+    # python3 tools/build_dictionary.py jamdict.db dictionary.tsv [large_ja.msgpack.gz [lexicon.bin]]
+    main(*sys.argv[1:5])
